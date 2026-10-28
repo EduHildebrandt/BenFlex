@@ -1,0 +1,682 @@
+.main {
+  padding: 48px 0 80px;
+  background-color: var(--color-bg-main);
+  flex: 1;
+}
+
+.pageTitle {
+  font-family: var(--font-family-title);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 32px;
+}
+
+.checkoutLayout {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Form Cards */
+.formsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.cardForm {
+  padding: 32px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  background-color: white;
+}
+
+.cardTitle {
+  font-family: var(--font-family-title);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputGroup label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inputGroup input,
+.inputGroup select {
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: var(--color-bg-main);
+}
+
+.inputGroup input:focus,
+.inputGroup select:focus {
+  border-color: var(--color-accent);
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.inputError {
+  border-color: var(--color-error) !important;
+  background-color: rgba(239, 68, 68, 0.03) !important;
+}
+
+.errorText {
+  font-size: 11px;
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+/* Shipping Details */
+.shippingOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.shippingLabel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shippingLabel input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+}
+
+.shippingText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shippingText strong {
+  font-size: 14px;
+  color: var(--color-primary);
+}
+
+.shippingText span {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.shippingPrice {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.shippingActive {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+}
+
+.addressGrid {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Mercado Pago Header */
+.mpHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.mpBadge {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  background-color: var(--color-accent-soft);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.mpSecure {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* CREDIT CARD MOCKUP */
+.cardContainer {
+  perspective: 1000px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.creditCard {
+  width: 320px;
+  height: 190px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cardFlipped {
+  transform: rotateY(180deg);
+}
+
+.cardSide {
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-md);
+  color: white;
+}
+
+/* Card Brands backgrounds */
+.cardFront {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  z-index: 2;
+}
+
+.visa {
+  background: linear-gradient(135deg, #1a365d 0%, #2a4365 100%);
+}
+
+.mastercard {
+  background: linear-gradient(135deg, #7b341e 0%, #4a1d12 100%);
+}
+
+.amex {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+}
+
+.cardBack {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  transform: rotateY(180deg);
+  padding: 20px 0;
+}
+
+.cardChip {
+  width: 40px;
+  height: 30px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+  border-radius: 6px;
+}
+
+.cardBrandLogo {
+  font-family: var(--font-family-title);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 20px;
+  letter-spacing: -1px;
+}
+
+.cardNumDisplay {
+  font-family: monospace;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.cardBottomRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cardColLabel {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  display: block;
+}
+
+.cardColVal {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.cardMagStrip {
+  height: 40px;
+  background-color: #0f172a;
+  width: 100%;
+}
+
+.cardSignatureRow {
+  background-color: white;
+  height: 36px;
+  width: 85%;
+  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10px;
+}
+
+.cardSignatureMock {
+  flex: 1;
+  background: repeating-linear-gradient(45deg, #cbd5e1, #cbd5e1 2px, transparent 2px, transparent 6px);
+  height: 20px;
+}
+
+.cardCvvDisplay {
+  color: #1e293b;
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.cardBackText {
+  font-size: 8px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* Order Summary Column */
+.summaryCol {
+  position: sticky;
+  top: 100px;
+}
+
+.summaryCard {
+  padding: 32px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  background-color: white;
+}
+
+.summaryTitle {
+  font-family: var(--font-family-title);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+}
+
+.summaryItems {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summaryItem {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.sumImageMock {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sumDetails {
+  flex: 1;
+}
+
+.sumDetails h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  line-height: 1.3;
+}
+
+.sumDetails p {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.sumQtyPrice {
+  font-size: 11px;
+  color: var(--color-text-light);
+  font-weight: 600;
+}
+
+.sumTotal {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.summaryDivider {
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.06);
+  margin: 20px 0;
+}
+
+.sumRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.grandTotalRow {
+  color: var(--color-primary);
+}
+
+.greenText {
+  color: var(--color-success);
+}
+
+.grandTotal {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary);
+  font-family: var(--font-family-title);
+}
+
+.installmentDisclaimer {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin-top: 4px;
+  display: block;
+}
+
+.submitOrderBtn {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  background-color: var(--color-accent);
+  color: white;
+  border-radius: var(--border-radius-md);
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+.submitOrderBtn:hover {
+  background-color: var(--color-accent-light);
+  transform: translateY(-1px);
+}
+
+.securitySeal {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-light);
+}
+
+.securitySeal svg {
+  color: var(--color-success);
+}
+
+/* Loader Overlay */
+.loaderOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loaderBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 320px;
+  padding: 32px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 4px solid var(--color-accent-soft);
+  border-top-color: var(--color-accent);
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+.loaderBox h3 {
+  font-family: var(--font-family-title);
+  font-size: 20px;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.loaderStep {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  height: 40px; /* fix height to prevent jumps */
+}
+
+.loaderMpBadge {
+  margin-top: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Receipt Screen */
+.receiptContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  background-color: var(--color-bg-main);
+}
+
+.receiptCard {
+  width: 100%;
+  max-width: 500px;
+  background-color: white;
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 40px;
+  text-align: center;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.successIconWrapper {
+  width: 72px;
+  height: 72px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.receiptTitle {
+  font-family: var(--font-family-title);
+  font-size: 26px;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.receiptSubtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 32px;
+}
+
+.receiptDetails {
+  background-color: var(--color-bg-main);
+  border-radius: var(--border-radius-md);
+  padding: 24px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  gap: 16px;
+}
+
+.detailRow span {
+  color: var(--color-text-muted);
+}
+
+.detailRow strong {
+  color: var(--color-primary);
+  text-align: right;
+}
+
+.receiptTotal {
+  font-size: 18px;
+  color: var(--color-accent) !important;
+  font-family: var(--font-family-title);
+}
+
+.receiptBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--color-accent-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  text-align: left;
+  line-height: 1.4;
+  margin-bottom: 32px;
+}
+
+.receiptBanner svg {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.receiptHomeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 32px;
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius-md);
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.receiptHomeBtn:hover {
+  background-color: var(--color-primary-light);
+}
+
+@media (max-width: 992px) {
+  .checkoutLayout {
+    grid-template-columns: 1fr;
+  }
+  .summaryCol {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardForm {
+    padding: 20px;
+  }
+  .creditCard {
+    width: 280px;
+    height: 165px;
+  }
+  .cardNumDisplay {
+    font-size: 17px;
+  }
+}
