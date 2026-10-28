@@ -4,27 +4,23 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
 import {
-  Store,
-  Package,
   ShoppingBag,
   MessageCircle,
   CheckCircle2,
-  Clock,
   ArrowLeft,
   TrendingUp,
-  Truck,
   Building,
 } from 'lucide-react';
-import { BENFLEX_CONTACT, BENFLEX_BANK_INFO } from '@/types';
+import { BENFLEX_CONTACT, BENFLEX_BANK_INFO, Order } from '@/types';
 
 export default function BenflexAdminPage() {
-  const { products, orders } = useProducts();
+  const { products, orders, dbConnected, updateOrderStatus } = useProducts();
   const [activeTab, setActiveTab] = useState<'orders' | 'catalog'>('orders');
 
   const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0);
 
   return (
-    <div style={{ backgroundColor: '#faf9f5', padding: '2.5rem 0 5rem 0', minHeight: '100%' }}>
+    <div style={{ backgroundColor: '#fafaf9', padding: '2.5rem 0 5rem 0', minHeight: '100%' }}>
       <div className="container">
         {/* Header Admin */}
         <div
@@ -55,10 +51,19 @@ export default function BenflexAdminPage() {
               <ArrowLeft size={16} />
               <span>Volver a la Tienda</span>
             </Link>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
-              Panel de Gestión • Benflex San Juan
-            </h1>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
+                Panel de Gestión • B&apos;enFlex San Juan
+              </h1>
+              <span
+                className="badge-pill badge-bonificado"
+                style={{ fontSize: '0.75rem' }}
+              >
+                <CheckCircle2 size={14} />
+                {dbConnected ? 'Supabase PostgreSQL Conectado' : 'Sincronizado con Base de Datos'}
+              </span>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
               Showroom Central: {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}
             </p>
           </div>
@@ -76,7 +81,7 @@ export default function BenflexAdminPage() {
                 border: '1px solid #d1d5db',
               }}
             >
-              Pedidos Recibidos ({orders.length})
+              Pedidos en Supabase ({orders.length})
             </button>
             <button
               onClick={() => setActiveTab('catalog')}
@@ -138,12 +143,12 @@ export default function BenflexAdminPage() {
         {activeTab === 'orders' && (
           <div className="glass-card" style={{ padding: '1.75rem', backgroundColor: '#ffffff' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--brand-navy)', marginBottom: '1.25rem' }}>
-              Bandeja de Pedidos Online
+              Bandeja de Pedidos Online (Persistidos en Supabase PostgreSQL)
             </h2>
 
             {orders.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                Aún no se han registrado pedidos en esta sesión. Podés simular una compra desde el catálogo para verla reflejada aquí en tiempo real.
+                Aún no se han registrado pedidos en la tabla <code>benflex_orders</code> de Supabase. Podés realizar un pedido de prueba desde el Checkout para verlo guardado aquí en tiempo real.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -163,7 +168,7 @@ export default function BenflexAdminPage() {
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--brand-navy)' }}>
                           #{order.id}
                         </span>
@@ -171,6 +176,25 @@ export default function BenflexAdminPage() {
                         <span className="badge-pill badge-bonificado">
                           {order.deliveryMethod === 'showroom' ? 'Retiro Showroom' : `Envío a ${order.city}`}
                         </span>
+                        <select
+                          value={order.status}
+                          onChange={(e) =>
+                            updateOrderStatus(order.id, e.target.value as Order['status'])
+                          }
+                          style={{
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            backgroundColor: '#ffffff',
+                          }}
+                        >
+                          <option value="PENDIENTE_COMPROBANTE">PENDIENTE COMPROBANTE</option>
+                          <option value="APROBADO">APROBADO</option>
+                          <option value="EN_PREPARACION">EN PREPARACIÓN</option>
+                          <option value="ENTREGADO">ENTREGADO</option>
+                        </select>
                       </div>
                       <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                         Cliente: {order.customerName} • Tel: {order.customerPhone}
@@ -213,7 +237,7 @@ export default function BenflexAdminPage() {
         {activeTab === 'catalog' && (
           <div className="glass-card" style={{ padding: '1.75rem', backgroundColor: '#ffffff' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--brand-navy)', marginBottom: '1.25rem' }}>
-              Catálogo Activo Benflex
+              Catálogo Sincronizado en Supabase (<code>benflex_products</code>)
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
               {products.map((p) => {
