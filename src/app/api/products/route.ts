@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { getDbProducts } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { getDbProducts, upsertDbProduct, deleteDbProduct } from '@/lib/db';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 
 export async function GET() {
@@ -17,5 +17,40 @@ export async function GET() {
       source: 'local_fallback',
       products: BENFLEX_PRODUCTS,
     });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const product = await req.json();
+    const saved = await upsertDbProduct(product);
+    return NextResponse.json({
+      success: true,
+      source: 'supabase_postgres',
+      product: saved,
+    });
+  } catch (error: any) {
+    console.error('Error upserting product in Supabase:', error.message);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
+    await deleteDbProduct(id);
+    return NextResponse.json({
+      success: true,
+      source: 'supabase_postgres',
+    });
+  } catch (error: any) {
+    console.error('Error deleting product in Supabase:', error.message);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }

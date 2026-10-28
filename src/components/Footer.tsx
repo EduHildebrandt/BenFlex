@@ -412,7 +412,12 @@ export default function Footer() {
             gap: '1rem',
           }}
         >
-          <div>
+          <div
+            onDoubleClick={() => {
+              window.location.href = '/admin';
+            }}
+            style={{ userSelect: 'none' }}
+          >
             © {new Date().getFullYear()} Benflex - Confort y Descanso. Todos los derechos reservados.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>

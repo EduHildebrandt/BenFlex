@@ -255,3 +255,80 @@ export async function updateDbOrderStatus(
     orderId,
   ]);
 }
+
+export async function upsertDbProduct(p: Product): Promise<Product> {
+  await ensureDatabaseInitialized();
+  const db = getPool();
+  await db.query(
+    `
+    INSERT INTO public.benflex_products (
+      id, name, slug, description, short_description, category, category_label,
+      technology, technology_label, measure, firmness, base_price,
+      transfer_discount_percent, variations, features, fabrics, image,
+      badge, stock, weight_support, warranty, rating, reviews_count, is_active, updated_at
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, true, NOW()
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      slug = EXCLUDED.slug,
+      description = EXCLUDED.description,
+      short_description = EXCLUDED.short_description,
+      category = EXCLUDED.category,
+      category_label = EXCLUDED.category_label,
+      technology = EXCLUDED.technology,
+      technology_label = EXCLUDED.technology_label,
+      measure = EXCLUDED.measure,
+      firmness = EXCLUDED.firmness,
+      base_price = EXCLUDED.base_price,
+      transfer_discount_percent = EXCLUDED.transfer_discount_percent,
+      variations = EXCLUDED.variations,
+      features = EXCLUDED.features,
+      fabrics = EXCLUDED.fabrics,
+      image = EXCLUDED.image,
+      badge = EXCLUDED.badge,
+      stock = EXCLUDED.stock,
+      weight_support = EXCLUDED.weight_support,
+      warranty = EXCLUDED.warranty,
+      rating = EXCLUDED.rating,
+      reviews_count = EXCLUDED.reviews_count,
+      is_active = true,
+      updated_at = NOW();
+    `,
+    [
+      p.id,
+      p.name,
+      p.slug || p.id,
+      p.description,
+      p.shortDescription || p.description.slice(0, 110),
+      p.category,
+      p.categoryLabel,
+      p.technology,
+      p.technologyLabel,
+      p.measure,
+      p.firmness || null,
+      p.basePrice,
+      p.transferDiscountPercent ?? 15,
+      JSON.stringify(p.variations || []),
+      JSON.stringify(p.features || []),
+      JSON.stringify(p.fabrics || []),
+      p.image,
+      p.badge || null,
+      p.stock ?? 10,
+      p.weightSupport || null,
+      p.warranty || null,
+      p.rating ?? 5.0,
+      p.reviewsCount ?? 50,
+    ]
+  );
+  return p;
+}
+
+export async function deleteDbProduct(id: string): Promise<void> {
+  await ensureDatabaseInitialized();
+  const db = getPool();
+  await db.query(
+    `UPDATE public.benflex_products SET is_active = false, updated_at = NOW() WHERE id = $1`,
+    [id]
+  );
+}

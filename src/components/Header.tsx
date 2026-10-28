@@ -609,13 +609,6 @@ export default function Header() {
             >
               📍 Nuestro Showroom en Villa Krause, San Juan
             </Link>
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.4rem 0' }}
-            >
-              Panel de Gestión Benflex
-            </Link>
           </div>
         )}
       </div>

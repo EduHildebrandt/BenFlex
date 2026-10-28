@@ -10,6 +10,8 @@ interface ProductContextType {
   dbConnected: boolean;
   getProductById: (id: string) => Product | undefined;
   getProductsByCategory: (category: ProductCategory) => Product[];
+  saveProduct: (product: Product) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
   placeOrder: (order: Order) => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   getOrderById: (orderId: string) => Order | undefined;
@@ -61,6 +63,46 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => console.warn('Could not sync orders from API:', err));
   }, []);
 
+  const saveProduct = async (product: Product): Promise<boolean> => {
+    setProducts((prev) => {
+      const exists = prev.some((p) => p.id === product.id);
+      if (exists) {
+        return prev.map((p) => (p.id === product.id ? product : p));
+      }
+      return [product, ...prev];
+    });
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product),
+      });
+      const data = await res.json();
+      return Boolean(data.success);
+    } catch (e) {
+      console.error('Error saving product to Supabase:', e);
+      return false;
+    }
+  };
+
+  const deleteProduct = async (id: string): Promise<boolean> => {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      return Boolean(data.success);
+    } catch (e) {
+      console.error('Error deleting product from Supabase:', e);
+      return false;
+    }
+  };
+
   const placeOrder = (order: Order) => {
     setOrders((prev) => {
       const updated = [order, ...prev];
@@ -72,7 +114,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Persistir en Supabase PostgreSQL
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -118,6 +159,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         dbConnected,
         getProductById,
         getProductsByCategory,
+        saveProduct,
+        deleteProduct,
         placeOrder,
         updateOrderStatus,
         getOrderById,
