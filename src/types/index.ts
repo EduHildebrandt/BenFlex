@@ -107,7 +107,7 @@ export interface Order {
   status: 'PENDIENTE_COMPROBANTE' | 'APROBADO' | 'EN_PREPARACION' | 'ENTREGADO';
 }
 
-export interface BenflexBankData {
+export interface BenFlexBankData {
   bankName: string;
   accountType: string;
   holder: string;
@@ -116,10 +116,10 @@ export interface BenflexBankData {
   alias: string;
 }
 
-export const BENFLEX_BANK_INFO: BenflexBankData = {
+export const BENFLEX_BANK_INFO: BenFlexBankData = {
   bankName: 'Banco Santander Argentina',
   accountType: 'Cuenta Corriente Especial',
-  holder: 'Benflex Confort y Descanso S.R.L.',
+  holder: 'BenFlex Confort y Descanso S.R.L.',
   cuit: '30-71842918-6',
   cbu: '0720194820000001239845',
   alias: 'BENFLEX.DESCANSO.SJ',

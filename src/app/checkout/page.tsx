@@ -114,7 +114,7 @@ export default function CheckoutPage() {
       customerPhone,
       deliveryMethod,
       postalCode: deliveryMethod === 'delivery' ? postalCode : BENFLEX_CONTACT.postalCode,
-      address: deliveryMethod === 'delivery' ? address : `Showroom Benflex - ${BENFLEX_CONTACT.address}`,
+      address: deliveryMethod === 'delivery' ? address : `Showroom BenFlex - ${BENFLEX_CONTACT.address}`,
       city: deliveryMethod === 'delivery' ? city : BENFLEX_CONTACT.city,
       province: deliveryMethod === 'delivery' ? province : BENFLEX_CONTACT.province,
       notes,
@@ -482,7 +482,7 @@ export default function CheckoutPage() {
                       lineHeight: 1.5,
                     }}
                   >
-                    <strong>Sucursal de Retiro:</strong> Showroom Benflex en {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}, {BENFLEX_CONTACT.province}.
+                    <strong>Sucursal de Retiro:</strong> Showroom BenFlex en {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}, {BENFLEX_CONTACT.province}.
                     <br />
                     <strong>Horario:</strong> {BENFLEX_CONTACT.schedule}.
                   </div>
@@ -656,7 +656,7 @@ export default function CheckoutPage() {
                       }}
                     >
                       <Sparkles size={16} color="var(--brand-sage)" />
-                      <span>Datos Bancarios Oficiales de Benflex:</span>
+                      <span>Datos Bancarios Oficiales de BenFlex:</span>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem' }}>
@@ -1030,7 +1030,7 @@ export default function CheckoutPage() {
                 }}
               >
                 <ShieldCheck size={15} color="var(--brand-sage)" />
-                <span>Garantía de fábrica y atención personalizada Benflex</span>
+                <span>Garantía de fábrica y atención personalizada BenFlex</span>
               </div>
             </div>
           </div>

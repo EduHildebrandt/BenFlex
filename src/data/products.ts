@@ -4,7 +4,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   // 1. COLCHONES & SOMMIERS
   {
     id: 'colchon-imperial-alta-densidad',
-    name: 'Colchón Benflex Imperial Alta Densidad (35 kg/m³)',
+    name: 'Colchón BenFlex Imperial Alta Densidad (35 kg/m³)',
     slug: 'colchon-imperial-alta-densidad',
     description:
       'Diseñado para quienes priorizan la salud postural y un soporte firme ortopédico. Fabricado con espuma de poliuretano de altísima resiliencia (35 kg/m³) que no se deforma con el paso de los años. Incorpora un Euro-Pillow viscoelástico de última generación con tejido de punto Jacquard matelaseado con hilado de bambú antibacterial y atérmico.',
@@ -41,7 +41,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'colchon-nuage-resortes-pocket',
-    name: 'Colchón Benflex Nuage Resortes Pocket Ensacados',
+    name: 'Colchón BenFlex Nuage Resortes Pocket Ensacados',
     slug: 'colchon-nuage-resortes-pocket',
     description:
       'La máxima expresión de independencia de movimiento para parejas. Cada resorte de acero templado trabaja encapsulado de forma individual, absorbiendo cada movimiento sin transmitir vibraciones al lado opuesto de la cama. Posee doble marco perimetral de acero con estabilizadores y pillow top ultra soft con memory foam.',
@@ -115,7 +115,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   // 2. SILLONES & SOFÁS CAMA
   {
     id: 'sofa-cama-verona-antidesgarro',
-    name: 'Sofá Cama Benflex Verona (Pana Anti-Desgarro Pet Friendly)',
+    name: 'Sofá Cama BenFlex Verona (Pana Anti-Desgarro Pet Friendly)',
     slug: 'sofa-cama-verona-antidesgarro',
     description:
       'El equilibrio perfecto entre elegancia para tu living y un descanso de primera categoría para visitas. Sistema de apertura telescópica suave en un solo movimiento que se convierte en una cómoda cama de 2 plazas reales. Tapizado en exclusiva Pana EasyClean anti-desgarro y repelente a líquidos, ideal para hogares con mascotas y niños.',
@@ -195,7 +195,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   // 3. ALMOHADAS & CONFORT
   {
     id: 'almohada-viscoelastica-memory-gel',
-    name: 'Almohada Viscoelástica Benflex Memory Gel Ergonómica',
+    name: 'Almohada Viscoelástica BenFlex Memory Gel Ergonómica',
     slug: 'almohada-viscoelastica-memory-gel',
     description:
       'Espuma viscoelástica termo-sensible con tecnología Memory Foam infundida con micropartículas de gel refrigerante. Se moldea anatómicamente a las curvas de tu cuello y hombros, manteniendo la columna vertebral perfectamente alineada durante toda la noche y disipando el calor corporal excesivo.',
@@ -261,7 +261,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'cubrecolchon-impermeable-bambu',
-    name: 'Protector Cubrecolchón Benflex Impermeable & Respirable Bambú',
+    name: 'Protector Cubrecolchón BenFlex Impermeable & Respirable Bambú',
     slug: 'cubrecolchon-impermeable-bambu',
     description:
       'Protegé tu inversión contra manchas, humedad, transpiración y ácaros sin hacer ruido plástico. Membrana técnica de poliuretano microporoso ultra delgada recubierta de tejido de punto de bambú 100% natural, hipoalergénico y fresco.',
@@ -298,14 +298,14 @@ export const BENFLEX_PRODUCTS: Product[] = [
   // 4. COMBOS BENFLEX
   {
     id: 'combo-imperial-completo-regalo',
-    name: 'Combo Benflex Imperial: Colchón 35kg + Sommier Reforzado + 2 Almohadas Visco de REGALO',
+    name: 'Combo BenFlex Imperial: Colchón 35kg + Sommier Reforzado + 2 Almohadas Visco de REGALO',
     slug: 'combo-imperial-completo-regalo',
     description:
-      'El set definitivo para renovar tu dormitorio por completo con el máximo ahorro. Incluye el consagrado Colchón Benflex Imperial de alta densidad (35 kg/m³) con Euro-Pillow, la Base de Sommier en madera nativa estacionada con patas torneadas, y de REGALO exclusivo 2 Almohadas Viscoelásticas Memory Gel valuadas en $84.000.',
+      'El set definitivo para renovar tu dormitorio por completo con el máximo ahorro. Incluye el consagrado Colchón BenFlex Imperial de alta densidad (35 kg/m³) con Euro-Pillow, la Base de Sommier en madera nativa estacionada con patas torneadas, y de REGALO exclusivo 2 Almohadas Viscoelásticas Memory Gel valuadas en $84.000.',
     shortDescription:
       'Set Colchón + Sommier + 2 Almohadas Viscoelásticas de REGALO. El combo más premiado.',
     category: 'combos-benflex',
-    categoryLabel: 'Combos Benflex',
+    categoryLabel: 'Combos BenFlex',
     technology: 'alta_densidad',
     technologyLabel: 'Set Completo + Almohadas Gratis',
     measure: '2 Plazas (140x190)',
@@ -334,14 +334,14 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'combo-nuage-pocket-hotel-experience',
-    name: 'Combo Benflex Nuage Pocket Hotel Experience: Colchón Pocket + 2 Sommiers + Almohadas',
+    name: 'Combo BenFlex Nuage Pocket Hotel Experience: Colchón Pocket + 2 Sommiers + Almohadas',
     slug: 'combo-nuage-pocket-hotel-experience',
     description:
       'Llevá la experiencia de descanso de un hotel 5 estrellas a tu hogar. Colchón Nuage con resortes Pocket independientes ensacados para cero transferencia de movimiento, doble base sommier tapizada en Chenille gris cálido y juego de almohadas inteligentes de regalo. Máxima relajación cervical y confort atérmico.',
     shortDescription:
       'Experiencia Hotel 5 Estrellas. Colchón Resortes Pocket + Sommier + Almohadas Visco.',
     category: 'combos-benflex',
-    categoryLabel: 'Combos Benflex',
+    categoryLabel: 'Combos BenFlex',
     technology: 'resortes_pocket',
     technologyLabel: 'Set Resortes Pocket Hotel',
     measure: 'Queen (160x200)',
@@ -369,7 +369,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'almohada-fibra-siliconada-hotel',
-    name: 'Almohada Benflex Cloud Fibra Siliconada Virgen (Sensación Pluma)',
+    name: 'Almohada BenFlex Cloud Fibra Siliconada Virgen (Sensación Pluma)',
     slug: 'almohada-fibra-siliconada-hotel',
     description:
       'Rellena con microfibra siliconada hueca conjugada 100% virgen que imita la suavidad del plumón natural pero con propiedades hipoalergénicas y lavables. Recupera su volumen al instante y brinda un soporte mullido y fresco durante toda la noche.',
@@ -403,7 +403,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'sabanas-algodon-egipcio-400-hilos',
-    name: 'Juego de Sábanas Benflex Luxury 400 Hilos Satén Algodón Peinado',
+    name: 'Juego de Sábanas BenFlex Luxury 400 Hilos Satén Algodón Peinado',
     slug: 'sabanas-algodon-egipcio-400-hilos',
     description:
       'Ropa de cama de lujo confeccionada en satén de algodón peinado de 400 hilos reales. Su tejido sedoso regula naturalmente la temperatura corporal, ofreciendo frescura en las noches cálidas de San Juan y abrigo suave en invierno. Sábana ajustable con elástico perimetral completo para colchones de hasta 38 cm de altura.',
@@ -444,7 +444,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
   },
   {
     id: 'sillon-nordico-oslo-antimanchas',
-    name: 'Sillón Benflex Oslo Nórdico (Lino Anti-Manchas & Madera Paraíso)',
+    name: 'Sillón BenFlex Oslo Nórdico (Lino Anti-Manchas & Madera Paraíso)',
     slug: 'sillon-nordico-oslo-antimanchas',
     description:
       'Diseño escandinavo cálido y minimalista con base y patas a la vista en madera maciza de Paraíso lustrada al natural. Asientos con placa Soft de alta densidad (28 kg/m³) y respaldos rellenos de vellón siliconado. Tapizado en Lino Rústico con proceso nanotecnológico repelente a líquidos y manchas.',

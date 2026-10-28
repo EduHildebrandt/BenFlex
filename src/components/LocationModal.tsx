@@ -109,7 +109,7 @@ export default function LocationModal() {
         >
           <Truck size={20} style={{ color: '#059669', flexShrink: 0 }} />
           <div style={{ fontSize: '0.82rem', color: '#065f46' }}>
-            <span style={{ fontWeight: 700 }}>¡Promoción Exclusiva Benflex!</span> Costo de flete{' '}
+            <span style={{ fontWeight: 700 }}>¡Promoción Exclusiva BenFlex!</span> Costo de flete{' '}
             <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>10% del total</span>{' '}
             → <strong>¡GRATIS / 100% Bonificado a tu zona!</strong>
           </div>

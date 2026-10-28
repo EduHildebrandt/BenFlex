@@ -338,7 +338,7 @@ export default function SleepQuiz() {
                 }}
               >
                 <CheckCircle2 size={20} />
-                <span>Recomendación Personalizada Benflex</span>
+                <span>Recomendación Personalizada BenFlex</span>
               </div>
               <h3
                 style={{

@@ -41,7 +41,7 @@ function OrderConfirmationContent() {
 
   // Mensaje URL encode preconfigurado solicitado
   const whatsappMessage = encodeURIComponent(
-    `¡Hola Benflex! Acabo de realizar el pedido #${orderId} por un total de $${total.toLocaleString('es-AR')}. Adjunto mi comprobante de transferencia para coordinar la entrega en ${destination}.`
+    `¡Hola BenFlex! Acabo de realizar el pedido #${orderId} por un total de $${total.toLocaleString('es-AR')}. Adjunto mi comprobante de transferencia para coordinar la entrega en ${destination}.`
   );
 
   const whatsappHref = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${whatsappMessage}`;
@@ -100,7 +100,7 @@ function OrderConfirmationContent() {
               letterSpacing: '-0.02em',
             }}
           >
-            ¡Gracias por confiar en Benflex!
+            ¡Gracias por confiar en BenFlex!
           </h1>
 
           <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 1.75rem auto' }}>
@@ -298,7 +298,7 @@ function OrderConfirmationContent() {
                   fontWeight: 700,
                 }}
               >
-                <span>Volver a la tienda Benflex</span>
+                <span>Volver a la tienda BenFlex</span>
                 <ArrowRight size={15} />
               </Link>
             </div>

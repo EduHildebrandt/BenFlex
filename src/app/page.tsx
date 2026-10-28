@@ -221,7 +221,7 @@ export default function HomePage() {
               >
                 <img
                   src="https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=1200&q=80"
-                  alt="Dormitorio Benflex Confort y Descanso"
+                  alt="Dormitorio BenFlex Confort y Descanso"
                   style={{
                     width: '100%',
                     height: '380px',
@@ -325,7 +325,7 @@ export default function HomePage() {
               { id: 'colchones-sommiers', label: 'Colchones & Sommiers' },
               { id: 'sillones-sofas', label: 'Sillones & Sofás Cama' },
               { id: 'almohadas-confort', label: 'Almohadas & Confort' },
-              { id: 'combos-benflex', label: 'Combos Benflex (Regalo)' },
+              { id: 'combos-benflex', label: 'Combos BenFlex (Regalo)' },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -552,7 +552,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <a
                     href={`https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
-                      'Hola Benflex! Quisiera consultar disponibilidad y horarios para visitar el showroom en Villa Krause.'
+                      'Hola BenFlex! Quisiera consultar disponibilidad y horarios para visitar el showroom en Villa Krause.'
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -598,7 +598,7 @@ export default function HomePage() {
               <div>
                 <img
                   src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=80"
-                  alt="Showroom Benflex en San Juan"
+                  alt="Showroom BenFlex en San Juan"
                   style={{
                     width: '100%',
                     height: '340px',

@@ -35,7 +35,7 @@ const CATEGORY_MAP: Record<ProductCategory, string> = {
   'colchones-sommiers': 'Colchones & Sommiers',
   'sillones-sofas': 'Sillones & Sofás Cama',
   'almohadas-confort': 'Almohadas & Confort',
-  'combos-benflex': 'Combos Benflex',
+  'combos-benflex': 'Combos BenFlex',
 };
 
 const TECH_MAP: Record<ProductTechnology, string> = {
@@ -47,7 +47,7 @@ const TECH_MAP: Record<ProductTechnology, string> = {
   fibra_siliconada: 'Fibra Siliconada / Algodón 400 Hilos',
 };
 
-export default function BenflexAdminPage() {
+export default function BenFlexAdminPage() {
   const {
     products,
     orders,
@@ -85,7 +85,7 @@ export default function BenflexAdminPage() {
     basePrice: 380000,
     transferDiscountPercent: 15,
     image: '',
-    badge: 'Destacado B\'enFlex',
+    badge: 'Destacado BenFlex',
     stock: 15,
     weightSupport: 'Hasta 130 kg por lado',
     warranty: '5 años de garantía escrita de fábrica',
@@ -374,7 +374,7 @@ export default function BenflexAdminPage() {
           </div>
 
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', marginBottom: '0.4rem' }}>
-            Acceso Privado B&apos;enFlex
+            Acceso Privado BenFlex
           </h1>
           <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1.75rem' }}>
             Panel interno exclusivo para el <strong>Dueño</strong> y el <strong>Desarrollador</strong>.
@@ -497,7 +497,7 @@ export default function BenflexAdminPage() {
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
-                Panel de Control • B&apos;enFlex
+                Panel de Control • BenFlex
               </h1>
               <span className="badge-pill badge-navy" style={{ fontSize: '0.72rem' }}>
                 Modo: {authRole === 'owner' ? 'Dueño / Administración' : 'Desarrollador Full-Access'}
@@ -940,7 +940,7 @@ export default function BenflexAdminPage() {
               </button>
 
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#111827', marginBottom: '1.25rem' }}>
-                {editingProduct ? `Editar: ${editingProduct.name}` : 'Cargar Nuevo Producto B\'enFlex'}
+                {editingProduct ? `Editar: ${editingProduct.name}` : 'Cargar Nuevo Producto BenFlex'}
               </h2>
 
               <form onSubmit={handleSaveProductSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -953,7 +953,7 @@ export default function BenflexAdminPage() {
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Colchón Benflex Ortopédico 35kg"
+                      placeholder="Ej: Colchón BenFlex Ortopédico 35kg"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       style={{
@@ -984,7 +984,7 @@ export default function BenflexAdminPage() {
                       <option value="colchones-sommiers">Colchones & Sommiers</option>
                       <option value="sillones-sofas">Sillones & Sofás Cama</option>
                       <option value="almohadas-confort">Almohadas & Confort / Ropa de Cama</option>
-                      <option value="combos-benflex">Combos Benflex (Con Regalo)</option>
+                      <option value="combos-benflex">Combos BenFlex (Con Regalo)</option>
                     </select>
                   </div>
 

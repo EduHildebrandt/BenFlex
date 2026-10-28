@@ -100,7 +100,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   // WhatsApp preconfigurado para dudas de medidas o telas
   const whatsappInquiryMsg = encodeURIComponent(
-    `¡Hola Benflex! Estoy viendo en la tienda el "${product.name}" (Medida: ${selectedVariationName}${
+    `¡Hola BenFlex! Estoy viendo en la tienda el "${product.name}" (Medida: ${selectedVariationName}${
       selectedFabric ? ` / Tela: ${selectedFabric}` : ''
     }). Quisiera consultar detalles de stock, telas y tiempos de entrega para ${location.city}.`
   );

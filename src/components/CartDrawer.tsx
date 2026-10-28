@@ -94,7 +94,7 @@ export default function CartDrawer() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <ShoppingBag size={20} color="var(--brand-sage)" />
             <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
-              Tu Carrito Benflex
+              Tu Carrito BenFlex
             </h2>
           </div>
           <button

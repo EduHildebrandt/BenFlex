@@ -8,7 +8,7 @@ export default function WhatsAppFloatingButton() {
   const [showTooltip, setShowTooltip] = useState(true);
 
   const defaultMsg = encodeURIComponent(
-    '¡Hola Benflex! Estoy viendo su tienda online y quisiera asesoramiento sobre colchones, medidas y opciones de descanso en su showroom de San Juan.'
+    '¡Hola BenFlex! Estoy viendo su tienda online y quisiera asesoramiento sobre colchones, medidas y opciones de descanso en su showroom de San Juan.'
   );
 
   const whatsappHref = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${defaultMsg}`;
@@ -61,7 +61,7 @@ export default function WhatsAppFloatingButton() {
           <div style={{ fontWeight: 700, color: 'var(--brand-sage)', marginBottom: '2px' }}>
             ¿Dudas con tu colchón o medidas?
           </div>
-          <div>Atención personalizada con un asesor de Benflex San Juan.</div>
+          <div>Atención personalizada con un asesor de BenFlex San Juan.</div>
         </div>
       )}
 
@@ -92,7 +92,7 @@ export default function WhatsAppFloatingButton() {
         }}
       >
         <MessageCircle size={22} fill="#ffffff" color="#25D366" />
-        <span style={{ whiteSpace: 'nowrap' }}>Asesor Benflex</span>
+        <span style={{ whiteSpace: 'nowrap' }}>Asesor BenFlex</span>
       </a>
     </div>
   );

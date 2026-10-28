@@ -141,7 +141,7 @@ export default function Header() {
             flexWrap: 'wrap',
           }}
         >
-          {/* Logo Oficial B'enFlex & Mobile Menu Toggle */}
+          {/* Logo Oficial BenFlex & Mobile Menu Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -174,7 +174,7 @@ export default function Header() {
               >
                 <img
                   src="/logo.png"
-                  alt="B'enFlex Fábrica"
+                  alt="BenFlex Fábrica"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -195,7 +195,7 @@ export default function Header() {
                     paddingBottom: '1px',
                   }}
                 >
-                  B&apos;enFlex
+                  BenFlex
                 </span>
                 <span
                   style={{
@@ -541,7 +541,7 @@ export default function Header() {
               }}
             >
               <Sparkles size={14} />
-              Combos Benflex (Regalo)
+              Combos BenFlex (Regalo)
             </Link>
             <Link
               href="/#quiz-descanso"

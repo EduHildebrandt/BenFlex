@@ -18,7 +18,7 @@ import { BENFLEX_CONTACT, BENFLEX_BANK_INFO } from '@/types';
 
 export default function Footer() {
   const whatsappUrl = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
-    'Hola Benflex, quisiera hacer una consulta sobre el showroom en San Juan y opciones de retiro.'
+    'Hola BenFlex, quisiera hacer una consulta sobre el showroom en San Juan y opciones de retiro.'
   )}`;
 
   return (
@@ -114,7 +114,7 @@ export default function Footer() {
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Garantía Oficial 5 Años</div>
                 <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                  Directa de fábrica y servicio posventa Benflex
+                  Directa de fábrica y servicio posventa BenFlex
                 </div>
               </div>
             </div>
@@ -174,12 +174,12 @@ export default function Footer() {
                 >
                   <img
                     src="/logo.png"
-                    alt="B'enFlex Logo"
+                    alt="BenFlex Logo"
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 </div>
                 <span style={{ fontSize: '1.45rem', fontWeight: 900, fontStyle: 'italic', letterSpacing: '-0.02em', color: '#ffffff' }}>
-                  B&apos;enFlex
+                  BenFlex
                 </span>
               </div>
               <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.25rem' }}>
@@ -266,7 +266,7 @@ export default function Footer() {
                 />
                 <div style={{ position: 'relative', zIndex: 1, padding: '1rem' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
-                    Showroom Central Benflex
+                    Showroom Central BenFlex
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '0.65rem' }}>
                     Castaño Oeste y Conector Sur • Fácil estacionamiento
@@ -323,7 +323,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link href="/#combos-benflex" style={{ transition: 'color 0.2s', display: 'inline-block', color: '#86efac' }}>
-                    Combos Benflex con Almohadas de Regalo
+                    Combos BenFlex con Almohadas de Regalo
                   </Link>
                 </li>
                 <li>
@@ -418,7 +418,7 @@ export default function Footer() {
             }}
             style={{ userSelect: 'none' }}
           >
-            © {new Date().getFullYear()} Benflex - Confort y Descanso. Todos los derechos reservados.
+            © {new Date().getFullYear()} BenFlex - Confort y Descanso. Todos los derechos reservados.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>

@@ -35,7 +35,7 @@ export default function ContactoShowroomPage() {
   };
 
   const whatsappDirectUrl = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
-    `¡Hola Benflex! Mi nombre es ${formData.name || 'Cliente'}. Me contacto desde la web por: ${formData.subject}. ${formData.message}`
+    `¡Hola BenFlex! Mi nombre es ${formData.name || 'Cliente'}. Me contacto desde la web por: ${formData.subject}. ${formData.message}`
   )}`;
 
   return (
@@ -253,7 +253,7 @@ export default function ContactoShowroomPage() {
                     </div>
                     <a
                       href={`https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
-                        '¡Hola Benflex! Quisiera hacer una consulta a un asesor del Showroom de Villa Krause.'
+                        '¡Hola BenFlex! Quisiera hacer una consulta a un asesor del Showroom de Villa Krause.'
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -287,7 +287,7 @@ export default function ContactoShowroomPage() {
                   }}
                 >
                   <iframe
-                    title="Mapa Showroom Benflex Villa Krause San Juan"
+                    title="Mapa Showroom BenFlex Villa Krause San Juan"
                     src="https://www.google.com/maps?q=Casta%C3%B1o+Oeste+y+Conector+Sur,+Villa+Krause,+San+Juan,+Argentina&output=embed"
                     width="100%"
                     height="100%"

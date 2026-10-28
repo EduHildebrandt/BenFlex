@@ -10,7 +10,7 @@ import LocationModal from '@/components/LocationModal';
 import WhatsAppFloatingButton from '@/components/WhatsAppFloatingButton';
 
 export const metadata: Metadata = {
-  title: 'Benflex | Confort, Salud Postural y Descanso Premium en San Juan',
+  title: 'BenFlex | Confort, Salud Postural y Descanso Premium en San Juan',
   description:
     'Especialistas en descanso y salud postural: colchones de alta densidad, resortes pocket, sommiers reforzados, sillones y almohadas inteligentes. Showroom en Villa Krause, San Juan. Envíos bonificados y 15% OFF por transferencia.',
   keywords:
