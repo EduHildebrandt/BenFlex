@@ -98,11 +98,15 @@ export default function ProductPage({ params }: ProductPageProps) {
     setTimeout(() => setAddedAnimation(false), 2000);
   };
 
-  // WhatsApp preconfigurado para dudas de medidas o telas
+  // WhatsApp preconfigurado para dudas de medidas, telas o cotización de envío
   const whatsappInquiryMsg = encodeURIComponent(
-    `¡Hola BenFlex! Estoy viendo en la tienda el "${product.name}" (Medida: ${selectedVariationName}${
-      selectedFabric ? ` / Tela: ${selectedFabric}` : ''
-    }). Quisiera consultar detalles de stock, telas y tiempos de entrega para ${location.city}.`
+    location.isSanJuan
+      ? `¡Hola BenFlex! Estoy viendo en la tienda el "${product.name}" (Medida: ${selectedVariationName}${
+          selectedFabric ? ` / Tela: ${selectedFabric}` : ''
+        }). Quisiera consultar detalles de stock, telas y entrega bonificada en ${location.city}, San Juan.`
+      : `¡Hola BenFlex! Estoy viendo en la tienda el "${product.name}" (Medida: ${selectedVariationName}${
+          selectedFabric ? ` / Tela: ${selectedFabric}` : ''
+        }). Quisiera cotizar el costo de envío a ${location.city}, ${location.province} (CP ${location.postalCode}).`
   );
   const whatsappHref = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${whatsappInquiryMsg}`;
 
@@ -405,50 +409,106 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </div>
               )}
 
-              {/* SELECTOR DE ENVÍO Y GEOLOCALIZACIÓN VISIBLE */}
-              <div
-                style={{
-                  padding: '1rem',
-                  borderRadius: '14px',
-                  backgroundColor: '#ecfdf5',
-                  border: '1px solid #a7f3d0',
-                  marginBottom: '1.75rem',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-                  <Truck size={22} color="#059669" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#065f46' }}>
-                        Envío a {location.city} ({location.postalCode})
+              {/* SELECTOR DE ENVÍO Y GEOLOCALIZACIÓN VISIBLE (SAN JUAN VS RESTO DEL PAÍS) */}
+              {location.isSanJuan ? (
+                <div
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '14px',
+                    backgroundColor: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    marginBottom: '1.75rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <Truck size={22} color="#059669" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#065f46' }}>
+                          Envío en San Juan: {location.city} (CP {location.postalCode})
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setModalOpen(true)}
+                          style={{
+                            fontSize: '0.78rem',
+                            color: '#047857',
+                            fontWeight: 700,
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          Cambiar CP
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setModalOpen(true)}
-                        style={{
-                          fontSize: '0.78rem',
-                          color: '#047857',
-                          fontWeight: 700,
-                          textDecoration: 'underline',
-                        }}
-                      >
-                        Cambiar CP
-                      </button>
-                    </div>
 
-                    <div style={{ fontSize: '0.82rem', color: '#047857', marginTop: '0.3rem' }}>
-                      Costo de flete:{' '}
-                      <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>
-                        ${shippingMockCost.toLocaleString('es-AR')}
-                      </span>{' '}
-                      → <strong>¡GRATIS / 100% Bonificado a tu zona!</strong>
-                    </div>
+                      <div style={{ fontSize: '0.82rem', color: '#047857', marginTop: '0.3rem' }}>
+                        Costo de flete:{' '}
+                        <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>
+                          ${shippingMockCost.toLocaleString('es-AR')}
+                        </span>{' '}
+                        → <strong>¡GRATIS / 100% Bonificado en San Juan!</strong>
+                      </div>
 
-                    <div style={{ fontSize: '0.75rem', color: '#065f46', marginTop: '0.4rem' }}>
-                      ✓ Opción de <strong>Retiro gratis en sucursal</strong> (Castaño Oeste y Conector Sur, Villa Krause, San Juan).
+                      <div style={{ fontSize: '0.75rem', color: '#065f46', marginTop: '0.4rem' }}>
+                        ✓ También podés elegir <strong>Retiro gratis en sucursal</strong> (Villa Krause, San Juan).
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div
+                  style={{
+                    padding: '1rem',
+                    borderRadius: '14px',
+                    backgroundColor: '#f0f9ff',
+                    border: '1px solid #bae6fd',
+                    marginBottom: '1.75rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <MapPin size={22} color="#0284c7" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0c4a6e' }}>
+                          Envío a {location.city}, {location.province} (CP {location.postalCode})
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setModalOpen(true)}
+                          style={{
+                            fontSize: '0.78rem',
+                            color: '#0284c7',
+                            fontWeight: 700,
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          Cambiar CP
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: '0.82rem', color: '#0369a1', marginTop: '0.3rem' }}>
+                        Costo de flete: <strong>A cotizar según transporte / localidad</strong> (Envío bonificado exclusivo dentro de San Juan).
+                      </div>
+
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <a
+                          href={whatsappHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            color: '#0284c7',
+                            textDecoration: 'underline',
+                          }}
+                        >
+                          → Consultar cotización de envío a {location.city} por WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* BOTONES DE ACCIÓN: AGREGAR AL CARRITO + WHATSAPP */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>

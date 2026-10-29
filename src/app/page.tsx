@@ -13,12 +13,11 @@ import {
   MessageCircle,
   ArrowRight,
   SlidersHorizontal,
-  Bed,
   CheckCircle,
   MapPin,
   Clock,
 } from 'lucide-react';
-import { ProductCategory, ProductTechnology, BENFLEX_CONTACT } from '@/types';
+import { BENFLEX_CONTACT } from '@/types';
 
 export default function HomePage() {
   const { products } = useProducts();
@@ -86,7 +85,7 @@ export default function HomePage() {
                   }}
                 >
                   <Store size={14} color="#38bdf8" />
-                  <span>Fábrica Directa & Showroom en Villa Krause, San Juan</span>
+                  <span>Fábrica Directa &amp; Showroom en Villa Krause, San Juan</span>
                 </div>
 
                 <a
@@ -132,7 +131,7 @@ export default function HomePage() {
                   maxWidth: '540px',
                 }}
               >
-                Colchones de alta densidad ortopédica (35 kg/m³) y resortes pocket con cero transferencia de movimiento. Comprá online con <strong>flete 100% bonificado</strong> y <strong>15% OFF por transferencia bancaria</strong>.
+                Colchones de alta densidad ortopédica (35 kg/m³) y resortes pocket con cero transferencia de movimiento. Comprá online con <strong>envío bonificado en todo San Juan</strong> (resto del país a cotizar) y <strong>15% OFF por transferencia bancaria</strong>.
               </p>
 
               {/* CTAs */}
@@ -146,7 +145,7 @@ export default function HomePage() {
                     borderRadius: '12px',
                     fontWeight: 700,
                     fontSize: '1rem',
-                    boxShadow: '0 8px 20px rgba(45, 90, 63, 0.3)',
+                    boxShadow: '0 8px 20px rgba(2, 132, 199, 0.25)',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.5rem',
@@ -180,7 +179,7 @@ export default function HomePage() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                   gap: '1rem',
                   paddingTop: '1.5rem',
                   borderTop: '1px solid #e2e8f0',
@@ -195,7 +194,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Truck size={20} color="var(--brand-sage)" />
                   <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Flete 100% Bonificado
+                    Envío Gratis (San Juan)
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -408,7 +407,7 @@ export default function HomePage() {
               <option value="all">Todas las tecnologías</option>
               <option value="alta_densidad">Espuma Alta Densidad (35 kg/m³)</option>
               <option value="resortes_pocket">Resortes Pocket Ensacados</option>
-              <option value="anti_desgarro">Pana / Lino Anti-Desgarro & Anti-Manchas</option>
+              <option value="anti_desgarro">Pana / Lino Anti-Desgarro &amp; Anti-Manchas</option>
               <option value="viscoelastica">Viscoelástica (Memory Foam)</option>
               <option value="espuma_inteligente">Espuma Inteligente Cervical</option>
               <option value="fibra_siliconada">Fibra Siliconada / Algodón 400 Hilos</option>
@@ -545,7 +544,7 @@ export default function HomePage() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.9rem', color: '#059669', fontWeight: 600 }}>
                     <CheckCircle size={18} />
-                    <span>Comprá online y retirá en el día sin costo</span>
+                    <span>Envío sin cargo en todo San Juan o retiro inmediato en sucursal</span>
                   </div>
                 </div>
 

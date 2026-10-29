@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   MapPin,
   Clock,
-  Phone,
   Mail,
   ShieldCheck,
   Truck,
@@ -18,7 +17,7 @@ import { BENFLEX_CONTACT, BENFLEX_BANK_INFO } from '@/types';
 
 export default function Footer() {
   const whatsappUrl = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
-    'Hola BenFlex, quisiera hacer una consulta sobre el showroom en San Juan y opciones de retiro.'
+    'Hola BenFlex, quisiera hacer una consulta sobre el showroom en San Juan y opciones de envío o retiro.'
   )}`;
 
   return (
@@ -64,9 +63,9 @@ export default function Footer() {
                 <Truck size={24} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Flete 100% Bonificado</div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Envío Gratis en San Juan</div>
                 <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                  Ahorrás el 10% de flete en todos tus pedidos
+                  Bonificado en todo San Juan • Resto del país a cotizar
                 </div>
               </div>
             </div>
@@ -302,27 +301,27 @@ export default function Footer() {
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: '#94a3b8' }}>
                 <li>
-                  <Link href="/#colchones-sommiers" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Colchones & Sommiers Ortopédicos
+                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
+                    Colchones &amp; Sommiers Ortopédicos
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#colchones-sommiers" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
+                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
                     Resortes Pocket Ensacados Parejas
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#sillones-sofas" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Sillones & Sofás Cama Anti-Desgarro
+                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
+                    Sillones &amp; Sofás Cama Anti-Desgarro
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#almohadas-confort" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
+                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
                     Almohadas Viscoelásticas y Cervicales
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#combos-benflex" style={{ transition: 'color 0.2s', display: 'inline-block', color: '#86efac' }}>
+                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block', color: '#86efac' }}>
                     Combos BenFlex con Almohadas de Regalo
                   </Link>
                 </li>

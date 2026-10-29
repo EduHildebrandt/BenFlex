@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import { useLocation } from '@/context/LocationContext';
+import { useLocation, isSanJuanPostalCode } from '@/context/LocationContext';
 import { useProducts } from '@/context/ProductContext';
 import {
   ShieldCheck,
@@ -60,7 +60,9 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Recálculos en tiempo real según método de pago
+  // Recálculos en tiempo real según método de pago y provincia de destino
+  const isDestinationSanJuan = deliveryMethod === 'showroom' || isSanJuanPostalCode(postalCode);
+  const estimatedSanJuanShipping = Math.round(subtotal * 0.1);
   const isTransfer = paymentMethod === 'transferencia';
   const transferDiscount = isTransfer ? Math.round(subtotal * 0.15) : 0;
   const finalTotal = subtotal - transferDiscount;
@@ -77,10 +79,10 @@ export default function CheckoutPage() {
   const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cp = e.target.value;
     setPostalCode(cp);
-    if (cp.length >= 4) {
-      updateByPostalCode(cp);
-      setCity(location.city);
-      setProvince(location.province);
+    if (cp.replace(/\D/g, '').length >= 4) {
+      const resolved = updateByPostalCode(cp);
+      setCity(resolved.city);
+      setProvince(resolved.province);
     }
   };
 
@@ -121,8 +123,8 @@ export default function CheckoutPage() {
       paymentMethod,
       items: cartItems,
       subtotal,
-      shippingOriginal,
-      shippingDiscount: shippingOriginal,
+      shippingOriginal: isDestinationSanJuan ? estimatedSanJuanShipping : 0,
+      shippingDiscount: isDestinationSanJuan ? estimatedSanJuanShipping : 0,
       shippingFinal: 0,
       transferDiscount,
       total: finalTotal,
@@ -352,12 +354,20 @@ export default function CheckoutPage() {
                         <Truck size={18} color="var(--brand-sage)" />
                         <span>Envío a Domicilio</span>
                       </div>
-                      <span className="badge-pill badge-bonificado" style={{ fontSize: '0.72rem' }}>
-                        100% Bonificado
-                      </span>
+                      {isSanJuanPostalCode(postalCode) ? (
+                        <span className="badge-pill badge-bonificado" style={{ fontSize: '0.72rem' }}>
+                          Bonificado (San Juan)
+                        </span>
+                      ) : (
+                        <span className="badge-pill badge-sage" style={{ fontSize: '0.72rem' }}>
+                          Flete a cotizar
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Entrega directa en tu domicilio. Flete bonificado a todo el país.
+                      {isSanJuanPostalCode(postalCode)
+                        ? 'Entrega directa sin cargo en todo San Juan.'
+                        : 'Bonificado en San Juan. Para otras provincias cotizamos el expreso al confirmar.'}
                     </div>
                   </button>
 
@@ -947,15 +957,25 @@ export default function CheckoutPage() {
                   <span>${subtotal.toLocaleString('es-AR')}</span>
                 </div>
 
-                {/* Flete bonificado */}
+                {/* Flete: Bonificado en San Juan o Showroom vs A cotizar resto del país */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Flete a {city} (10%)</span>
-                  <span style={{ color: '#059669', fontWeight: 700 }}>
-                    <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginRight: '6px', fontWeight: 400 }}>
-                      ${shippingOriginal.toLocaleString('es-AR')}
-                    </span>
-                    ¡GRATIS!
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {deliveryMethod === 'showroom'
+                      ? 'Retiro en Showroom Villa Krause'
+                      : `Envío a ${city || 'destino'}`}
                   </span>
+                  {deliveryMethod === 'showroom' ? (
+                    <span style={{ color: '#059669', fontWeight: 700 }}>¡GRATIS!</span>
+                  ) : isDestinationSanJuan ? (
+                    <span style={{ color: '#059669', fontWeight: 700 }}>
+                      <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginRight: '6px', fontWeight: 400 }}>
+                        ${estimatedSanJuanShipping.toLocaleString('es-AR')}
+                      </span>
+                      ¡GRATIS!
+                    </span>
+                  ) : (
+                    <span style={{ color: '#0284c7', fontWeight: 700 }}>A cotizar</span>
+                  )}
                 </div>
 
                 {/* Descuento por Transferencia */}
@@ -986,8 +1006,15 @@ export default function CheckoutPage() {
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
-                    ${finalTotal.toLocaleString('es-AR')}
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.65rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
+                      ${finalTotal.toLocaleString('es-AR')}
+                    </div>
+                    {!isDestinationSanJuan && (
+                      <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 600 }}>
+                        + envío a cotizar por WhatsApp
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { Product, CartItem } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
+import { useLocation } from '@/context/LocationContext';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -12,9 +13,10 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   subtotal: number;
-  shippingOriginal: number; // 10% del subtotal
-  shippingDiscount: number; // -100% del envio
-  shippingFinal: number; // $0 siempre bonificado
+  isShippingBonificado: boolean; // true dentro de San Juan, false resto del país (a cotizar)
+  shippingOriginal: number; // 10% estimado dentro de San Juan
+  shippingDiscount: number; // -100% dentro de San Juan
+  shippingFinal: number; // $0 en San Juan (resto del país se cotiza aparte)
   transferDiscount: number; // 15% del subtotal
   totalList: number; // Subtotal de lista
   totalTransfer: number; // Subtotal con 15% OFF
@@ -26,6 +28,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { location } = useLocation();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setCartOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -124,14 +127,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return cartItems.reduce((acc, item) => acc + item.subtotal, 0);
   }, [cartItems]);
 
-  // Flete ficticio del 10% bonificado al 100%
-  const shippingOriginal = useMemo(() => {
-    if (subtotal === 0) return 0;
-    return Math.round(subtotal * 0.1);
-  }, [subtotal]);
+  const isShippingBonificado = location.isSanJuan;
 
-  const shippingDiscount = shippingOriginal;
-  const shippingFinal = 0; // Bonificado
+  // Flete estimado del 10% bonificado al 100% dentro de San Juan; resto del país a cotizar
+  const shippingOriginal = useMemo(() => {
+    if (subtotal === 0 || !isShippingBonificado) return 0;
+    return Math.round(subtotal * 0.1);
+  }, [subtotal, isShippingBonificado]);
+
+  const shippingDiscount = isShippingBonificado ? shippingOriginal : 0;
+  const shippingFinal = 0;
 
   // Descuento exclusivo del 15% por transferencia
   const transferDiscount = useMemo(() => {
@@ -161,6 +166,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         cartCount,
         subtotal,
+        isShippingBonificado,
         shippingOriginal,
         shippingDiscount,
         shippingFinal,

@@ -322,7 +322,7 @@ export const BENFLEX_PRODUCTS: Product[] = [
       'Colchón Alta Densidad 35kg con Euro-Pillow viscoelástico',
       'Sommier de madera maciza con esquineros reforzados',
       '2 Almohadas Viscoelásticas Memory Foam de REGALO',
-      'Flete 100% bonificado con entrega coordinada en San Juan y todo el país',
+      'Flete 100% bonificado en todo San Juan (envíos al resto del país a cotizar)',
     ],
     image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=1000&q=80',
     badge: 'Ahorro Combo + Regalo',

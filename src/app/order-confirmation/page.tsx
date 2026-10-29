@@ -4,6 +4,7 @@ import React, { use, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
+import { isSanJuanPostalCode } from '@/context/LocationContext';
 import {
   CheckCircle,
   MessageCircle,
@@ -33,15 +34,19 @@ function OrderConfirmationContent() {
   };
 
   const total = order ? order.total : 493000;
+  const isFreeShippingOrder =
+    !order || order.deliveryMethod === 'showroom' || isSanJuanPostalCode(order.postalCode);
   const destination = order
     ? order.deliveryMethod === 'showroom'
       ? 'Retiro en Showroom Villa Krause'
-      : `${order.address}, ${order.city}`
+      : `${order.address}, ${order.city} (CP ${order.postalCode})`
     : 'San Juan';
 
-  // Mensaje URL encode preconfigurado solicitado
+  // Mensaje URL encode preconfigurado solicitado (diferenciando entrega bonificada en San Juan vs cotización fuera de San Juan)
   const whatsappMessage = encodeURIComponent(
-    `¡Hola BenFlex! Acabo de realizar el pedido #${orderId} por un total de $${total.toLocaleString('es-AR')}. Adjunto mi comprobante de transferencia para coordinar la entrega en ${destination}.`
+    isFreeShippingOrder
+      ? `¡Hola BenFlex! Acabo de realizar el pedido #${orderId} por un total de $${total.toLocaleString('es-AR')}. Adjunto mi comprobante de transferencia para coordinar la entrega en ${destination}.`
+      : `¡Hola BenFlex! Acabo de realizar el pedido #${orderId} por $${total.toLocaleString('es-AR')} (productos). Adjunto mi comprobante de transferencia y solicito cotizar el envío a ${destination}.`
   );
 
   const whatsappHref = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${whatsappMessage}`;
@@ -275,9 +280,15 @@ function OrderConfirmationContent() {
               <div>
                 <strong>Destino de entrega:</strong> {destination}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#059669', fontWeight: 700 }}>
-                <span>Costo de flete: 100% Bonificado ($0)</span>
-              </div>
+              {isFreeShippingOrder ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#059669', fontWeight: 700 }}>
+                  <span>Costo de flete: 100% Bonificado en San Juan ($0)</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0284c7', fontWeight: 700 }}>
+                  <span>Costo de flete: A cotizar por WhatsApp según localidad</span>
+                </div>
+              )}
               <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.65rem', marginTop: '0.35rem' }}>
                 <strong>Showroom Oficial:</strong> {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}, {BENFLEX_CONTACT.province}.
               </div>

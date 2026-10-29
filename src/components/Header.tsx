@@ -89,7 +89,7 @@ export default function Header() {
         <div className="container bf-topbar-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#86efac', fontWeight: 600 }}>
             <Sparkles size={12} />
-            <span>15% OFF Transferencia • Flete 100% Bonificado</span>
+            <span>15% OFF Transferencia • Flete Bonificado en San Juan</span>
           </div>
 
           <div className="bf-desktop-only" style={{ alignItems: 'center', gap: '0.85rem', opacity: 0.9 }}>
@@ -188,9 +188,13 @@ export default function Header() {
             <button
               onClick={() => setModalOpen(true)}
               className="bf-icon-btn bf-icon-btn-pill"
-              title={`Envío bonificado a ${location.city} (CP ${location.postalCode})`}
+              title={
+                location.isSanJuan
+                  ? `Envío 100% bonificado en ${location.city}, San Juan (CP ${location.postalCode})`
+                  : `Envío a ${location.city} (CP ${location.postalCode}) • Flete a cotizar`
+              }
             >
-              <MapPin size={14} color="var(--brand-sage)" />
+              <MapPin size={14} color={location.isSanJuan ? '#059669' : 'var(--brand-sage)'} />
               <span className="bf-collapsible-label">{location.city} ·</span>
               <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>
                 {location.postalCode}

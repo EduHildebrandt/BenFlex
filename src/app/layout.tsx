@@ -12,7 +12,7 @@ import WhatsAppFloatingButton from '@/components/WhatsAppFloatingButton';
 export const metadata: Metadata = {
   title: 'BenFlex | Confort, Salud Postural y Descanso Premium en San Juan',
   description:
-    'Especialistas en descanso y salud postural: colchones de alta densidad, resortes pocket, sommiers reforzados, sillones y almohadas inteligentes. Showroom en Villa Krause, San Juan. Envíos bonificados y 15% OFF por transferencia.',
+    'Especialistas en descanso y salud postural: colchones de alta densidad, resortes pocket, sommiers reforzados, sillones y almohadas inteligentes. Showroom en Villa Krause, San Juan. Envíos bonificados en San Juan (resto del país a cotizar) y 15% OFF por transferencia.',
   keywords:
     'colchones san juan, sommiers villa krause, benflex descanso, colchon alta densidad, colchon resortes pocket, sillones sofacama san juan, almohadas viscoelasticas',
 };

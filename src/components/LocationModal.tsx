@@ -1,15 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useLocation } from '@/context/LocationContext';
-import { MapPin, X, Check, Truck, Store } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, resolvePostalCode } from '@/context/LocationContext';
+import { MapPin, X, Check, Truck, Store, MessageCircle } from 'lucide-react';
 import { BENFLEX_CONTACT } from '@/types';
 
 export default function LocationModal() {
   const { location, updateByPostalCode, isModalOpen, setModalOpen } = useLocation();
   const [inputCp, setInputCp] = useState(location.postalCode);
 
+  useEffect(() => {
+    setInputCp(location.postalCode);
+  }, [location.postalCode, isModalOpen]);
+
   if (!isModalOpen) return null;
+
+  const previewLoc = resolvePostalCode(inputCp || location.postalCode);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,31 +95,50 @@ export default function LocationModal() {
               ¿A dónde enviamos tu compra?
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Calculamos los tiempos y te aplicamos el flete 100% bonificado
+              Ingresá tu Código Postal para ver la modalidad de envío en tu zona
             </p>
           </div>
         </div>
 
-        {/* Banner de flete bonificado */}
-        <div
-          style={{
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #a7f3d0',
-            borderRadius: '12px',
-            padding: '0.85rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            margin: '1rem 0 1.25rem 0',
-          }}
-        >
-          <Truck size={20} style={{ color: '#059669', flexShrink: 0 }} />
-          <div style={{ fontSize: '0.82rem', color: '#065f46' }}>
-            <span style={{ fontWeight: 700 }}>¡Promoción Exclusiva BenFlex!</span> Costo de flete{' '}
-            <span style={{ textDecoration: 'line-through', opacity: 0.8 }}>10% del total</span>{' '}
-            → <strong>¡GRATIS / 100% Bonificado a tu zona!</strong>
+        {/* Estado dinámico según si el CP es de San Juan o fuera de San Juan */}
+        {previewLoc.isSanJuan ? (
+          <div
+            style={{
+              backgroundColor: '#ecfdf5',
+              border: '1px solid #a7f3d0',
+              borderRadius: '12px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              margin: '1rem 0 1.25rem 0',
+            }}
+          >
+            <Truck size={20} style={{ color: '#059669', flexShrink: 0 }} />
+            <div style={{ fontSize: '0.82rem', color: '#065f46' }}>
+              <span style={{ fontWeight: 700 }}>¡Zona San Juan ({previewLoc.city})!</span> Contás con{' '}
+              <strong>¡Flete 100% Bonificado sin cargo!</strong>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div
+            style={{
+              backgroundColor: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: '12px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              margin: '1rem 0 1.25rem 0',
+            }}
+          >
+            <MessageCircle size={20} style={{ color: '#0284c7', flexShrink: 0 }} />
+            <div style={{ fontSize: '0.82rem', color: '#0c4a6e' }}>
+              <span style={{ fontWeight: 700 }}>Envío fuera de San Juan ({previewLoc.city}):</span> Los envíos bonificados aplican dentro de San Juan. Para tu localidad, <strong>cotizamos el flete a medida</strong> según transporte.
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
           <input
@@ -150,8 +175,8 @@ export default function LocationModal() {
         </form>
 
         <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-          <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Accesos rápidos frecuentes:
+          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: 700 }}>
+            Zonas frecuentes:
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
             <button
@@ -161,17 +186,17 @@ export default function LocationModal() {
                 textAlign: 'left',
                 padding: '0.6rem 0.8rem',
                 borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: location.postalCode === '5425' ? 'var(--bg-sage-light)' : '#f8fafc',
-                fontSize: '0.82rem',
+                border: '1px solid #a7f3d0',
+                backgroundColor: location.postalCode === '5425' ? '#ecfdf5' : '#f8fafc',
+                fontSize: '0.8rem',
                 color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span>⭐ Villa Krause (San Juan)</span>
-              {location.postalCode === '5425' && <Check size={14} color="var(--brand-sage)" />}
+              <span>⭐ Villa Krause (Gratis)</span>
+              {location.postalCode === '5425' && <Check size={14} color="#059669" />}
             </button>
 
             <button
@@ -181,17 +206,17 @@ export default function LocationModal() {
                 textAlign: 'left',
                 padding: '0.6rem 0.8rem',
                 borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: location.postalCode === '5400' ? 'var(--bg-sage-light)' : '#f8fafc',
-                fontSize: '0.82rem',
+                border: '1px solid #a7f3d0',
+                backgroundColor: location.postalCode === '5400' ? '#ecfdf5' : '#f8fafc',
+                fontSize: '0.8rem',
                 color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span>San Juan Capital (5400)</span>
-              {location.postalCode === '5400' && <Check size={14} color="var(--brand-sage)" />}
+              <span>San Juan Cap. (Gratis)</span>
+              {location.postalCode === '5400' && <Check size={14} color="#059669" />}
             </button>
 
             <button
@@ -203,14 +228,14 @@ export default function LocationModal() {
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',
                 backgroundColor: location.postalCode === '5500' ? 'var(--bg-sage-light)' : '#f8fafc',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span>Mendoza Capital (5500)</span>
+              <span>Mendoza (A cotizar)</span>
               {location.postalCode === '5500' && <Check size={14} color="var(--brand-sage)" />}
             </button>
 
@@ -223,14 +248,14 @@ export default function LocationModal() {
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',
                 backgroundColor: location.postalCode === '1000' ? 'var(--bg-sage-light)' : '#f8fafc',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span>CABA / Bs As (1000)</span>
+              <span>CABA / Bs As (A cotizar)</span>
               {location.postalCode === '1000' && <Check size={14} color="var(--brand-sage)" />}
             </button>
           </div>

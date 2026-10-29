@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { useLocation } from '@/context/LocationContext';
 import {
   X,
   Trash2,
@@ -13,6 +14,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  MapPin,
 } from 'lucide-react';
 
 export default function CartDrawer() {
@@ -23,12 +25,14 @@ export default function CartDrawer() {
     updateQuantity,
     removeFromCart,
     subtotal,
+    isShippingBonificado,
     shippingOriginal,
     transferDiscount,
     totalTransfer,
     crossSellItems,
     addToCart,
   } = useCart();
+  const { location, setModalOpen } = useLocation();
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -113,28 +117,78 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* Barra de Flete Bonificado */}
-        <div
-          style={{
-            backgroundColor: '#ecfdf5',
-            borderBottom: '1px solid #a7f3d0',
-            padding: '0.75rem 1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.65rem',
-            fontSize: '0.82rem',
-            color: '#065f46',
-          }}
-        >
-          <Truck size={18} color="#059669" style={{ flexShrink: 0 }} />
-          <div>
-            <strong>¡Flete 100% Bonificado!</strong> Te ahorrás{' '}
-            <span style={{ textDecoration: 'line-through' }}>
-              ${shippingOriginal.toLocaleString('es-AR')}
-            </span>{' '}
-            en el envío.
+        {/* Barra de Estado de Envío según Ubicación (San Juan vs Resto del País) */}
+        {isShippingBonificado ? (
+          <div
+            style={{
+              backgroundColor: '#ecfdf5',
+              borderBottom: '1px solid #a7f3d0',
+              padding: '0.75rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.65rem',
+              fontSize: '0.8rem',
+              color: '#065f46',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Truck size={18} color="#059669" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>¡Envío Bonificado en San Juan!</strong> ({location.city})
+                {shippingOriginal > 0 && (
+                  <>
+                    {' '}• Ahorrás{' '}
+                    <span style={{ textDecoration: 'line-through' }}>
+                      ${shippingOriginal.toLocaleString('es-AR')}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCartOpen(false);
+                setModalOpen(true);
+              }}
+              style={{ fontSize: '0.74rem', fontWeight: 700, color: '#047857', textDecoration: 'underline', flexShrink: 0 }}
+            >
+              CP {location.postalCode}
+            </button>
           </div>
-        </div>
+        ) : (
+          <div
+            style={{
+              backgroundColor: '#f0f9ff',
+              borderBottom: '1px solid #bae6fd',
+              padding: '0.75rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.65rem',
+              fontSize: '0.8rem',
+              color: '#0c4a6e',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <MapPin size={18} color="#0284c7" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Envío a {location.city}:</strong> Flete a cotizar (Bonificado en San Juan)
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCartOpen(false);
+                setModalOpen(true);
+              }}
+              style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0284c7', textDecoration: 'underline', flexShrink: 0 }}
+            >
+              CP {location.postalCode}
+            </button>
+          </div>
+        )}
 
         {/* Lista de Productos o Carrito Vacío */}
         <div
@@ -178,7 +232,7 @@ export default function CartDrawer() {
                 Tu carrito está vacío
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '280px' }}>
-                Descubrí nuestros colchones y sets con flete bonificado y 15% OFF por transferencia.
+                Descubrí nuestros colchones y sets con envío bonificado en San Juan y 15% OFF por transferencia.
               </p>
               <button
                 onClick={() => setCartOpen(false)}
@@ -427,15 +481,23 @@ export default function CartDrawer() {
                 <span>${subtotal.toLocaleString('es-AR')}</span>
               </div>
 
-              {/* Flete bonificado */}
+              {/* Flete: Bonificado en San Juan vs A cotizar resto del país */}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Costo de flete estimado (10%)</span>
-                <span style={{ color: '#059669', fontWeight: 700 }}>
-                  <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginRight: '6px', fontWeight: 400 }}>
-                    ${shippingOriginal.toLocaleString('es-AR')}
-                  </span>
-                  ¡GRATIS!
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  Envío a {location.city} ({location.postalCode})
                 </span>
+                {isShippingBonificado ? (
+                  <span style={{ color: '#059669', fontWeight: 700 }}>
+                    <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginRight: '6px', fontWeight: 400 }}>
+                      ${shippingOriginal.toLocaleString('es-AR')}
+                    </span>
+                    ¡GRATIS!
+                  </span>
+                ) : (
+                  <span style={{ color: '#0284c7', fontWeight: 700 }}>
+                    A cotizar
+                  </span>
+                )}
               </div>
 
               {/* Descuento por Transferencia */}
@@ -466,6 +528,11 @@ export default function CartDrawer() {
                   <div style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
                     ${totalTransfer.toLocaleString('es-AR')}
                   </div>
+                  {!isShippingBonificado && (
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      + flete a cotizar
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -485,7 +552,7 @@ export default function CartDrawer() {
                 borderRadius: '12px',
                 fontWeight: 800,
                 fontSize: '1rem',
-                boxShadow: '0 6px 20px rgba(45, 90, 63, 0.35)',
+                boxShadow: '0 6px 20px rgba(2, 132, 199, 0.3)',
                 transition: 'background-color 0.2s',
               }}
             >
@@ -505,7 +572,11 @@ export default function CartDrawer() {
               }}
             >
               <ShieldCheck size={14} color="var(--brand-sage)" />
-              <span>Compra 100% segura • Retiro en Showroom o Envío Bonificado</span>
+              <span>
+                {isShippingBonificado
+                  ? 'Envío Bonificado en San Juan • Retiro Gratis en Showroom'
+                  : 'Retiro Gratis en San Juan • Envíos al país a cotizar'}
+              </span>
             </div>
           </div>
         )}

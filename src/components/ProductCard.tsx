@@ -4,7 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
-import { Star, Truck, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { useLocation } from '@/context/LocationContext';
+import { Star, Truck, ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { location } = useLocation();
   const transferPrice = Math.round(product.basePrice * 0.85);
   const installment12 = Math.round(product.basePrice / 12);
 
@@ -48,13 +50,23 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.badge}
           </span>
         )}
-        <span
-          className="badge-pill badge-bonificado"
-          style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '3px' }}
-        >
-          <Truck size={12} />
-          Flete 100% Bonificado
-        </span>
+        {location.isSanJuan ? (
+          <span
+            className="badge-pill badge-bonificado"
+            style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '3px' }}
+          >
+            <Truck size={12} />
+            Envío Gratis en San Juan
+          </span>
+        ) : (
+          <span
+            className="badge-pill badge-sage"
+            style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '3px' }}
+          >
+            <Truck size={12} />
+            Envío a cotizar
+          </span>
+        )}
       </div>
 
       {/* Product Image */}

@@ -381,7 +381,7 @@ export default function SleepQuiz() {
                       Tecnología: {recommendedProduct.technologyLabel}
                     </span>
                     <span className="badge-pill badge-bonificado">
-                      Flete 100% Bonificado
+                      Envío Gratis en San Juan
                     </span>
                   </div>
                   <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1rem' }}>
