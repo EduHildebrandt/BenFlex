@@ -14,8 +14,10 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { location } = useLocation();
-  const transferPrice = Math.round(product.basePrice * 0.85);
+  const discountPct = product.transferDiscountPercent ?? 15;
+  const transferPrice = Math.round(product.basePrice * (1 - discountPct / 100));
   const installment12 = Math.round(product.basePrice / 12);
+  const isOutOfStock = product.stock <= 0;
 
   return (
     <div
@@ -42,6 +44,19 @@ export default function ProductCard({ product }: ProductCardProps) {
           gap: '6px',
         }}
       >
+        {isOutOfStock && (
+          <span
+            className="badge-pill"
+            style={{
+              fontSize: '0.72rem',
+              backgroundColor: '#fee2e2',
+              color: '#991b1b',
+              border: '1px solid #fecaca',
+            }}
+          >
+            Sin Stock Temporal
+          </span>
+        )}
         {product.badge && (
           <span
             className="badge-pill badge-navy"
@@ -188,16 +203,20 @@ export default function ProductCard({ product }: ProductCardProps) {
             marginBottom: '1rem',
           }}
         >
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-            Precio de lista: ${product.basePrice.toLocaleString('es-AR')}
-          </div>
+          {discountPct > 0 && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+              Precio de lista: ${product.basePrice.toLocaleString('es-AR')}
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
             <span style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
               ${transferPrice.toLocaleString('es-AR')}
             </span>
-            <span className="badge-pill badge-discount" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
-              15% OFF Transf.
-            </span>
+            {discountPct > 0 && (
+              <span className="badge-pill badge-discount" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>
+                {discountPct}% OFF Transf.
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
             o 12 cuotas de <strong>${installment12.toLocaleString('es-AR')}</strong>
@@ -207,18 +226,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Actions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem' }}>
           <button
-            onClick={() => addToCart(product)}
+            onClick={() => !isOutOfStock && addToCart(product)}
+            disabled={isOutOfStock}
             style={{
-              backgroundColor: 'var(--brand-sage)',
-              color: '#ffffff',
+              backgroundColor: isOutOfStock ? '#cbd5e1' : 'var(--brand-sage)',
+              color: isOutOfStock ? '#64748b' : '#ffffff',
               padding: '0.65rem 0.85rem',
               borderRadius: '8px',
               fontWeight: 700,
               fontSize: '0.85rem',
+              cursor: isOutOfStock ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.2s',
             }}
           >
-            Agregar al Carrito
+            {isOutOfStock ? 'Sin Stock' : 'Agregar al Carrito'}
           </button>
           <Link
             href={`/product/${product.id}`}

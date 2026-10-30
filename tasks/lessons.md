@@ -1,56 +1,14 @@
-# Lecciones Aprendidas y Patrones de Arquitectura (tasks/lessons.md)
+# Lecciones Aprendidas & Reglas de Ingeniería (BenFlex)
 
-Este documento registra los patrones arquitectónicos críticos, problemas de entorno resueltos y decisiones de diseño implementadas durante el desarrollo del sistema de reservas de Fútbol 5.
+## 1. Seguridad de E-Commerce & Postura OWASP / ASVS
+- **Cero Confianza en Precios del Cliente (Zero Client Trust):** Nunca aceptar `total`, `subtotal`, `unitPrice`, `transferDiscount` ni `status` desde el payload HTTP del navegador en `POST /api/orders`. El servidor siempre debe recalcular importes leyendo `base_price`, `variations` y `transfer_discount_percent` desde PostgreSQL dentro de la transacción.
+- **Control de Acceso Administrativo (`HttpOnly` + `SameSite=Strict`):** Jamás declarar contraseñas ni claves en archivos con `'use client'` ni variables `NEXT_PUBLIC_*`. Validar credenciales exclusivamente en Route Handlers usando `crypto.timingSafeEqual` y cookies firmadas con HMAC-SHA256.
+- **Protección de PII y Anti-IDOR (`BOLA`):** `GET /api/orders` solo debe responder a sesiones administrativas autenticadas. Para la pantalla pública `/order-confirmation`, utilizar identificadores no secuenciales (`BF-<HEX>`) combinados con un `accessToken` criptográfico de 128 bits verificado en tiempo constante en `GET /api/orders/[id]?token=...`.
+- **Cumplimiento PCI-DSS SAQ-A:** Nunca renderizar `<input>` propios para números de tarjeta (PAN), vencimiento o CVV en formularios propios; delegar siempre la captura a links/pasarelas oficiales encriptadas.
+- **Defensa en Profundidad en Supabase:** Toda tabla en el esquema `public` (`benflex_products`, `benflex_orders`, `benflex_inquiries`) debe tener `ENABLE ROW LEVEL SECURITY` activo para impedir acceso directo no autorizado vía PostgREST (`anon` key).
 
----
-
-## 1. Entorno de Ejecución en Unidades Virtuales (Google Drive / `Z:\`)
-- **Problema Detectado**: Ejecutar comandos como `npm install` masivos dentro del montaje virtual de Google Drive (`Z:\Mi unidad\...`) produce bloqueos de archivos por parte del proceso de sincronización en la nube (`TAR_ENTRY_ERROR EBADF` o `EPERM: operation not permitted`).
-- **Regla & Solución**: 
-  - Evitar paquetes npm voluminosos o innecesarios cuando se puede implementar la solución de forma nativa.
-  - Para Mercado Pago, usar llamadas nativas con `fetch` contra los endpoints de la API REST oficial (`https://api.mercadopago.com/checkout/preferences`) en lugar del SDK pesado `mercadopago`. Esto garantiza cero dependencias vulnerables a locks de archivos, menor latencia y portabilidad total.
-  - Cuando se requiera descargar paquetes o scripts temporales, utilizar el directorio de almacenamiento temporal del sistema local (`%TEMP%`) y no saturar la carpeta de sincronización continua.
-  - Aprovechar Node 24 (`node --experimental-strip-types`) para ejecutar scripts de validación y utilitarios TypeScript sin requerir transpilación o herramientas pesadas como `ts-node` o `tsx`.
-
----
-
-## 2. Prevención de Colisiones de Turnos (Anti-Concurrency Safe)
-- **Problema**: Dos usuarios seleccionando simultáneamente el horario de mayor demanda (ej. 21:00 hs viernes) e iniciando el pago a la vez.
-- **Patrón Aplicado**:
-  - **Bloqueo `HOLD` Transitorio**: Cuando el cliente avanza al checkout, se crea inmediatamente un registro en estado `HOLD` con un timestamp de expiración a 20 minutos (`expires_at`).
-  - **Doble Verificación Atómica**: Antes de insertar el `HOLD`, se evalúa si ya existe otro registro en `CONFIRMED`, `PENDING_APPROVAL` o `HOLD` con `expires_at > NOW()`.
-  - **Lazy & Cron Auto-Release**: Se implementa un procedimiento de auto-liberación (`releaseExpiredHolds`) que corre de manera periódica y también antes de calcular la grilla de disponibilidad del día, garantizando que los turnos abandonados vuelvan automáticamente a la oferta pública.
-
----
-
-## 3. Imputación de Pagos Parciales (Seña) vs Pago Completo
-- **Patrón de Negocio**:
-  - `total_amount`: Tarifa calculada según horario (Diurno $24.000 vs Nocturno $30.000 a partir de las 18:00 hs con iluminación).
-  - `deposit_amount`: Porcentaje de seña configurable (por defecto 30%).
-  - Al abonar seña vía Mercado Pago o Transferencia, la reserva pasa a estado `CONFIRMED` y `payment_status = PARTIAL_PAID`.
-  - Se mantiene explícito el campo `remaining_balance = total_amount - paid_amount` para la liquidación final presencial en el mostrador antes del pitazo inicial.
-
----
-
-## 4. Estrategia de Fallback Resiliente (Dual Engine DB)
-- **Patrón de Base de Datos**:
-  - El sistema cuenta con soporte primario para Supabase / PostgreSQL con esquemas relacionales, constraints de unicidad y RLS.
-  - Se integró un **In-Memory & JSON Resilient Storage** automático en los servicios (`src/services/`) que se activa cuando las credenciales de Supabase no están configuradas en `.env.local`.
-  - Esto asegura que el sistema funcione perfectamente de forma local y en entornos de staging/testing sin romper la experiencia del desarrollador o del evaluador.
-
----
-
-## 5. Diseño y Experiencia de Usuario (UX Deportivo / Glassmorphism)
-- **Paleta de Identidad**: Estética nocturna de estadio (fondo oscuro degradado con acentos verde césped `#10b981` y acentos ámbar `#f59e0b` para horarios nocturnos con luz artificial).
-- **Voucher Compartible por WhatsApp**: Generación de mensaje codificado para compartir la reserva y el saldo a pagar con el grupo de amigos en un solo toque.
-
-
----
-
-## 6. Arquitectura E-Commerce de Descanso y Conversión (Benflex)
-- **Reparación Programática de `node_modules` en Unidades Virtuales**: Cuando npm queda interrumpido por sincronización de Google Drive y deja carpetas `.pkg-hash`, en lugar de relanzar un `npm install` pesado, restaurar con `fs.renameSync` los directorios `.pkg-hash` hacia sus rutas definitivas (`node_modules/next`, `node_modules/typescript`) resuelve el problema en milisegundos sin colisiones de IO.
-- **Compatibilidad `import type` en Node 24 + Next.js 16**: Usar siempre `import type { ... }` para interfaces puras de TypeScript permite ejecutar suites de validación directas con `node --experimental-strip-types` sin errores `ERR_MODULE_NOT_FOUND` ni `SyntaxError: does not provide an export`.
-- **Psicología de Conversión en E-Commerce de Ticket Alto (Colchones y Sillones)**:
-  - **Doble Anclaje de Precio**: Mostrar en primer plano el precio con **15% OFF por Transferencia Bancaria** junto al ahorro nominal en pesos, contrastado con el precio de lista en hasta 12 cuotas.
-  - **Transparencia de Flete Bonificado**: Calcular el 10% del valor del carrito como costo logístico estimado y tacharlo explícitamente (`Costo de flete: $XX.XXX → ¡GRATIS / 100% Bonificado!`) reduce drásticamente el abandono en el checkout.
-  - **Cierre Asistido por WhatsApp**: En rubros de descanso donde el cliente suele consultar medidas, firmeza o coordinar la entrega en su domicilio, el botón post-checkout con mensaje URL-encoded (`#order_id`, `$total`, `{direccion}`) acelera la conciliación de transferencias bancarias.
+## 2. Consistencia Transaccional, Stock y Redondeo en Next.js 16
+- **Concurrencia de Stock sin Deadlocks:** Agrupar cantidades por `productId`, ordenar los IDs alfabéticamente antes de ejecutar `SELECT ... FOR UPDATE`, descontar stock dentro de `BEGIN ... COMMIT` y restaurarlo automáticamente si el pedido pasa a `CANCELADO`.
+- **Idempotencia en Checkout:** Enviar un `idempotencyKey` (`UUID`) único por intento de compra y esperar (`await`) la confirmación `201/200` del servidor antes de vaciar el carrito (`clearCart()`), evitando pérdidas de carrito ante errores de red o falta de stock (`HTTP 409`).
+- **Redondeo Exacto en Pesos (ARS):** Calcular el descuento por transferencia a nivel unitario (`unitTransfer = Math.round(unitPrice * (1 - pct / 100))`) tanto en el carrito como en PostgreSQL para asegurar `$0` de diferencia entre la suma de líneas y el total final.
+- **Frontera Server/Client en App Router:** No importar funciones utilitarias desde módulos marcados con `'use client'` dentro de código de servidor (`src/lib/db.ts`); mantener helpers puros en módulos de servidor o compartidos sin `'use client'`.

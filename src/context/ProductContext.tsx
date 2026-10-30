@@ -1,20 +1,26 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, Order, ProductCategory } from '@/types';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Product, Order, OrderStatus, CreateOrderPayload } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 
 interface ProductContextType {
   products: Product[];
   orders: Order[];
+  isLoading: boolean;
   dbConnected: boolean;
+  refreshProducts: () => Promise<void>;
+  fetchAdminOrders: () => Promise<{ success: boolean; orders?: Order[]; error?: string }>;
+  saveProduct: (product: Product) => Promise<{ success: boolean; product?: Product; error?: string }>;
+  deleteProduct: (id: string) => Promise<{ success: boolean; error?: string }>;
+  submitOrder: (
+    payload: CreateOrderPayload
+  ) => Promise<{ success: boolean; order?: Order; accessToken?: string; error?: string }>;
+  updateOrderStatus: (
+    orderId: string,
+    status: OrderStatus
+  ) => Promise<{ success: boolean; order?: Order; error?: string }>;
   getProductById: (id: string) => Product | undefined;
-  getProductsByCategory: (category: ProductCategory) => Product[];
-  saveProduct: (product: Product) => Promise<boolean>;
-  deleteProduct: (id: string) => Promise<boolean>;
-  placeOrder: (order: Order) => void;
-  updateOrderStatus: (orderId: string, status: Order['status']) => void;
-  getOrderById: (orderId: string) => Order | undefined;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -22,148 +28,172 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(BENFLEX_PRODUCTS);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [dbConnected, setDbConnected] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dbConnected, setDbConnected] = useState(false);
 
-  // Sincronizar productos y pedidos desde Supabase PostgreSQL (/api/products y /api/orders)
-  useEffect(() => {
+  const refreshProducts = useCallback(async () => {
     try {
-      const stored = localStorage.getItem('benflex_orders_v2');
-      if (stored) {
-        setOrders(JSON.parse(stored));
+      const pRes = await fetch('/api/products', { cache: 'no-store' });
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        if (Array.isArray(pData.products) && pData.products.length > 0) {
+          setProducts(pData.products);
+        }
+        setDbConnected(pData.source === 'supabase');
       }
     } catch (e) {
-      console.warn('Error reading stored orders:', e);
+      console.warn('No se pudo conectar al catálogo remoto, usando catálogo base:', e);
+    } finally {
+      setIsLoading(false);
     }
-
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
-          setProducts(data.products);
-          if (data.source === 'supabase_postgres') {
-            setDbConnected(true);
-          }
-        }
-      })
-      .catch((err) => console.warn('Could not sync products from API:', err));
-
-    fetch('/api/orders')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.orders)) {
-          setOrders(data.orders);
-          setDbConnected(true);
-          try {
-            localStorage.setItem('benflex_orders_v2', JSON.stringify(data.orders));
-          } catch (e) {
-            // ignore
-          }
-        }
-      })
-      .catch((err) => console.warn('Could not sync orders from API:', err));
   }, []);
 
-  const saveProduct = async (product: Product): Promise<boolean> => {
-    setProducts((prev) => {
-      const exists = prev.some((p) => p.id === product.id);
-      if (exists) {
-        return prev.map((p) => (p.id === product.id ? product : p));
-      }
-      return [product, ...prev];
-    });
+  // En el montaje público SOLO cargamos el catálogo activo (nunca datos PII de pedidos)
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
 
+  // Carga exclusiva para el panel administrativo autenticado (/admin)
+  const fetchAdminOrders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'No autorizado' };
+      }
+      if (Array.isArray(data.orders)) {
+        setOrders(data.orders);
+      }
+      return { success: true, orders: data.orders || [] };
+    } catch {
+      return { success: false, error: 'Error de red al consultar pedidos.' };
+    }
+  }, []);
+
+  const saveProduct = async (
+    product: Product
+  ): Promise<{ success: boolean; product?: Product; error?: string }> => {
     try {
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(product),
       });
       const data = await res.json();
-      return Boolean(data.success);
-    } catch (e) {
-      console.error('Error saving product to Supabase:', e);
-      return false;
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'No se pudo guardar el producto.' };
+      }
+
+      const saved: Product = data.product;
+      setProducts((prev) => {
+        const exists = prev.some((p) => p.id === saved.id);
+        return exists ? prev.map((p) => (p.id === saved.id ? saved : p)) : [...prev, saved];
+      });
+      return { success: true, product: saved };
+    } catch {
+      return { success: false, error: 'Error de conexión al guardar el producto.' };
     }
   };
 
-  const deleteProduct = async (id: string): Promise<boolean> => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-
+  const deleteProduct = async (id: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch('/api/products', {
+      const res = await fetch(`/api/products?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        credentials: 'same-origin',
       });
       const data = await res.json();
-      return Boolean(data.success);
-    } catch (e) {
-      console.error('Error deleting product from Supabase:', e);
-      return false;
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'No se pudo eliminar el producto.' };
+      }
+
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Error de conexión al eliminar el producto.' };
     }
   };
 
-  const placeOrder = (order: Order) => {
-    setOrders((prev) => {
-      const updated = [order, ...prev];
-      try {
-        localStorage.setItem('benflex_orders_v2', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Error saving order locally:', e);
+  const submitOrder = async (
+    payload: CreateOrderPayload
+  ): Promise<{ success: boolean; order?: Order; accessToken?: string; error?: string }> => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        // Refrescamos productos por si hubo cambio de stock concurrente
+        await refreshProducts();
+        return {
+          success: false,
+          error: data.error || 'No se pudo confirmar el pedido. Verificá los datos e intentá nuevamente.',
+        };
       }
-      return updated;
-    });
 
-    fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order),
-    }).catch((err) => console.error('Error persisting order to Supabase:', err));
+      // Refrescamos el catálogo para reflejar de inmediato el nuevo stock descontado
+      await refreshProducts();
+      return {
+        success: true,
+        order: data.order as Order,
+        accessToken: data.accessToken as string,
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor. Tu carrito sigue intacto, intentá nuevamente.',
+      };
+    }
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    setOrders((prev) => {
-      const updated = prev.map((o) => (o.id === orderId ? { ...o, status } : o));
-      try {
-        localStorage.setItem('benflex_orders_v2', JSON.stringify(updated));
-      } catch (e) {
-        // ignore
+  const updateOrderStatus = async (
+    orderId: string,
+    status: OrderStatus
+  ): Promise<{ success: boolean; order?: Order; error?: string }> => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ orderId, status }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'No se pudo actualizar el estado.' };
       }
-      return updated;
-    });
 
-    fetch('/api/orders', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, status }),
-    }).catch((err) => console.error('Error updating order status in Supabase:', err));
+      const updated: Order = data.order;
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      // Si se canceló o reactivó un pedido, el stock en Supabase cambió; refrescamos productos
+      await refreshProducts();
+      return { success: true, order: updated };
+    } catch {
+      return { success: false, error: 'Error de red al actualizar el estado del pedido.' };
+    }
   };
 
-  const getProductById = (id: string) => {
-    return products.find((p) => p.id === id || p.slug === id);
-  };
-
-  const getProductsByCategory = (cat: ProductCategory) => {
-    return products.filter((p) => p.category === cat);
-  };
-
-  const getOrderById = (orderId: string) => {
-    return orders.find((o) => o.id === orderId);
-  };
+  const getProductById = (id: string) => products.find((p) => p.id === id);
 
   return (
     <ProductContext.Provider
       value={{
         products,
         orders,
+        isLoading,
         dbConnected,
-        getProductById,
-        getProductsByCategory,
+        refreshProducts,
+        fetchAdminOrders,
         saveProduct,
         deleteProduct,
-        placeOrder,
+        submitOrder,
         updateOrderStatus,
-        getOrderById,
+        getProductById,
       }}
     >
       {children}

@@ -83,9 +83,11 @@ export default function ProductPage({ params }: ProductPageProps) {
   // Cálculo del precio según la variación seleccionada
   const activeVariation = product.variations.find((v) => v.name === selectedVariationName);
   const currentPrice = product.basePrice + (activeVariation ? activeVariation.priceModifier : 0);
-  const transferPrice = Math.round(currentPrice * 0.85);
+  const discountPct = product.transferDiscountPercent ?? 15;
+  const transferPrice = Math.round(currentPrice * (1 - discountPct / 100));
   const transferSavings = currentPrice - transferPrice;
   const shippingMockCost = Math.round(currentPrice * 0.1);
+  const isOutOfStock = product.stock <= 0;
 
   // Cuotas
   const cuota3 = Math.round(currentPrice / 3);
@@ -93,9 +95,12 @@ export default function ProductPage({ params }: ProductPageProps) {
   const cuota12 = Math.round(currentPrice / 12);
 
   const handleAddToCart = () => {
-    addToCart(product, selectedVariationName, quantity);
-    setAddedAnimation(true);
-    setTimeout(() => setAddedAnimation(false), 2000);
+    if (isOutOfStock) return;
+    const added = addToCart(product, selectedVariationName, quantity, selectedFabric || undefined);
+    if (added) {
+      setAddedAnimation(true);
+      setTimeout(() => setAddedAnimation(false), 2000);
+    }
   };
 
   // WhatsApp preconfigurado para dudas de medidas, telas o cotización de envío
@@ -283,11 +288,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                   marginBottom: '1.5rem',
                 }}
               >
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                  Precio de Lista: ${currentPrice.toLocaleString('es-AR')}
-                </div>
+                {discountPct > 0 && (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                    Precio de Lista: ${currentPrice.toLocaleString('es-AR')}
+                  </div>
+                )}
 
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', margin: '0.25rem 0' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', margin: '0.25rem 0', flexWrap: 'wrap' }}>
                   <span
                     style={{
                       fontSize: '2.4rem',
@@ -298,14 +305,18 @@ export default function ProductPage({ params }: ProductPageProps) {
                   >
                     ${transferPrice.toLocaleString('es-AR')}
                   </span>
-                  <span className="badge-pill badge-discount" style={{ fontSize: '0.85rem' }}>
-                    15% OFF Transferencia
-                  </span>
+                  {discountPct > 0 && (
+                    <span className="badge-pill badge-discount" style={{ fontSize: '0.85rem' }}>
+                      {discountPct}% OFF Transferencia
+                    </span>
+                  )}
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: 600, marginBottom: '0.75rem' }}>
-                  ¡Ahorrás ${transferSavings.toLocaleString('es-AR')} pagando con Transferencia Bancaria!
-                </div>
+                {discountPct > 0 && (
+                  <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: 600, marginBottom: '0.75rem' }}>
+                    ¡Ahorrás ${transferSavings.toLocaleString('es-AR')} pagando con Transferencia Bancaria!
+                  </div>
+                )}
 
                 {/* Calculador de Cuotas */}
                 <div
@@ -510,19 +521,34 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </div>
               )}
 
+              {/* INDICADOR DE STOCK REAL */}
+              <div style={{ marginBottom: '0.85rem', fontSize: '0.82rem', fontWeight: 700 }}>
+                {isOutOfStock ? (
+                  <span style={{ color: '#b91c1c' }}>
+                    • Sin stock inmediato para despacho online (Consultá fabricación a pedido por WhatsApp)
+                  </span>
+                ) : (
+                  <span style={{ color: '#059669' }}>
+                    • Stock disponible en fábrica ({product.stock} {product.stock === 1 ? 'unidad' : 'unidades'})
+                  </span>
+                )}
+              </div>
+
               {/* BOTONES DE ACCIÓN: AGREGAR AL CARRITO + WHATSAPP */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
                 <button
                   type="button"
                   onClick={handleAddToCart}
+                  disabled={isOutOfStock}
                   style={{
-                    backgroundColor: 'var(--brand-sage)',
-                    color: '#ffffff',
+                    backgroundColor: isOutOfStock ? '#cbd5e1' : 'var(--brand-sage)',
+                    color: isOutOfStock ? '#64748b' : '#ffffff',
                     padding: '1.1rem 2rem',
                     borderRadius: '12px',
                     fontWeight: 800,
                     fontSize: '1.05rem',
-                    boxShadow: '0 8px 25px rgba(45, 90, 63, 0.35)',
+                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                    boxShadow: isOutOfStock ? 'none' : '0 8px 25px rgba(45, 90, 63, 0.35)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -531,7 +557,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                   }}
                 >
                   <Sparkles size={18} />
-                  <span>{addedAnimation ? '¡Agregado al Carrito!' : 'Agregar al Carrito'}</span>
+                  <span>
+                    {isOutOfStock
+                      ? 'Sin Stock Disponible'
+                      : addedAnimation
+                      ? '¡Agregado al Carrito!'
+                      : 'Agregar al Carrito'}
+                  </span>
                 </button>
 
                 {/* Botón WhatsApp Ficha */}

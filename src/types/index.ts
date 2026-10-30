@@ -43,7 +43,7 @@ export interface Product {
   measure: string;
   firmness?: 'Suave' | 'Media' | 'Firme' | 'Extra Firme';
   basePrice: number; // Precio de lista en cuotas
-  transferDiscountPercent: number; // 15%
+  transferDiscountPercent: number; // Por defecto 15%
   variations: ProductVariation[];
   features: string[];
   fabrics?: string[]; // Telas disponibles para sillones o fundas
@@ -57,10 +57,11 @@ export interface Product {
 }
 
 export interface CartItem {
-  id: string; // productId + variationName
+  id: string; // productId + variationName + fabric
   productId: string;
   product: Product;
   variationName: string;
+  fabric?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -81,7 +82,15 @@ export type PaymentMethod =
 
 export type DeliveryMethod =
   | 'showroom' // Retiro gratis en sucursal Villa Krause, San Juan
-  | 'delivery'; // Envío a domicilio bonificado
+  | 'delivery'; // Envío a domicilio (bonificado en San Juan, a cotizar resto del país)
+
+export type OrderStatus =
+  | 'PENDIENTE_COMPROBANTE'
+  | 'PENDIENTE_PAGO'
+  | 'APROBADO'
+  | 'EN_PREPARACION'
+  | 'ENTREGADO'
+  | 'CANCELADO';
 
 export interface Order {
   id: string;
@@ -89,6 +98,7 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  customerDni?: string;
   deliveryMethod: DeliveryMethod;
   postalCode: string;
   address?: string;
@@ -98,13 +108,46 @@ export interface Order {
   paymentMethod: PaymentMethod;
   items: CartItem[];
   subtotal: number;
-  shippingOriginal: number; // 10%
-  shippingDiscount: number; // -10%
-  shippingFinal: number; // $0
-  transferDiscount: number; // 15% si paga por transferencia
+  shippingOriginal: number;
+  shippingDiscount: number;
+  shippingFinal: number;
+  transferDiscount: number;
   total: number;
   installments?: number;
-  status: 'PENDIENTE_COMPROBANTE' | 'APROBADO' | 'EN_PREPARACION' | 'ENTREGADO';
+  status: OrderStatus;
+  accessToken?: string;
+  idempotencyKey?: string;
+}
+
+export interface CreateOrderPayload {
+  idempotencyKey: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerDni?: string;
+  deliveryMethod: DeliveryMethod;
+  postalCode: string;
+  address?: string;
+  city: string;
+  province: string;
+  notes?: string;
+  paymentMethod: PaymentMethod;
+  installments?: number;
+  items: Array<{
+    productId: string;
+    variationName: string;
+    fabric?: string;
+    quantity: number;
+  }>;
+}
+
+export interface CustomerInquiry {
+  id: number;
+  name: string;
+  phone: string;
+  subject: string;
+  message: string;
+  createdAt: string;
 }
 
 export interface BenFlexBankData {

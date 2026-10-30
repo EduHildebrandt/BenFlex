@@ -1,79 +1,23 @@
-# Master Roadmap: Benflex - Tienda Online de Descanso y Confort
+# Master Roadmap & Registro de Remediación — BenFlex E-Commerce
 
-## 1. Visión del Producto y Justificación (The WHY)
-Benflex es una marca líder de descanso y bienestar postural con local físico y showroom en **Castaño Oeste y Conector Sur, Villa Krause, San Juan**.
-El objetivo de este e-commerce es:
-1. **Maximizar la conversión y la confianza**:
-   - Resaltar la presencia física (Showroom en Villa Krause, San Juan) y retiro gratuito en sucursal.
-   - Claridad total en precios con doble visualización: **Precio de Lista en Cuotas** vs. **Precio con 15% OFF por Transferencia Bancaria**.
-   - Flete calculado (10%) y **100% bonificado/tachado** a nivel nacional y provincial para eliminar la fricción del carrito abandonado.
-2. **Experiencia de Descanso Guiada y Personalizada**:
-   - Quiz interactivo en 3 pasos: "¿Cómo dormís?", "¿Prioridad de descanso?", "¿Medida de cama?", arrojando la recomendación ideal de colchón o combo al instante.
-   - Consultas técnicas de telas o medidas con 1 clic a WhatsApp directo con un asesor del showroom.
-3. **Flujo de Pago y Cierre Eficiente por WhatsApp**:
-   - Checkout en 1 solo paso con selector dinámico de métodos de pago (Mercado Pago, Tarjeta de Crédito con calculadora de cuotas, Tarjeta de Débito, Transferencia con datos bancarios y botón de copia).
-   - Generación de comprobante y mensaje automatizado en URL encoded para enviar la constancia por WhatsApp con el ID de orden y dirección.
+## Arquitectura Base
+- **Stack:** Next.js 16.2.7 (App Router) + React 19.2.4 + Supabase PostgreSQL (`pg` Pooler IPv4 + RLS).
+- **Reglas Comerciales Activas:**
+  - Marca estandarizada: **BenFlex**.
+  - Envíos 100% bonificados exclusivamente dentro de **San Juan (`CP 5400–5499`)** y retiro sin cargo en **Showroom Villa Krause** (`Castaño Oeste y Conector Sur`). Envíos al resto del país: **A cotizar**.
 
----
+## Squad Status — Auditoría QA Funcional & Seguridad (OWASP / ASVS / PCI-DSS)
 
-## 2. Decisiones de Arquitectura y UI/UX
-- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Glassmorphism modular.
-- **Identidad Visual**:
-  - Paleta: Tonos neutros (blanco roto `#faf9f5`, marfil `#f4efe6`, arena `#ebe5d8`), acento azul noche profundo (`#0f172a` / `#1e293b`) y verde salvia (`#2d5a3f` / `#407b55`), con CTAs vibrantes de alta conversión.
-  - Tipografía: Plus Jakarta Sans & Outfit.
-  - Componentes: Header con barra de avisos, buscador predictivo, selector de Código Postal persistente, Drawer Cart con cross-selling, Quiz Interactivo de 3 pasos, PDP enriquecida, Checkout One-Step y Panel Admin Benflex.
-- **Gestión de Estado**:
-  - `LocationContext`: Código Postal, Localidad y Provincia seleccionada, persistido en localStorage.
-  - `CartContext`: Gestión de ítems, cálculo de subtotal, flete del 10% bonificado ($0 final), descuento del 15% por transferencia y cross-selling.
-  - `ProductContext`: Catálogo completo con variantes de medidas, tecnologías (alta densidad, resortes pocket), telas anti-desgarro, etc.
+| Fase | Módulo / Objetivo | Estado |
+| :--- | :--- | :---: |
+| Fase 1 | Autenticación server-side (`HttpOnly` + HMAC-SHA256), cierre de rutas admin (`401`), eliminación de secretos en cliente y activación de RLS en Supabase | ✅ Completado |
+| Fase 2 | Remoción de inputs PAN/CVV (PCI-DSS SAQ-A), recálculo server-side de precios/descuentos, bloqueo atómico de stock (`FOR UPDATE`), idempotencia y protección anti-IDOR con `accessToken` | ✅ Completado |
+| Fase 3 | Validación estricta de esquemas, Rate Limiting por IP, cabeceras HTTP de seguridad, persistencia de consultas `/contacto` y restauración de stock en `CANCELADO` | ✅ Completado |
 
----
-
-## 3. Fases de Ejecución
-
-### Fase 1: Arquitectura Base, Catálogo y Contextos
-- [x] Configuración de tipos (`Product`, `CartItem`, `Order`, `LocationState`) y datos iniciales de Benflex con las 4 categorías:
-  - Colchones & Sommiers (1 Plaza, 1½, 2 Plazas, Queen, King; alta densidad y resortes pocket).
-  - Sillones & Sofás Cama (2 y 3 cuerpos, esquineros, telas anti-desgarro/anti-manchas).
-  - Almohadas & Confort (viscoelásticas, inteligentes, cervicales, protector impermeable).
-  - Combos Benflex (sets de colchón + sommier + juego de almohadas de regalo).
-- [x] Contexto de Geolocalización (`LocationContext`) para selector de CP/Provincia persistente.
-- [x] Contexto de Carrito (`CartContext`) actualizado con flete ficticio 10% bonificado y descuento 15% transferencia.
-
-### Fase 2: Identidad Visual, Layout Global y Puntos de Contacto
-- [x] Global CSS con la paleta Benflex (neutros, arena, azul noche, verde salvia, glassmorphism limpio).
-- [x] `Header` renovado: Barra superior con avisos, buscador predictivo, selector de CP y botón de carrito con badge.
-- [x] `Footer` renovado: Sección "Nuestro Showroom en Villa Krause, San Juan" con mapa, horarios de atención y opciones de retiro gratis.
-- [x] Botón flotante persistente de WhatsApp con mensaje personalizado.
-
-### Fase 3: Home Page Orientada a la Conversión
-- [x] Hero Banner sensorial y cálido con llamadas a la acción directas y badges de confianza.
-- [x] Quiz interactivo "Descubrí tu colchón ideal en 3 preguntas" con resultado y botón de compra inmediato.
-- [x] Grilla de productos destacados con comparador de precios (Precio Lista vs 15% OFF Transferencia).
-- [x] Badges de beneficios: Garantía de fábrica de 5 años, asesoramiento por WhatsApp, Showroom San Juan, Flete 100% bonificado.
-
-### Fase 4: Experiencia de Catálogo y Ficha de Producto (PDP)
-- [x] Selector interactivo de medidas y telas con actualización de precio en vivo.
-- [x] Calculador de cuotas con tarjeta (3, 6, 12) y destaque de precio con transferencia.
-- [x] Calculador / Selector de CP con badge "Envío Gratis a tu zona".
-- [x] Botón de consulta directa a WhatsApp: "Consultar medidas o telas por WhatsApp".
-- [x] Especificaciones ergonómicas, soporte de peso y garantía.
-
-### Fase 5: Carrito Lateral con Cross-Selling y Checkout One-Step
-- [x] `CartDrawer` con barra de progreso de envío bonificado y sugerencias de venta cruzada (protectores de colchón, almohadas).
-- [x] `CheckoutPage` One-Step:
-  - Datos de contacto y entrega (opción Retiro en Showroom Villa Krause gratis o Envío a Domicilio).
-  - Medios de pago: Mercado Pago, Tarjeta de Crédito/Débito, y Transferencia Bancaria (con recálculo del 15% OFF y despliegue de CBU/CVU/Alias/CUIT con botón de copiar).
-  - Desglose transparente: Subtotal, Descuento Transferencia, Flete Bonificado (-10%) y Total a pagar.
-- [x] Pantalla de Confirmación de Orden (`/order-confirmation`):
-  - Botón principal destacado: "Enviar comprobante y coordinar envío por WhatsApp" con mensaje preformateado en URL encode.
-
-### Fase 6: Auditoría, Verificación y Compilación
-- [x] Restauración de paquetes truncados en unidad virtual (`Z:\`) y compilación limpia de TypeScript (`tsc --noEmit` con 0 errores).
-- [x] Suite automatizada de auditoría de negocio (`scratch/verify-benflex.ts`) con 13 aserciones verificadas.
-
----
-
-## 4. Revisión y Auto-Resolución [AUTO-HEALED]
-- **[AUTO-HEALED] Restauración de Módulos en Unidad Sincronizada (`Z:\`)**: Se detectaron carpetas temporales `.pkg-hash` en `node_modules` producto de bloqueos previos de sincronización de Google Drive (`next`, `typescript`, `@types/node`, `lucide-react`). Se restauraron programáticamente y se reconstruyeron las definiciones tipadas faltantes, logrando compilación estricta con 0 errores (`tsc --noEmit`).
-- **[AUTO-HEALED] Compatibilidad Dual de Tipos TypeScript / Node 24**: Se estandarizó el uso de `import type` y `allowImportingTsExtensions` para permitir que los módulos de datos (`src/data/products.ts` y `src/types/index.ts`) sean ejecutados tanto por Next.js 16 como por el motor nativo de pruebas de Node 24 (`--experimental-strip-types`).
+## [AUTO-HEALED] Revisión de Remediación Integral
+- **[AUTO-HEALED] SEC-01 & SEC-04:** Eliminadas credenciales hardcodeadas del bundle cliente en `/admin`. Implementado `src/lib/auth.ts` y `/api/admin/auth` con cookies `HttpOnly; SameSite=Strict` y `requireAdmin` en `POST/DELETE /api/products`, `GET/PATCH /api/orders` y `GET /api/inquiries`.
+- **[AUTO-HEALED] SEC-02:** Cerrada exposición pública de PII en `GET /api/orders`, eliminado `fetch('/api/orders')` global del montaje público y protegido `/api/orders/[id]` mediante `accessToken` criptográfico de 128 bits.
+- **[AUTO-HEALED] SEC-03, QA-01 & QA-04:** Implementada transacción ACID en `createValidatedDbOrder` (`src/lib/db.ts`) con `idempotency_key` único, `SELECT ... FOR UPDATE` ordenado anti-deadlock, recálculo 100% server-side de precios/variaciones/descuentos y restauración automática de stock al pasar a `CANCELADO`.
+- **[AUTO-HEALED] SEC-05:** Activado `ROW LEVEL SECURITY` en `public.benflex_products`, `public.benflex_orders` y `public.benflex_inquiries` en Supabase con política pública de solo lectura limitada a `benflex_products (is_active = true)`.
+- **[AUTO-HEALED] SEC-06 & QA-06:** Removidos todos los campos crudos de tarjeta/CVV en `/checkout` (cumplimiento PCI-DSS SAQ-A) y adaptada `/order-confirmation` según medio de pago (`transferencia` vs `credito`/`debito`/`mercadopago`).
+- **[AUTO-HEALED] QA-02, QA-03, QA-08, QA-09 & QA-12:** Unificado descuento dinámico por producto (`transferDiscountPercent`) con redondeo unitario exacto (`$0` discrepancia), persistidos `selectedFabric` y `customerDni`, y conectado `/contacto` con `public.benflex_inquiries` + pestaña de consultas en `/admin`.

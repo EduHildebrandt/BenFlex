@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
 import {
@@ -15,21 +15,19 @@ import {
   Trash2,
   X,
   Search,
-  Sparkles,
   Package,
+  MailQuestion,
 } from 'lucide-react';
 import {
-  BENFLEX_CONTACT,
   BENFLEX_BANK_INFO,
   Order,
+  OrderStatus,
   Product,
   ProductCategory,
   ProductTechnology,
   ProductVariation,
+  CustomerInquiry,
 } from '@/types';
-
-const OWNER_PASS = 'benflex2026';
-const DEV_PASS = 'dev2026';
 
 const CATEGORY_MAP: Record<ProductCategory, string> = {
   'colchones-sommiers': 'Colchones & Sommiers',
@@ -52,18 +50,24 @@ export default function BenFlexAdminPage() {
     products,
     orders,
     dbConnected,
+    fetchAdminOrders,
     saveProduct,
     deleteProduct,
     updateOrderStatus,
   } = useProducts();
 
-  // Autenticación privada (Dueño / Desarrollador)
+  // Autenticación privada validada en servidor (Cookie HttpOnly + HMAC-SHA256)
   const [authRole, setAuthRole] = useState<'owner' | 'developer' | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
 
+  // Consultas desde /contacto
+  const [inquiries, setInquiries] = useState<CustomerInquiry[]>([]);
+
   // Pestañas del panel
-  const [activeTab, setActiveTab] = useState<'catalog' | 'orders'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'orders' | 'inquiries'>('catalog');
   const [searchFilter, setSearchFilter] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
@@ -89,7 +93,8 @@ export default function BenFlexAdminPage() {
     stock: 15,
     weightSupport: 'Hasta 130 kg por lado',
     warranty: '5 años de garantía escrita de fábrica',
-    featuresText: 'Espuma certificada de alta densidad\nTejido hipoalergénico y respirable\nGarantía directa de fábrica en San Juan',
+    featuresText:
+      'Espuma certificada de alta densidad\nTejido hipoalergénico y respirable\nGarantía directa de fábrica en San Juan',
     fabricsText: '',
     variations: [
       { name: '1½ Plaza (90x190)', priceModifier: -60000, measure: '1½ Plaza (90x190)' },
@@ -99,38 +104,102 @@ export default function BenFlexAdminPage() {
     ] as ProductVariation[],
   });
 
-  useEffect(() => {
-    const savedRole = sessionStorage.getItem('benflex_admin_role');
-    if (savedRole === 'owner' || savedRole === 'developer') {
-      setAuthRole(savedRole);
-    }
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = passwordInput.trim();
-    if (clean === OWNER_PASS) {
-      setAuthRole('owner');
-      sessionStorage.setItem('benflex_admin_role', 'owner');
-      setAuthError('');
-    } else if (clean === DEV_PASS) {
-      setAuthRole('developer');
-      sessionStorage.setItem('benflex_admin_role', 'developer');
-      setAuthError('');
-    } else {
-      setAuthError('Clave incorrecta. Acceso exclusivo para el dueño o desarrollador.');
-    }
-  };
-
-  const handleLogout = () => {
-    setAuthRole(null);
-    setPasswordInput('');
-    sessionStorage.removeItem('benflex_admin_role');
-  };
-
   const showToast = (msg: string) => {
     setFeedbackMsg(msg);
-    setTimeout(() => setFeedbackMsg(null), 3500);
+    setTimeout(() => setFeedbackMsg(null), 3800);
+  };
+
+  const loadAdminPrivateData = useCallback(async () => {
+    await fetchAdminOrders();
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.inquiries)) {
+          setInquiries(data.inquiries);
+        }
+      }
+    } catch {
+      // Silencioso
+    }
+  }, [fetchAdminOrders]);
+
+  // Verificar cookie HttpOnly activa al montar /admin
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/auth', {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (!cancelled && data.authenticated && (data.role === 'owner' || data.role === 'developer')) {
+          setAuthRole(data.role);
+        }
+      } catch {
+        // Sin sesión activa
+      } finally {
+        if (!cancelled) setCheckingSession(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Cargar pedidos y consultas apenas se autentique la sesión
+  useEffect(() => {
+    if (authRole) {
+      loadAdminPrivateData();
+    }
+  }, [authRole, loadAdminPrivateData]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordInput.trim() || isLoggingIn) return;
+
+    setIsLoggingIn(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ password: passwordInput }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAuthError(
+          data.error || 'Clave incorrecta. Acceso exclusivo para el dueño o desarrollador.'
+        );
+        return;
+      }
+      setAuthRole(data.role);
+      setPasswordInput('');
+    } catch {
+      setAuthError('Error de conexión al validar credenciales con el servidor.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', {
+        method: 'DELETE',
+        credentials: 'same-origin',
+      });
+    } catch {
+      // Ignorar error de red en cierre
+    }
+    setAuthRole(null);
+    setPasswordInput('');
   };
 
   // Abrir modal para Nuevo Producto
@@ -147,12 +216,14 @@ export default function BenFlexAdminPage() {
       firmness: 'Firme',
       basePrice: 350000,
       transferDiscountPercent: 15,
-      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80',
+      image:
+        'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80',
       badge: 'Nuevo Ingreso',
       stock: 10,
       weightSupport: 'Hasta 130 kg por lado',
       warranty: '5 años de garantía oficial',
-      featuresText: 'Fabricación propia en San Juan\nMateriales hipoalergénicos de alta durabilidad\nGarantía escrita de fábrica',
+      featuresText:
+        'Fabricación propia en San Juan\nMateriales hipoalergénicos de alta durabilidad\nGarantía escrita de fábrica',
       fabricsText: '',
       variations: [
         { name: '2 Plazas (140x190)', priceModifier: 0, measure: '2 Plazas (140x190)' },
@@ -175,7 +246,7 @@ export default function BenFlexAdminPage() {
       measure: p.measure,
       firmness: p.firmness || 'Firme',
       basePrice: p.basePrice,
-      transferDiscountPercent: p.transferDiscountPercent || 15,
+      transferDiscountPercent: p.transferDiscountPercent ?? 15,
       image: p.image,
       badge: p.badge || '',
       stock: p.stock,
@@ -183,7 +254,10 @@ export default function BenFlexAdminPage() {
       warranty: p.warranty || '5 años de garantía',
       featuresText: (p.features || []).join('\n'),
       fabricsText: (p.fabrics || []).join('\n'),
-      variations: p.variations.length > 0 ? [...p.variations] : [{ name: 'Estándar', priceModifier: 0 }],
+      variations:
+        p.variations.length > 0
+          ? [...p.variations]
+          : [{ name: 'Estándar', priceModifier: 0 }],
     });
     setIsModalOpen(true);
   };
@@ -205,7 +279,7 @@ export default function BenFlexAdminPage() {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
           setForm((prev) => ({ ...prev, image: compressedDataUrl }));
         }
       };
@@ -233,6 +307,11 @@ export default function BenFlexAdminPage() {
         '-' +
         Math.floor(100 + Math.random() * 900);
 
+    const parsedFabrics = form.fabricsText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const productToSave: Product = {
       id: editingProduct ? editingProduct.id : generatedSlug,
       slug: editingProduct ? editingProduct.slug : generatedSlug,
@@ -240,7 +319,9 @@ export default function BenFlexAdminPage() {
       description: form.description.trim() || form.name.trim(),
       shortDescription:
         form.shortDescription.trim() ||
-        (form.description.trim() ? form.description.trim().slice(0, 100) + '...' : form.name.trim()),
+        (form.description.trim()
+          ? form.description.trim().slice(0, 100) + '...'
+          : form.name.trim()),
       category: form.category,
       categoryLabel: CATEGORY_MAP[form.category],
       technology: form.technology,
@@ -248,55 +329,81 @@ export default function BenFlexAdminPage() {
       measure: form.measure,
       firmness: form.firmness,
       basePrice: Number(form.basePrice) || 0,
-      transferDiscountPercent: Number(form.transferDiscountPercent) || 15,
+      transferDiscountPercent: Number(form.transferDiscountPercent ?? 15),
       variations: form.variations.filter((v) => v.name.trim() !== ''),
       features: form.featuresText
         .split('\n')
         .map((s) => s.trim())
         .filter(Boolean),
-      fabrics: form.fabricsText
-        .split('\n')
-        .map((s) => s.trim())
-        .filter(Boolean),
+      fabrics: parsedFabrics.length > 0 ? parsedFabrics : undefined,
       image: form.image.trim(),
       badge: form.badge.trim() || undefined,
-      stock: Number(form.stock) || 0,
+      stock: Math.max(0, Math.floor(Number(form.stock) || 0)),
       weightSupport: form.weightSupport.trim() || undefined,
       warranty: form.warranty.trim() || undefined,
       rating: editingProduct ? editingProduct.rating : 5.0,
       reviewsCount: editingProduct ? editingProduct.reviewsCount : 25,
     };
 
-    const ok = await saveProduct(productToSave);
+    const res = await saveProduct(productToSave);
     setIsSaving(false);
+
+    if (!res.success) {
+      showToast(`❌ ${res.error || 'Error al guardar el producto'}`);
+      return;
+    }
+
     setIsModalOpen(false);
-    showToast(
-      ok
-        ? `✅ Producto "${productToSave.name}" guardado en Supabase PostgreSQL`
-        : `⚠️ Producto actualizado localmente`
-    );
+    showToast(`✅ Producto "${productToSave.name}" guardado en Supabase PostgreSQL`);
   };
 
   // Ajuste rápido de precio o stock desde la tarjeta
   const handleQuickPriceUpdate = async (product: Product, newPrice: number) => {
-    if (newPrice <= 0 || newPrice === product.basePrice) return;
-    await saveProduct({ ...product, basePrice: newPrice });
-    showToast(`💰 Precio de "${product.name}" actualizado a $${newPrice.toLocaleString('es-AR')}`);
+    if (!Number.isFinite(newPrice) || newPrice <= 0 || newPrice === product.basePrice) return;
+    const res = await saveProduct({ ...product, basePrice: Math.round(newPrice) });
+    if (res.success) {
+      showToast(`💰 Precio de "${product.name}" actualizado a $${Math.round(newPrice).toLocaleString('es-AR')}`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo actualizar el precio'}`);
+    }
   };
 
   const handleQuickStockUpdate = async (product: Product, newStock: number) => {
-    if (newStock < 0 || newStock === product.stock) return;
-    await saveProduct({ ...product, stock: newStock });
-    showToast(`📦 Stock de "${product.name}" actualizado a ${newStock} unidades`);
+    if (!Number.isFinite(newStock) || newStock < 0 || Math.floor(newStock) === product.stock) return;
+    const cleanStock = Math.floor(newStock);
+    const res = await saveProduct({ ...product, stock: cleanStock });
+    if (res.success) {
+      showToast(`📦 Stock de "${product.name}" actualizado a ${cleanStock} unidades`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo actualizar el stock'}`);
+    }
   };
 
   const handleDeleteProduct = async (product: Product) => {
     const confirmed = window.confirm(
-      `¿Estás seguro de eliminar "${product.name}" del catálogo?`
+      `¿Estás seguro de ocultar/eliminar "${product.name}" del catálogo público?`
     );
     if (!confirmed) return;
-    await deleteProduct(product.id);
-    showToast(`🗑️ Producto "${product.name}" eliminado del catálogo`);
+    const res = await deleteProduct(product.id);
+    if (res.success) {
+      showToast(`🗑️ Producto "${product.name}" ocultado del catálogo`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo eliminar el producto'}`);
+    }
+  };
+
+  const handleOrderStatusChange = async (order: Order, nextStatus: OrderStatus) => {
+    if (nextStatus === order.status) return;
+    const res = await updateOrderStatus(order.id, nextStatus);
+    if (res.success) {
+      if (nextStatus === 'CANCELADO') {
+        showToast(`↩️ Pedido #${order.id} cancelado y stock restaurado en catálogo`);
+      } else {
+        showToast(`✅ Estado del pedido #${order.id} actualizado a ${nextStatus}`);
+      }
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo actualizar el estado del pedido'}`);
+    }
   };
 
   // Variaciones helper
@@ -330,8 +437,18 @@ export default function BenFlexAdminPage() {
     }));
   };
 
+  if (checkingSession) {
+    return (
+      <div style={{ padding: '6rem 1rem', textAlign: 'center', backgroundColor: '#fafaf9', minHeight: '80vh' }}>
+        <p style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+          Verificando sesión de seguridad...
+        </p>
+      </div>
+    );
+  }
+
   // =========================================================================
-  // PANTALLA DE BLOQUEO PRIVADO (OCULTO AL PÚBLICO)
+  // PANTALLA DE BLOQUEO PRIVADO (AUTENTICACIÓN SERVER-SIDE HTTPONLY)
   // =========================================================================
   if (!authRole) {
     return (
@@ -405,6 +522,7 @@ export default function BenFlexAdminPage() {
 
             <button
               type="submit"
+              disabled={isLoggingIn}
               style={{
                 backgroundColor: '#111827',
                 color: '#ffffff',
@@ -412,9 +530,11 @@ export default function BenFlexAdminPage() {
                 borderRadius: '12px',
                 fontWeight: 800,
                 fontSize: '0.95rem',
+                opacity: isLoggingIn ? 0.7 : 1,
+                cursor: isLoggingIn ? 'not-allowed' : 'pointer',
               }}
             >
-              Ingresar al Panel de Control
+              {isLoggingIn ? 'Validando acceso...' : 'Ingresar al Panel de Control'}
             </button>
           </form>
 
@@ -431,7 +551,11 @@ export default function BenFlexAdminPage() {
     );
   }
 
-  const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0);
+  const activeOrdersCount = orders.filter((o) => o.status !== 'CANCELADO').length;
+  const totalRevenue = orders
+    .filter((o) => o.status !== 'CANCELADO')
+    .reduce((acc, o) => acc + o.total, 0);
+
   const filteredCatalog = products.filter(
     (p) =>
       p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -504,7 +628,7 @@ export default function BenFlexAdminPage() {
               </span>
               <span className="badge-pill badge-bonificado" style={{ fontSize: '0.72rem' }}>
                 <CheckCircle2 size={13} />
-                {dbConnected ? 'Supabase PostgreSQL Activo' : 'Sincronizado'}
+                {dbConnected ? 'Supabase PostgreSQL + RLS Activo' : 'Sincronizado'}
               </span>
             </div>
           </div>
@@ -560,6 +684,21 @@ export default function BenFlexAdminPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('inquiries')}
+              style={{
+                padding: '0.65rem 1.15rem',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                backgroundColor: activeTab === 'inquiries' ? '#111827' : '#ffffff',
+                color: activeTab === 'inquiries' ? '#ffffff' : 'var(--text-primary)',
+                border: '1px solid #d1d5db',
+              }}
+            >
+              Consultas Web ({inquiries.length})
+            </button>
+
+            <button
               onClick={handleLogout}
               style={{
                 padding: '0.65rem 1rem',
@@ -595,15 +734,15 @@ export default function BenFlexAdminPage() {
           <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#059669', marginBottom: '0.25rem' }}>
               <ShoppingBag size={18} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Pedidos Recibidos</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Pedidos Activos</span>
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#111827' }}>{orders.length}</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#111827' }}>{activeOrdersCount}</div>
           </div>
 
           <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#059669', marginBottom: '0.25rem' }}>
               <TrendingUp size={18} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Ventas Registradas</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Ventas Netas</span>
             </div>
             <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
               ${totalRevenue.toLocaleString('es-AR')}
@@ -639,7 +778,7 @@ export default function BenFlexAdminPage() {
                   Catálogo de Productos, Precios y Fotos
                 </h2>
                 <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                  Modificá el precio de lista o stock directamente, o hacé clic en <strong>Editar Producto / Foto</strong> para cambiar imágenes y medidas.
+                  Modificá el precio de lista o stock directamente, o hacé clic en <strong>Editar Producto / Foto</strong> para cambiar imágenes, telas y medidas.
                 </p>
               </div>
 
@@ -668,9 +807,8 @@ export default function BenFlexAdminPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {filteredCatalog.map((p) => {
-                const transferPrice = Math.round(
-                  p.basePrice * (1 - (p.transferDiscountPercent || 15) / 100)
-                );
+                const discountPct = p.transferDiscountPercent ?? 15;
+                const transferPrice = Math.round(p.basePrice * (1 - discountPct / 100));
                 return (
                   <div
                     key={p.id}
@@ -698,13 +836,21 @@ export default function BenFlexAdminPage() {
                     />
 
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                         <span className="badge-pill badge-sage" style={{ fontSize: '0.68rem' }}>
                           {p.categoryLabel}
                         </span>
                         {p.badge && (
                           <span className="badge-pill badge-navy" style={{ fontSize: '0.68rem' }}>
                             {p.badge}
+                          </span>
+                        )}
+                        {p.stock <= 0 && (
+                          <span
+                            className="badge-pill"
+                            style={{ fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#b91c1c' }}
+                          >
+                            Agotado
                           </span>
                         )}
                       </div>
@@ -721,6 +867,7 @@ export default function BenFlexAdminPage() {
                           PRECIO LISTA ($)
                         </label>
                         <input
+                          key={`price-${p.id}-${p.basePrice}`}
                           type="number"
                           defaultValue={p.basePrice}
                           onBlur={(e) => handleQuickPriceUpdate(p, Number(e.target.value))}
@@ -735,7 +882,7 @@ export default function BenFlexAdminPage() {
                           }}
                         />
                         <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>
-                          Transf ({p.transferDiscountPercent}% OFF): ${transferPrice.toLocaleString('es-AR')}
+                          Transf ({discountPct}% OFF): ${transferPrice.toLocaleString('es-AR')}
                         </div>
                       </div>
 
@@ -744,6 +891,7 @@ export default function BenFlexAdminPage() {
                           STOCK
                         </label>
                         <input
+                          key={`stock-${p.id}-${p.stock}`}
                           type="number"
                           defaultValue={p.stock}
                           onBlur={(e) => handleQuickStockUpdate(p, Number(e.target.value))}
@@ -785,7 +933,7 @@ export default function BenFlexAdminPage() {
                           padding: '0.55rem 0.7rem',
                           borderRadius: '8px',
                         }}
-                        title="Eliminar producto"
+                        title="Ocultar producto"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -812,9 +960,146 @@ export default function BenFlexAdminPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {orders.map((order) => (
+                {orders.map((order) => {
+                  const isCancelled = order.status === 'CANCELADO';
+                  return (
+                    <div
+                      key={order.id}
+                      style={{
+                        padding: '1.25rem',
+                        borderRadius: '14px',
+                        border: isCancelled ? '1px solid #fecaca' : '1px solid #e2e8f0',
+                        backgroundColor: isCancelled ? '#fef2f2' : '#f8fafc',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: '280px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--brand-navy)' }}>
+                            #{order.id}
+                          </span>
+                          <span className="badge-pill badge-sage">
+                            {order.paymentMethod.toUpperCase()}
+                            {order.installments ? ` (${order.installments}c)` : ''}
+                          </span>
+                          <span className="badge-pill badge-bonificado">
+                            {order.deliveryMethod === 'showroom'
+                              ? 'Retiro Showroom'
+                              : `Envío a ${order.city}, ${order.province} (CP ${order.postalCode})`}
+                          </span>
+                          <select
+                            value={order.status}
+                            onChange={(e) =>
+                              handleOrderStatusChange(order, e.target.value as OrderStatus)
+                            }
+                            style={{
+                              padding: '0.28rem 0.65rem',
+                              borderRadius: '6px',
+                              border: '1px solid #cbd5e1',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: '#ffffff',
+                              color: isCancelled ? '#b91c1c' : '#111827',
+                            }}
+                          >
+                            <option value="PENDIENTE_COMPROBANTE">PENDIENTE COMPROBANTE</option>
+                            <option value="PENDIENTE_PAGO">PENDIENTE DE PAGO</option>
+                            <option value="APROBADO">APROBADO</option>
+                            <option value="EN_PREPARACION">EN PREPARACIÓN</option>
+                            <option value="ENTREGADO">ENTREGADO</option>
+                            <option value="CANCELADO">CANCELADO (Devuelve Stock)</option>
+                          </select>
+                        </div>
+
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                          Cliente: {order.customerName} • Tel: {order.customerPhone} • Email: {order.customerEmail}
+                          {order.customerDni ? ` • DNI/CUIT: ${order.customerDni}` : ''}
+                        </div>
+
+                        {order.address && (
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                            Dirección: {order.address}
+                            {order.notes ? ` (${order.notes})` : ''}
+                          </div>
+                        )}
+
+                        <div style={{ fontSize: '0.8rem', color: 'var(--brand-navy)', fontWeight: 600, marginTop: '0.3rem' }}>
+                          {order.items
+                            .map(
+                              (i) =>
+                                `${i.quantity}x ${i.product.name} (${i.variationName}${
+                                  i.fabric ? ` / ${i.fabric}` : ''
+                                })`
+                            )
+                            .join(' | ')}
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div
+                          style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 900,
+                            color: isCancelled ? '#9ca3af' : 'var(--brand-sage)',
+                            textDecoration: isCancelled ? 'line-through' : 'none',
+                          }}
+                        >
+                          ${order.total.toLocaleString('es-AR')}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          {new Date(order.date).toLocaleString('es-AR')}
+                        </div>
+                        <a
+                          href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            color: '#15803d',
+                            marginTop: '0.35rem',
+                          }}
+                        >
+                          <MessageCircle size={14} />
+                          <span>Contactar por WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB 3: CONSULTAS WEB (/contacto -> benflex_inquiries)             */}
+        {/* ================================================================= */}
+        {activeTab === 'inquiries' && (
+          <div className="glass-card" style={{ padding: '1.75rem', backgroundColor: '#ffffff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+              <MailQuestion size={22} color="var(--brand-sage)" />
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
+                Consultas Recibidas desde Showroom / Contacto
+              </h2>
+            </div>
+
+            {inquiries.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                Aún no hay consultas registradas en <code>benflex_inquiries</code>.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {inquiries.map((inq) => (
                   <div
-                    key={order.id}
+                    key={inq.id}
                     style={{
                       padding: '1.25rem',
                       borderRadius: '14px',
@@ -822,70 +1107,49 @@ export default function BenFlexAdminPage() {
                       backgroundColor: '#f8fafc',
                       display: 'flex',
                       flexWrap: 'wrap',
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
                       justifyContent: 'space-between',
                       gap: '1rem',
                     }}
                   >
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--brand-navy)' }}>
-                          #{order.id}
+                    <div style={{ flex: 1, minWidth: '260px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--brand-navy)' }}>{inq.name}</span>
+                        <span className="badge-pill badge-sage">{inq.subject}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {new Date(inq.createdAt).toLocaleString('es-AR')}
                         </span>
-                        <span className="badge-pill badge-sage">{order.paymentMethod.toUpperCase()}</span>
-                        <span className="badge-pill badge-bonificado">
-                          {order.deliveryMethod === 'showroom' ? 'Retiro Showroom' : `Envío a ${order.city}`}
-                        </span>
-                        <select
-                          value={order.status}
-                          onChange={(e) =>
-                            updateOrderStatus(order.id, e.target.value as Order['status'])
-                          }
-                          style={{
-                            padding: '0.25rem 0.6rem',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            backgroundColor: '#ffffff',
-                          }}
-                        >
-                          <option value="PENDIENTE_COMPROBANTE">PENDIENTE COMPROBANTE</option>
-                          <option value="APROBADO">APROBADO</option>
-                          <option value="EN_PREPARACION">EN PREPARACIÓN</option>
-                          <option value="ENTREGADO">ENTREGADO</option>
-                        </select>
                       </div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        Cliente: {order.customerName} • Tel: {order.customerPhone}
+                      <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                        Tel / WhatsApp: <strong>{inq.phone}</strong>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                        {order.items.map((i) => `${i.quantity}x ${i.product.name} (${i.variationName})`).join(' | ')}
-                      </div>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                        {inq.message}
+                      </p>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
-                        ${order.total.toLocaleString('es-AR')}
-                      </div>
-                      <a
-                        href={`https://wa.me/${order.customerPhone.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          color: '#15803d',
-                          marginTop: '0.35rem',
-                        }}
-                      >
-                        <MessageCircle size={14} />
-                        <span>Contactar por WhatsApp</span>
-                      </a>
-                    </div>
+                    <a
+                      href={`https://wa.me/${inq.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                        `¡Hola ${inq.name}! Te escribimos del Showroom BenFlex en Villa Krause por tu consulta web sobre "${inq.subject}".`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        backgroundColor: '#25D366',
+                        color: '#ffffff',
+                        padding: '0.6rem 1rem',
+                        borderRadius: '10px',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <MessageCircle size={15} />
+                      <span>Responder por WhatsApp</span>
+                    </a>
                   </div>
                 ))}
               </div>
@@ -1032,6 +1296,7 @@ export default function BenFlexAdminPage() {
                     <input
                       type="number"
                       required
+                      min={1}
                       value={form.basePrice}
                       onChange={(e) => setForm({ ...form, basePrice: Number(e.target.value) })}
                       style={{
@@ -1047,12 +1312,16 @@ export default function BenFlexAdminPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                      % OFF Transferencia
+                      % OFF Transferencia (0 a 60)
                     </label>
                     <input
                       type="number"
+                      min={0}
+                      max={60}
                       value={form.transferDiscountPercent}
-                      onChange={(e) => setForm({ ...form, transferDiscountPercent: Number(e.target.value) })}
+                      onChange={(e) =>
+                        setForm({ ...form, transferDiscountPercent: Number(e.target.value) })
+                      }
                       style={{
                         width: '100%',
                         padding: '0.7rem',
@@ -1069,6 +1338,7 @@ export default function BenFlexAdminPage() {
                     </label>
                     <input
                       type="number"
+                      min={0}
                       value={form.stock}
                       onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
                       style={{
@@ -1088,13 +1358,13 @@ export default function BenFlexAdminPage() {
                     <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#059669' }}>
                       $
                       {Math.round(
-                        form.basePrice * (1 - (form.transferDiscountPercent || 15) / 100)
+                        form.basePrice * (1 - (form.transferDiscountPercent ?? 15) / 100)
                       ).toLocaleString('es-AR')}
                     </span>
                   </div>
                 </div>
 
-                {/* FOTO DEL PRODUCTO (Subir archivo desde PC/Celular o pegar URL) */}
+                {/* FOTO DEL PRODUCTO (Subir archivo desde PC/Celular o pegar URL HTTPS) */}
                 <div
                   style={{
                     padding: '1.15rem',
@@ -1104,7 +1374,7 @@ export default function BenFlexAdminPage() {
                   }}
                 >
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#0369a1', marginBottom: '0.5rem' }}>
-                    📸 Foto del Producto (Subí una imagen desde tu dispositivo o pegá un link)
+                    📸 Foto del Producto (Subí una imagen desde tu dispositivo o pegá un link HTTPS)
                   </label>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '1rem', alignItems: 'center' }}>
@@ -1148,7 +1418,7 @@ export default function BenFlexAdminPage() {
                       />
                       <input
                         type="text"
-                        placeholder="O pegá la URL de la foto (https://...)"
+                        placeholder="O pegá la URL segura de la foto (https://...)"
                         value={form.image}
                         onChange={(e) => setForm({ ...form, image: e.target.value })}
                         style={{
@@ -1231,7 +1501,7 @@ export default function BenFlexAdminPage() {
                   </div>
                 </div>
 
-                {/* Descripción y Características */}
+                {/* Descripción, Características y Telas */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
@@ -1271,7 +1541,26 @@ export default function BenFlexAdminPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                      Badge Destacado y Garantía
+                      Telas Opcionales (1 por línea, para sillones/respaldos)
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Ej: Pana Anti-Desgarro Gris&#10;Lino Rústico Beige"
+                      value={form.fabricsText}
+                      onChange={(e) => setForm({ ...form, fabricsText: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.85rem',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Badge Destacado
                     </label>
                     <input
                       type="text"
@@ -1284,9 +1573,14 @@ export default function BenFlexAdminPage() {
                         borderRadius: '8px',
                         border: '1px solid #d1d5db',
                         fontSize: '0.85rem',
-                        marginBottom: '0.5rem',
                       }}
                     />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Garantía Escrita
+                    </label>
                     <input
                       type="text"
                       placeholder="Garantía (ej: 5 años de garantía)"

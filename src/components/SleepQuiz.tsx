@@ -52,7 +52,9 @@ export default function SleepQuiz() {
     );
   })();
 
-  const transferPrice = Math.round(recommendedProduct.basePrice * 0.85);
+  const quizDiscountPct = recommendedProduct.transferDiscountPercent ?? 15;
+  const transferPrice = Math.round(recommendedProduct.basePrice * (1 - quizDiscountPct / 100));
+  const isOutOfStock = recommendedProduct.stock <= 0;
 
   return (
     <section
@@ -396,7 +398,9 @@ export default function SleepQuiz() {
                       <span style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
                         ${transferPrice.toLocaleString('es-AR')}
                       </span>
-                      <span className="badge-pill badge-discount">15% OFF Transferencia</span>
+                      {quizDiscountPct > 0 && (
+                        <span className="badge-pill badge-discount">{quizDiscountPct}% OFF Transferencia</span>
+                      )}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                       o hasta 12 cuotas fijas con tarjeta de crédito
@@ -405,18 +409,20 @@ export default function SleepQuiz() {
 
                   <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <button
-                      onClick={() => addToCart(recommendedProduct)}
+                      onClick={() => !isOutOfStock && addToCart(recommendedProduct)}
+                      disabled={isOutOfStock}
                       style={{
-                        backgroundColor: 'var(--brand-sage)',
-                        color: '#ffffff',
+                        backgroundColor: isOutOfStock ? '#cbd5e1' : 'var(--brand-sage)',
+                        color: isOutOfStock ? '#64748b' : '#ffffff',
                         padding: '0.75rem 1.4rem',
                         borderRadius: '10px',
                         fontWeight: 700,
                         fontSize: '0.92rem',
-                        boxShadow: '0 4px 12px rgba(45, 90, 63, 0.3)',
+                        cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                        boxShadow: isOutOfStock ? 'none' : '0 4px 12px rgba(45, 90, 63, 0.3)',
                       }}
                     >
-                      Agregar al Carrito
+                      {isOutOfStock ? 'Sin Stock' : 'Agregar al Carrito'}
                     </button>
                     <Link
                       href={`/product/${recommendedProduct.id}`}

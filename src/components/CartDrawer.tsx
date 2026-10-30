@@ -232,7 +232,7 @@ export default function CartDrawer() {
                 Tu carrito está vacío
               </h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '280px' }}>
-                Descubrí nuestros colchones y sets con envío bonificado en San Juan y 15% OFF por transferencia.
+                Descubrí nuestros colchones y sets con envío bonificado en San Juan y descuento exclusivo por transferencia.
               </p>
               <button
                 onClick={() => setCartOpen(false)}
@@ -251,7 +251,13 @@ export default function CartDrawer() {
           ) : (
             <>
               {cartItems.map((item) => {
-                const itemTransferPrice = Math.round(item.unitPrice * 0.85);
+                const discountPct = item.product.transferDiscountPercent ?? 15;
+                const itemTransferPrice = Math.round(item.unitPrice * (1 - discountPct / 100));
+                const totalProductQtyInCart = cartItems
+                  .filter((i) => i.productId === item.productId)
+                  .reduce((acc, i) => acc + i.quantity, 0);
+                const reachedMaxStock = totalProductQtyInCart >= item.product.stock;
+
                 return (
                   <div
                     key={item.id}
@@ -282,14 +288,19 @@ export default function CartDrawer() {
                           fontWeight: 700,
                           color: 'var(--text-primary)',
                           lineHeight: 1.3,
-                          marginBottom: '0.25rem',
+                          marginBottom: '0.2rem',
                         }}
                       >
                         {item.product.name}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: item.fabric ? '0.15rem' : '0.5rem' }}>
                         Medida / Opción: <strong>{item.variationName}</strong>
                       </div>
+                      {item.fabric && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--brand-sage)', fontWeight: 600, marginBottom: '0.5rem' }}>
+                          Tela: {item.fabric}
+                        </div>
+                      )}
 
                       <div
                         style={{
@@ -299,7 +310,7 @@ export default function CartDrawer() {
                           marginTop: 'auto',
                         }}
                       >
-                        {/* Selector de cantidad */}
+                        {/* Selector de cantidad con tope de stock real */}
                         <div
                           style={{
                             display: 'flex',
@@ -333,10 +344,13 @@ export default function CartDrawer() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => !reachedMaxStock && updateQuantity(item.id, item.quantity + 1)}
+                            disabled={reachedMaxStock}
+                            title={reachedMaxStock ? `Máximo disponible en stock (${item.product.stock})` : 'Sumar uno'}
                             style={{
                               padding: '0.3rem 0.5rem',
-                              color: 'var(--text-secondary)',
+                              color: reachedMaxStock ? '#cbd5e1' : 'var(--text-secondary)',
+                              cursor: reachedMaxStock ? 'not-allowed' : 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                             }}
@@ -351,9 +365,11 @@ export default function CartDrawer() {
                           <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--brand-sage)' }}>
                             ${(itemTransferPrice * item.quantity).toLocaleString('es-AR')}
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                            ${item.subtotal.toLocaleString('es-AR')} (Lista)
-                          </div>
+                          {discountPct > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                              ${item.subtotal.toLocaleString('es-AR')} (Lista)
+                            </div>
+                          )}
                         </div>
 
                         {/* Eliminar */}
@@ -402,7 +418,8 @@ export default function CartDrawer() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                     {crossSellItems.map((cross) => {
-                      const crossPrice = Math.round(cross.basePrice * 0.85);
+                      const crossPct = cross.transferDiscountPercent ?? 15;
+                      const crossPrice = Math.round(cross.basePrice * (1 - crossPct / 100));
                       return (
                         <div
                           key={cross.id}
@@ -436,9 +453,11 @@ export default function CartDrawer() {
                             </div>
                             <div style={{ fontSize: '0.74rem', color: 'var(--brand-sage)', fontWeight: 700 }}>
                               ${crossPrice.toLocaleString('es-AR')}{' '}
-                              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 400 }}>
-                                (15% OFF)
-                              </span>
+                              {crossPct > 0 && (
+                                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 400 }}>
+                                  ({crossPct}% OFF)
+                                </span>
+                              )}
                             </div>
                           </div>
                           <button
@@ -501,10 +520,12 @@ export default function CartDrawer() {
               </div>
 
               {/* Descuento por Transferencia */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--cta-green)', fontWeight: 700 }}>
-                <span>Descuento Transferencia (-15%)</span>
-                <span>-${transferDiscount.toLocaleString('es-AR')}</span>
-              </div>
+              {transferDiscount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', color: 'var(--cta-green)', fontWeight: 700 }}>
+                  <span>Descuento Transferencia</span>
+                  <span>-${transferDiscount.toLocaleString('es-AR')}</span>
+                </div>
+              )}
 
               <div
                 style={{

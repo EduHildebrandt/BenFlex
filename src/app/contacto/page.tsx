@@ -27,11 +27,32 @@ export default function ContactoShowroomPage() {
     message: '',
   });
   const [sent, setSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.message.trim()) return;
-    setSent(true);
+
+    setIsSending(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setErrorMsg(data.error || 'No se pudo registrar la consulta. Probá por WhatsApp directo.');
+        return;
+      }
+      setSent(true);
+    } catch {
+      setErrorMsg('Error de conexión. Podés escribirnos directamente por WhatsApp.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const whatsappDirectUrl = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
@@ -460,8 +481,25 @@ export default function ContactoShowroomPage() {
                   />
                 </div>
 
+                {errorMsg && (
+                  <div
+                    style={{
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '10px',
+                      color: '#b91c1c',
+                      fontSize: '0.84rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errorMsg}
+                  </div>
+                )}
+
                 <button
                   type="submit"
+                  disabled={isSending}
                   style={{
                     backgroundColor: 'var(--brand-sage)',
                     color: '#ffffff',
@@ -473,11 +511,13 @@ export default function ContactoShowroomPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
+                    cursor: isSending ? 'not-allowed' : 'pointer',
+                    opacity: isSending ? 0.75 : 1,
                     boxShadow: '0 6px 20px rgba(45, 90, 63, 0.3)',
                   }}
                 >
                   <Send size={18} />
-                  <span>Enviar Consulta al Showroom</span>
+                  <span>{isSending ? 'Enviando consulta...' : 'Enviar Consulta al Showroom'}</span>
                 </button>
               </form>
             )}

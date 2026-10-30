@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -18,26 +18,33 @@ import {
   ArrowLeft,
   Sparkles,
   Lock,
+  AlertCircle,
 } from 'lucide-react';
 import {
   PaymentMethod,
   DeliveryMethod,
-  Order,
+  CreateOrderPayload,
   BENFLEX_BANK_INFO,
   BENFLEX_CONTACT,
 } from '@/types';
+
+function generateIdempotencyKey(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `bf-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const {
     cartItems,
     subtotal,
-    shippingOriginal,
-    shippingFinal,
+    transferDiscount: cartTransferDiscount,
     clearCart,
   } = useCart();
   const { location, updateByPostalCode } = useLocation();
-  const { placeOrder } = useProducts();
+  const { submitOrder } = useProducts();
 
   // Estados del Formulario One-Step
   const [customerName, setCustomerName] = useState('');
@@ -55,17 +62,31 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transferencia');
   const [installments, setInstallments] = useState<number>(3);
 
+  // Clave de idempotencia estable para evitar pedidos/descuentos de stock duplicados ante doble clic
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => generateIdempotencyKey());
+
   // Estados de UI
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderCompleted, setOrderCompleted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Si cambia la composición del carrito o el medio de pago/entrega tras un error, rotamos la clave de idempotencia
+  const cartFingerprint = cartItems.map((i) => `${i.id}:${i.quantity}`).join('|');
+  useEffect(() => {
+    if (!isSubmitting && !orderCompleted) {
+      setIdempotencyKey(generateIdempotencyKey());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartFingerprint, paymentMethod, deliveryMethod]);
 
   // Recálculos en tiempo real según método de pago y provincia de destino
   const isDestinationSanJuan = deliveryMethod === 'showroom' || isSanJuanPostalCode(postalCode);
   const estimatedSanJuanShipping = Math.round(subtotal * 0.1);
   const isTransfer = paymentMethod === 'transferencia';
-  const transferDiscount = isTransfer ? Math.round(subtotal * 0.15) : 0;
-  const finalTotal = subtotal - transferDiscount;
+  const transferDiscount = isTransfer ? cartTransferDiscount : 0;
+  const finalTotal = Math.max(0, subtotal - transferDiscount);
 
   // Cuotas para tarjeta de crédito
   const installmentAmount = Math.round(subtotal / installments);
@@ -88,57 +109,94 @@ export default function CheckoutPage() {
 
   const validateForm = () => {
     const errs: Record<string, string> = {};
-    if (!customerName.trim()) errs.name = 'Ingresá tu nombre y apellido completo';
-    if (!customerEmail.trim() || !customerEmail.includes('@')) errs.email = 'Ingresá un email válido';
-    if (!customerPhone.trim() || customerPhone.length < 8) errs.phone = 'Ingresá tu WhatsApp o teléfono';
+    if (!customerName.trim() || customerName.trim().length < 2) {
+      errs.name = 'Ingresá tu nombre y apellido completo';
+    }
+    if (!customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+      errs.email = 'Ingresá un email válido';
+    }
+    if (!customerPhone.trim() || customerPhone.replace(/\D/g, '').length < 8) {
+      errs.phone = 'Ingresá tu WhatsApp o teléfono (mínimo 8 dígitos)';
+    }
     if (deliveryMethod === 'delivery') {
-      if (!address.trim()) errs.address = 'Ingresá tu calle y número';
-      if (!postalCode.trim()) errs.postalCode = 'Ingresá tu código postal';
+      if (!address.trim() || address.trim().length < 3) {
+        errs.address = 'Ingresá tu calle y número';
+      }
+      if (!postalCode.trim()) {
+        errs.postalCode = 'Ingresá tu código postal';
+      }
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || orderCompleted) return;
+    setSubmitError(null);
+
     if (!validateForm()) return;
     if (cartItems.length === 0) return;
 
     setIsSubmitting(true);
 
-    const orderId = `BF-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const newOrder: Order = {
-      id: orderId,
-      date: new Date().toISOString(),
-      customerName,
-      customerEmail,
-      customerPhone,
+    const payload: CreateOrderPayload = {
+      idempotencyKey,
+      customerName: customerName.trim(),
+      customerEmail: customerEmail.trim(),
+      customerPhone: customerPhone.trim(),
+      customerDni: customerDni.trim() || undefined,
       deliveryMethod,
-      postalCode: deliveryMethod === 'delivery' ? postalCode : BENFLEX_CONTACT.postalCode,
-      address: deliveryMethod === 'delivery' ? address : `Showroom BenFlex - ${BENFLEX_CONTACT.address}`,
-      city: deliveryMethod === 'delivery' ? city : BENFLEX_CONTACT.city,
-      province: deliveryMethod === 'delivery' ? province : BENFLEX_CONTACT.province,
-      notes,
+      postalCode: deliveryMethod === 'delivery' ? postalCode.trim() : BENFLEX_CONTACT.postalCode,
+      address:
+        deliveryMethod === 'delivery'
+          ? address.trim()
+          : `Showroom BenFlex - ${BENFLEX_CONTACT.address}`,
+      city: deliveryMethod === 'delivery' ? city.trim() : BENFLEX_CONTACT.city,
+      province: deliveryMethod === 'delivery' ? province.trim() : BENFLEX_CONTACT.province,
+      notes: notes.trim() || undefined,
       paymentMethod,
-      items: cartItems,
-      subtotal,
-      shippingOriginal: isDestinationSanJuan ? estimatedSanJuanShipping : 0,
-      shippingDiscount: isDestinationSanJuan ? estimatedSanJuanShipping : 0,
-      shippingFinal: 0,
-      transferDiscount,
-      total: finalTotal,
       installments: paymentMethod === 'credito' ? installments : undefined,
-      status: paymentMethod === 'transferencia' ? 'PENDIENTE_COMPROBANTE' : 'APROBADO',
+      items: cartItems.map((item) => ({
+        productId: item.productId,
+        variationName: item.variationName,
+        fabric: item.fabric,
+        quantity: item.quantity,
+      })),
     };
 
-    placeOrder(newOrder);
-    clearCart();
+    const result = await submitOrder(payload);
 
-    setTimeout(() => {
-      router.push(`/order-confirmation?id=${orderId}`);
-    }, 600);
+    if (!result.success || !result.order) {
+      setSubmitError(
+        result.error || 'No se pudo procesar el pedido. Verificá los datos e intentá nuevamente.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    setOrderCompleted(true);
+    clearCart();
+    const tokenParam = result.accessToken
+      ? `&token=${encodeURIComponent(result.accessToken)}`
+      : '';
+    router.push(`/order-confirmation?id=${encodeURIComponent(result.order.id)}${tokenParam}`);
   };
+
+  if (orderCompleted) {
+    return (
+      <div style={{ padding: '6rem 1rem', textAlign: 'center', backgroundColor: '#faf9f5' }}>
+        <div className="container" style={{ maxWidth: '480px' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
+            ¡Pedido confirmado!
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.65rem' }}>
+            Generando tu comprobante seguro de reserva...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -179,6 +237,8 @@ export default function CheckoutPage() {
             marginBottom: '2rem',
             borderBottom: '1px solid #e5e7eb',
             paddingBottom: '1.25rem',
+            flexWrap: 'wrap',
+            gap: '1rem',
           }}
         >
           <div>
@@ -217,7 +277,7 @@ export default function CheckoutPage() {
             }}
           >
             <Lock size={15} />
-            <span>Encriptación SSL 256-Bit</span>
+            <span>Transacción Protegida SSL</span>
           </div>
         </div>
 
@@ -255,12 +315,12 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.name ? '1px solid red' : '1px solid #d1d5db',
+                        border: errors.name ? '1px solid #dc2626' : '1px solid #d1d5db',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.name && <span style={{ color: 'red', fontSize: '0.75rem' }}>{errors.name}</span>}
+                    {errors.name && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.name}</span>}
                   </div>
 
                   <div>
@@ -276,12 +336,12 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.phone ? '1px solid red' : '1px solid #d1d5db',
+                        border: errors.phone ? '1px solid #dc2626' : '1px solid #d1d5db',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.phone && <span style={{ color: 'red', fontSize: '0.75rem' }}>{errors.phone}</span>}
+                    {errors.phone && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.phone}</span>}
                   </div>
 
                   <div>
@@ -297,17 +357,17 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.email ? '1px solid red' : '1px solid #d1d5db',
+                        border: errors.email ? '1px solid #dc2626' : '1px solid #d1d5db',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.email && <span style={{ color: 'red', fontSize: '0.75rem' }}>{errors.email}</span>}
+                    {errors.email && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.email}</span>}
                   </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-                      DNI / CUIT (para factura y garantía)
+                      DNI / CUIT (para factura y garantía escrita)
                     </label>
                     <input
                       type="text"
@@ -413,12 +473,12 @@ export default function CheckoutPage() {
                           width: '100%',
                           padding: '0.75rem',
                           borderRadius: '8px',
-                          border: errors.postalCode ? '1px solid red' : '1px solid #d1d5db',
+                          border: errors.postalCode ? '1px solid #dc2626' : '1px solid #d1d5db',
                           fontSize: '0.9rem',
                           outline: 'none',
                         }}
                       />
-                      {errors.postalCode && <span style={{ color: 'red', fontSize: '0.75rem' }}>{errors.postalCode}</span>}
+                      {errors.postalCode && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.postalCode}</span>}
                     </div>
 
                     <div style={{ gridColumn: 'span 2' }}>
@@ -434,12 +494,12 @@ export default function CheckoutPage() {
                           width: '100%',
                           padding: '0.75rem',
                           borderRadius: '8px',
-                          border: errors.address ? '1px solid red' : '1px solid #d1d5db',
+                          border: errors.address ? '1px solid #dc2626' : '1px solid #d1d5db',
                           fontSize: '0.9rem',
                           outline: 'none',
                         }}
                       />
-                      {errors.address && <span style={{ color: 'red', fontSize: '0.75rem' }}>{errors.address}</span>}
+                      {errors.address && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.address}</span>}
                     </div>
 
                     <div>
@@ -479,6 +539,26 @@ export default function CheckoutPage() {
                         }}
                       />
                     </div>
+
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+                        Indicaciones adicionales de entrega (opcional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Portón blanco, horario de tarde..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          borderRadius: '8px',
+                          border: '1px solid #d1d5db',
+                          fontSize: '0.9rem',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div
@@ -499,7 +579,7 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {/* Paso 3: Medio de Pago */}
+              {/* Paso 3: Medio de Pago (Cumplimiento PCI-DSS SAQ-A: sin captura de PAN/CVV en el sitio) */}
               <div
                 className="glass-card"
                 style={{ padding: '1.75rem', backgroundColor: '#ffffff', borderRadius: '18px' }}
@@ -536,12 +616,14 @@ export default function CheckoutPage() {
                           <Building size={18} color="var(--brand-sage)" />
                           <span>Transferencia Bancaria o Depósito</span>
                         </div>
-                        <span className="badge-pill badge-discount" style={{ fontSize: '0.75rem' }}>
-                          15% OFF Exclusivo
-                        </span>
+                        {cartTransferDiscount > 0 && (
+                          <span className="badge-pill badge-discount" style={{ fontSize: '0.75rem' }}>
+                            Descuento Directo Aplicado
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                        Ahorrás ${Math.round(subtotal * 0.15).toLocaleString('es-AR')}. Coordinación inmediata por WhatsApp con comprobante.
+                        Ahorrás ${cartTransferDiscount.toLocaleString('es-AR')}. Coordinación inmediata por WhatsApp con comprobante.
                       </div>
                     </div>
                   </label>
@@ -573,7 +655,7 @@ export default function CheckoutPage() {
                         <span>Tarjeta de Crédito (Hasta 12 cuotas)</span>
                       </div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                        Visa, Mastercard, Cabal o American Express al precio de lista.
+                        Visa, Mastercard, Cabal o American Express mediante link de pago seguro oficial.
                       </div>
                     </div>
                   </label>
@@ -605,7 +687,7 @@ export default function CheckoutPage() {
                         <span>Tarjeta de Débito (1 pago sin recargo)</span>
                       </div>
                       <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                        Visa Débito, Maestro o Cabal Débito con acreditación en el acto.
+                        Visa Débito, Maestro o Cabal Débito mediante link de pago encriptado.
                       </div>
                     </div>
                   </label>
@@ -670,15 +752,9 @@ export default function CheckoutPage() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span><strong>Banco:</strong> {BENFLEX_BANK_INFO.bankName}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span><strong>Titular:</strong> {BENFLEX_BANK_INFO.holder}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span><strong>CUIT:</strong> {BENFLEX_BANK_INFO.cuit}</span>
-                      </div>
+                      <div><strong>Banco:</strong> {BENFLEX_BANK_INFO.bankName}</div>
+                      <div><strong>Titular:</strong> {BENFLEX_BANK_INFO.holder}</div>
+                      <div><strong>CUIT:</strong> {BENFLEX_BANK_INFO.cuit}</div>
 
                       {/* Alias con botón Copiar */}
                       <div
@@ -758,12 +834,12 @@ export default function CheckoutPage() {
                     </div>
 
                     <div style={{ marginTop: '0.85rem', fontSize: '0.78rem', color: '#047857', fontWeight: 600 }}>
-                      ✓ Al confirmar el pedido, serás dirigido a la pantalla para adjuntar o enviar tu comprobante directamente por WhatsApp.
+                      ✓ Al confirmar el pedido, reservaremos tu stock y pasarás a la pantalla para enviar el comprobante por WhatsApp.
                     </div>
                   </div>
                 )}
 
-                {/* Calculador de Cuotas e Inputs de Tarjeta si seleccionó Crédito o Débito */}
+                {/* Plan de Cuotas y Aviso PCI-DSS SAQ-A (Cero ingreso de PAN/CVV en formulario propio) */}
                 {(paymentMethod === 'credito' || paymentMethod === 'debito') && (
                   <div
                     className="animate-fade-in"
@@ -780,7 +856,7 @@ export default function CheckoutPage() {
                     {paymentMethod === 'credito' && (
                       <div>
                         <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                          Elegí tu plan de cuotas:
+                          Elegí tu plan de cuotas a solicitar:
                         </label>
                         <select
                           value={installments}
@@ -803,60 +879,24 @@ export default function CheckoutPage() {
                       </div>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                          Número de Tarjeta ({paymentMethod === 'credito' ? 'Crédito' : 'Débito'})
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="4509 •••• •••• ••••"
-                          maxLength={19}
-                          style={{
-                            width: '100%',
-                            padding: '0.7rem',
-                            borderRadius: '8px',
-                            border: '1px solid #d1d5db',
-                            fontSize: '0.88rem',
-                            backgroundColor: '#ffffff',
-                          }}
-                        />
-                      </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '0.65rem',
+                        padding: '0.9rem 1rem',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '10px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.82rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <Lock size={18} color="var(--brand-sage)" style={{ flexShrink: 0, marginTop: '2px' }} />
                       <div>
-                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                          Vencimiento (MM/AA)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="08/29"
-                          maxLength={5}
-                          style={{
-                            width: '100%',
-                            padding: '0.7rem',
-                            borderRadius: '8px',
-                            border: '1px solid #d1d5db',
-                            fontSize: '0.88rem',
-                            backgroundColor: '#ffffff',
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                          Código de Seguridad (CVV)
-                        </label>
-                        <input
-                          type="password"
-                          placeholder="•••"
-                          maxLength={4}
-                          style={{
-                            width: '100%',
-                            padding: '0.7rem',
-                            borderRadius: '8px',
-                            border: '1px solid #d1d5db',
-                            fontSize: '0.88rem',
-                            backgroundColor: '#ffffff',
-                          }}
-                        />
+                        <strong style={{ color: 'var(--brand-navy)' }}>Seguridad Financiera (PCI-DSS):</strong>{' '}
+                        Por tu protección, BenFlex <strong>nunca solicita ni almacena números de tarjeta ni códigos CVV</strong> en esta web. Al confirmar tu pedido se reservará el stock y te enviaremos el link de pago oficial encriptado (Posnet Web / Mercado Pago) para completar el abono.
                       </div>
                     </div>
                   </div>
@@ -876,7 +916,7 @@ export default function CheckoutPage() {
                       lineHeight: 1.5,
                     }}
                   >
-                    <strong>Checkout Pro de Mercado Pago:</strong> Al confirmar tu pedido, se generará tu orden segura para abonar con dinero en cuenta, tarjetas asociadas o código QR desde la app de Mercado Pago.
+                    <strong>Pago Seguro con Mercado Pago:</strong> Al confirmar tu pedido se reservará tu mercadería en fábrica y recibirás el link oficial de Checkout Pro para abonar desde tu app de Mercado Pago con Compra Protegida.
                   </div>
                 )}
               </div>
@@ -940,7 +980,8 @@ export default function CheckoutPage() {
                         {item.product.name}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {item.variationName} • Cant: {item.quantity}
+                        {item.variationName}
+                        {item.fabric ? ` • ${item.fabric}` : ''} • Cant: {item.quantity}
                       </div>
                     </div>
                     <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--brand-navy)' }}>
@@ -979,9 +1020,9 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Descuento por Transferencia */}
-                {isTransfer && (
+                {isTransfer && transferDiscount > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.92rem', color: 'var(--cta-green)', fontWeight: 700 }}>
-                    <span>Descuento Transferencia (-15%)</span>
+                    <span>Descuento Transferencia</span>
                     <span>-${transferDiscount.toLocaleString('es-AR')}</span>
                   </div>
                 )}
@@ -1002,7 +1043,7 @@ export default function CheckoutPage() {
                     </div>
                     {paymentMethod === 'credito' && (
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        {installments} cuotas de ${installmentAmount.toLocaleString('es-AR')}
+                        {installments} {installments === 1 ? 'pago' : 'cuotas'} de ${installmentAmount.toLocaleString('es-AR')}
                       </div>
                     )}
                   </div>
@@ -1018,6 +1059,29 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Mensaje de error de validación / concurrencia de stock */}
+              {submitError && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.55rem',
+                    padding: '0.85rem 1rem',
+                    marginBottom: '1rem',
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '10px',
+                    color: '#b91c1c',
+                    fontSize: '0.83rem',
+                    fontWeight: 600,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <span>{submitError}</span>
+                </div>
+              )}
 
               {/* Botón de Confirmación de Pedido */}
               <button
@@ -1041,7 +1105,7 @@ export default function CheckoutPage() {
                   transition: 'background-color 0.2s',
                 }}
               >
-                <span>{isSubmitting ? 'Procesando tu pedido...' : 'Confirmar Pedido'}</span>
+                <span>{isSubmitting ? 'Verificando stock y registrando...' : 'Confirmar Pedido'}</span>
                 <ArrowRight size={18} />
               </button>
 
