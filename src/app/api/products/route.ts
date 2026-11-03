@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDbProducts, upsertDbProduct, deleteDbProduct } from '@/lib/db';
+import { getDbProducts, upsertDbProduct, deleteDbProduct, isDbConfigured } from '@/lib/db';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { requireAdmin } from '@/lib/auth';
 import { validateProductInput } from '@/lib/validation';
@@ -7,7 +7,8 @@ import { validateProductInput } from '@/lib/validation';
 export async function GET() {
   try {
     const products = await getDbProducts();
-    return NextResponse.json({ source: 'supabase', products });
+    const source = isDbConfigured() ? 'supabase' : 'local';
+    return NextResponse.json({ source, products });
   } catch (error) {
     console.error('[API /products GET] Fallback local activado:', error);
     return NextResponse.json(
@@ -35,11 +36,12 @@ export async function POST(req: NextRequest) {
     }
 
     const saved = await upsertDbProduct(validation.data);
-    return NextResponse.json({ success: true, product: saved });
+    const source = isDbConfigured() ? 'supabase' : 'local';
+    return NextResponse.json({ success: true, product: saved, source });
   } catch (error) {
     console.error('[API /products POST] Error guardando producto:', error);
     return NextResponse.json(
-      { success: false, error: 'No se pudo guardar el producto en la base de datos.' },
+      { success: false, error: 'No se pudo guardar el producto. Verificá los campos ingresados.' },
       { status: 500 }
     );
   }

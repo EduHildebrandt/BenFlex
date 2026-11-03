@@ -50,9 +50,9 @@ function cleanText(val: unknown, maxLen: number): string {
 export function isSafeImageUrl(url: string): boolean {
   if (!url) return false;
   if (url.startsWith('/') && !url.startsWith('//')) return true;
-  if (url.startsWith('https://')) return url.length <= 2048;
-  if (/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(url)) {
-    return url.length <= 900_000; // Máx ~650 KB binario comprimido
+  if (url.startsWith('https://') || url.startsWith('http://')) return url.length <= 4096;
+  if (/^data:image\/(jpeg|jpg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url)) {
+    return url.length <= 1_800_000; // Máx ~1.3 MB binario comprimido
   }
   return false;
 }
@@ -106,7 +106,7 @@ export function validateProductInput(
   if (!isSafeImageUrl(image)) {
     return {
       valid: false,
-      error: 'La imagen debe ser una URL HTTPS segura o una foto JPEG/PNG/WebP comprimida (< 650 KB).',
+      error: 'La imagen debe ser una URL HTTP/HTTPS válida o una foto JPEG/PNG/WebP seleccionada desde tu dispositivo.',
     };
   }
 

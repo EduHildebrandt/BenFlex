@@ -9,6 +9,7 @@ interface ProductContextType {
   orders: Order[];
   isLoading: boolean;
   dbConnected: boolean;
+  dataSource: 'supabase' | 'local' | 'fallback';
   refreshProducts: () => Promise<void>;
   fetchAdminOrders: () => Promise<{ success: boolean; orders?: Order[]; error?: string }>;
   saveProduct: (product: Product) => Promise<{ success: boolean; product?: Product; error?: string }>;
@@ -30,6 +31,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState(false);
+  const [dataSource, setDataSource] = useState<'supabase' | 'local' | 'fallback'>('local');
 
   const refreshProducts = useCallback(async () => {
     try {
@@ -40,9 +42,11 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
           setProducts(pData.products);
         }
         setDbConnected(pData.source === 'supabase');
+        setDataSource(pData.source || 'local');
       }
     } catch (e) {
       console.warn('No se pudo conectar al catálogo remoto, usando catálogo base:', e);
+      setDataSource('fallback');
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +191,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         orders,
         isLoading,
         dbConnected,
+        dataSource,
         refreshProducts,
         fetchAdminOrders,
         saveProduct,

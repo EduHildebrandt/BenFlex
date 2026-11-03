@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     const token = createAdminSessionToken(role);
     const res = NextResponse.json({ success: true, role });
-    applyAdminSessionCookie(res, token);
+    applyAdminSessionCookie(res, token, req);
     return res;
   } catch {
     return NextResponse.json(
@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
   const res = NextResponse.json({ success: true });
-  clearAdminSessionCookie(res);
+  clearAdminSessionCookie(res, req);
   return res;
 }
