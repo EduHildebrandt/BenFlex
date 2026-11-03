@@ -11,6 +11,17 @@ import {
 } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { safeCompareStrings } from '@/lib/auth';
+import {
+  getLocalProducts,
+  upsertLocalProduct,
+  deleteLocalProduct,
+  getLocalOrders,
+  getLocalOrderByIdAndToken,
+  createValidatedLocalOrder,
+  updateLocalOrderStatus,
+  getLocalInquiries,
+  createLocalInquiry,
+} from '@/lib/localStore';
 
 const globalForPg = globalThis as unknown as {
   pgPool: Pool | undefined;
@@ -30,6 +41,16 @@ export function isSanJuanPostalCodeServer(cpInput?: string): boolean {
   if (!cpInput) return false;
   const num = parseInt(cpInput.replace(/\D/g, ''), 10);
   return !Number.isNaN(num) && num >= 5400 && num <= 5499;
+}
+
+export function isDbConfigured(): boolean {
+  const url = process.env.DATABASE_URL;
+  return Boolean(
+    url &&
+      url.trim().length > 0 &&
+      !url.includes('[PROJECT-REF]') &&
+      !url.includes('change-this')
+  );
 }
 
 export function getPool(): Pool {
@@ -225,12 +246,21 @@ export function mapRowToOrder(row: any): Order {
 }
 
 export async function getDbProducts(): Promise<Product[]> {
-  await ensureSchema();
-  const pool = getPool();
-  const res = await pool.query(
-    'SELECT * FROM public.benflex_products WHERE is_active = true ORDER BY created_at ASC'
-  );
-  return res.rows.map(mapRowToProduct);
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query(
+        'SELECT * FROM public.benflex_products WHERE is_active = true ORDER BY created_at ASC'
+      );
+      if (res.rows.length > 0) {
+        return res.rows.map(mapRowToProduct);
+      }
+    } catch (err) {
+      console.warn('[DB Products] Error consultando Supabase, usando almacenamiento local:', err);
+    }
+  }
+  return getLocalProducts();
 }
 
 async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promise<Product> {
@@ -307,28 +337,52 @@ async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promi
 }
 
 export async function upsertDbProduct(p: Product): Promise<Product> {
-  await ensureSchema();
-  const pool = getPool();
-  return upsertDbProductInternal(pool, p);
+  // Sincronizar siempre con almacenamiento local
+  const localSaved = upsertLocalProduct(p);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      return await upsertDbProductInternal(pool, p);
+    } catch (err) {
+      console.warn('[DB Products] Error guardando en Supabase, persistido en local store:', err);
+      return localSaved;
+    }
+  }
+
+  return localSaved;
 }
 
 export async function deleteDbProduct(id: string): Promise<void> {
-  await ensureSchema();
-  const pool = getPool();
-  await pool.query(
-    'UPDATE public.benflex_products SET is_active = false, updated_at = NOW() WHERE id = $1',
-    [id]
-  );
+  deleteLocalProduct(id);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      await pool.query(
+        'UPDATE public.benflex_products SET is_active = false, updated_at = NOW() WHERE id = $1',
+        [id]
+      );
+    } catch (err) {
+      console.warn('[DB Products] Error eliminando en Supabase, eliminado localmente:', err);
+    }
+  }
 }
 
 export async function createValidatedDbOrder(
   payload: CreateOrderPayload
 ): Promise<{ order: Order; accessToken: string; deduplicated: boolean }> {
-  await ensureSchema();
-  const pool = getPool();
-  const client = await pool.connect();
+  if (!isDbConfigured()) {
+    return createValidatedLocalOrder(payload);
+  }
 
+  let client: PoolClient | null = null;
   try {
+    await ensureSchema();
+    const pool = getPool();
+    client = await pool.connect();
     await client.query('BEGIN');
 
     // 1. Verificar clave de idempotencia para evitar cobros / órdenes duplicadas
@@ -513,24 +567,50 @@ export async function createValidatedDbOrder(
     );
 
     await client.query('COMMIT');
+    const confirmedOrder = mapRowToOrder(insertRes.rows[0]);
+
+    // También reflejar en almacenamiento local
+    try {
+      createValidatedLocalOrder(payload);
+    } catch {}
+
     return {
-      order: mapRowToOrder(insertRes.rows[0]),
+      order: confirmedOrder,
       accessToken,
       deduplicated: false,
     };
   } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {}
+    }
+    if (err instanceof OrderBusinessError) {
+      throw err;
+    }
+    console.warn('[DB Orders] Error procesando en Supabase, procesando en almacenamiento local:', err);
+    return createValidatedLocalOrder(payload);
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
   }
 }
 
 export async function getDbOrders(): Promise<Order[]> {
-  await ensureSchema();
-  const pool = getPool();
-  const res = await pool.query('SELECT * FROM public.benflex_orders ORDER BY date DESC');
-  return res.rows.map(mapRowToOrder);
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query('SELECT * FROM public.benflex_orders ORDER BY date DESC');
+      if (res.rows.length > 0) {
+        return res.rows.map(mapRowToOrder);
+      }
+    } catch (err) {
+      console.warn('[DB Orders] Error consultando Supabase, leyendo pedidos locales:', err);
+    }
+  }
+  return getLocalOrders();
 }
 
 export async function getDbOrderByIdAndToken(
@@ -538,110 +618,131 @@ export async function getDbOrderByIdAndToken(
   token?: string | null,
   isAdmin: boolean = false
 ): Promise<Order | null> {
-  await ensureSchema();
-  const pool = getPool();
-  const res = await pool.query('SELECT * FROM public.benflex_orders WHERE id = $1 LIMIT 1', [
-    orderId,
-  ]);
-  if (res.rows.length === 0) return null;
-
-  const row = res.rows[0];
-  if (isAdmin) {
-    return mapRowToOrder(row);
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query('SELECT * FROM public.benflex_orders WHERE id = $1 LIMIT 1', [
+        orderId,
+      ]);
+      if (res.rows.length > 0) {
+        const row = res.rows[0];
+        if (isAdmin) {
+          return mapRowToOrder(row);
+        }
+        if (token && row.access_token && safeCompareStrings(token, row.access_token)) {
+          return mapRowToOrder(row);
+        }
+        return null;
+      }
+    } catch (err) {
+      console.warn('[DB Order ID] Error consultando Supabase:', err);
+    }
   }
-
-  if (!token || !row.access_token || !safeCompareStrings(token, row.access_token)) {
-    return null;
-  }
-  return mapRowToOrder(row);
+  return getLocalOrderByIdAndToken(orderId, token, isAdmin);
 }
 
 export async function updateDbOrderStatus(
   orderId: string,
   newStatus: OrderStatus
 ): Promise<Order> {
-  await ensureSchema();
-  const pool = getPool();
-  const client = await pool.connect();
-
+  // Siempre actualizar copia local
   try {
-    await client.query('BEGIN');
+    updateLocalOrderStatus(orderId, newStatus);
+  } catch {}
 
-    const orderRes = await client.query(
-      'SELECT * FROM public.benflex_orders WHERE id = $1 FOR UPDATE',
-      [orderId]
-    );
-    if (orderRes.rows.length === 0) {
-      throw new OrderBusinessError('Pedido no encontrado.', 404);
-    }
+  if (isDbConfigured()) {
+    let client: PoolClient | null = null;
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      client = await pool.connect();
+      await client.query('BEGIN');
 
-    const row = orderRes.rows[0];
-    const items: CartItem[] = Array.isArray(row.items) ? row.items : [];
-    const wasDeducted = Boolean(row.stock_deducted);
-    let nextStockDeducted = wasDeducted;
+      const orderRes = await client.query(
+        'SELECT * FROM public.benflex_orders WHERE id = $1 FOR UPDATE',
+        [orderId]
+      );
+      if (orderRes.rows.length > 0) {
+        const row = orderRes.rows[0];
+        const items: CartItem[] = Array.isArray(row.items) ? row.items : [];
+        const wasDeducted = Boolean(row.stock_deducted);
+        let nextStockDeducted = wasDeducted;
 
-    // Agrupar items por productId en orden determinístico
-    const qtyByProduct = new Map<string, number>();
-    for (const item of items) {
-      if (item?.productId && Number(item?.quantity) > 0) {
-        qtyByProduct.set(
-          item.productId,
-          (qtyByProduct.get(item.productId) || 0) + Number(item.quantity)
-        );
-      }
-    }
-    const sortedProductIds = Array.from(qtyByProduct.keys()).sort();
-
-    if (newStatus === 'CANCELADO' && wasDeducted) {
-      // Devolver stock al catálogo al cancelar un pedido activo
-      for (const pid of sortedProductIds) {
-        const qty = qtyByProduct.get(pid) || 0;
-        await client.query(
-          'UPDATE public.benflex_products SET stock = stock + $1, updated_at = NOW() WHERE id = $2',
-          [qty, pid]
-        );
-      }
-      nextStockDeducted = false;
-    } else if (newStatus !== 'CANCELADO' && !wasDeducted) {
-      // Si se reactiva un pedido previamente cancelado, volver a verificar y reservar stock
-      for (const pid of sortedProductIds) {
-        const qty = qtyByProduct.get(pid) || 0;
-        const pRes = await client.query(
-          'SELECT name, stock FROM public.benflex_products WHERE id = $1 FOR UPDATE',
-          [pid]
-        );
-        if (pRes.rows.length === 0 || Number(pRes.rows[0].stock) < qty) {
-          throw new OrderBusinessError(
-            `No hay stock suficiente para reactivar el pedido (${pRes.rows[0]?.name || pid}).`,
-            409
-          );
+        // Agrupar items por productId en orden determinístico
+        const qtyByProduct = new Map<string, number>();
+        for (const item of items) {
+          if (item?.productId && Number(item?.quantity) > 0) {
+            qtyByProduct.set(
+              item.productId,
+              (qtyByProduct.get(item.productId) || 0) + Number(item.quantity)
+            );
+          }
         }
-        await client.query(
-          'UPDATE public.benflex_products SET stock = stock - $1, updated_at = NOW() WHERE id = $2',
-          [qty, pid]
+        const sortedProductIds = Array.from(qtyByProduct.keys()).sort();
+
+        if (newStatus === 'CANCELADO' && wasDeducted) {
+          // Devolver stock al catálogo al cancelar un pedido activo
+          for (const pid of sortedProductIds) {
+            const qty = qtyByProduct.get(pid) || 0;
+            await client.query(
+              'UPDATE public.benflex_products SET stock = stock + $1, updated_at = NOW() WHERE id = $2',
+              [qty, pid]
+            );
+          }
+          nextStockDeducted = false;
+        } else if (newStatus !== 'CANCELADO' && !wasDeducted) {
+          // Si se reactiva un pedido previamente cancelado, volver a verificar y reservar stock
+          for (const pid of sortedProductIds) {
+            const qty = qtyByProduct.get(pid) || 0;
+            const pRes = await client.query(
+              'SELECT name, stock FROM public.benflex_products WHERE id = $1 FOR UPDATE',
+              [pid]
+            );
+            if (pRes.rows.length === 0 || Number(pRes.rows[0].stock) < qty) {
+              throw new OrderBusinessError(
+                `No hay stock suficiente para reactivar el pedido (${pRes.rows[0]?.name || pid}).`,
+                409
+              );
+            }
+            await client.query(
+              'UPDATE public.benflex_products SET stock = stock - $1, updated_at = NOW() WHERE id = $2',
+              [qty, pid]
+            );
+          }
+          nextStockDeducted = true;
+        }
+
+        const updatedRes = await client.query(
+          `
+          UPDATE public.benflex_orders
+          SET status = $2, stock_deducted = $3
+          WHERE id = $1
+          RETURNING *;
+          `,
+          [orderId, newStatus, nextStockDeducted]
         );
+
+        await client.query('COMMIT');
+        return mapRowToOrder(updatedRes.rows[0]);
       }
-      nextStockDeducted = true;
+    } catch (err) {
+      if (client) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {}
+      }
+      console.warn('[DB Orders] Error actualizando estado en Supabase:', err);
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
-
-    const updatedRes = await client.query(
-      `
-      UPDATE public.benflex_orders
-      SET status = $2, stock_deducted = $3
-      WHERE id = $1
-      RETURNING *;
-      `,
-      [orderId, newStatus, nextStockDeducted]
-    );
-
-    await client.query('COMMIT');
-    return mapRowToOrder(updatedRes.rows[0]);
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
   }
+
+  const local = getLocalOrderByIdAndToken(orderId, null, true);
+  if (local) return local;
+  throw new Error(`Pedido #${orderId} no encontrado`);
 }
 
 export async function createDbInquiry(data: {
@@ -650,39 +751,58 @@ export async function createDbInquiry(data: {
   subject: string;
   message: string;
 }): Promise<CustomerInquiry> {
-  await ensureSchema();
-  const pool = getPool();
-  const res = await pool.query(
-    `
-    INSERT INTO public.benflex_inquiries (name, phone, subject, message)
-    VALUES ($1, $2, $3, $4)
-    RETURNING *;
-    `,
-    [data.name, data.phone, data.subject, data.message]
-  );
-  const row = res.rows[0];
-  return {
-    id: Number(row.id),
-    name: row.name,
-    phone: row.phone,
-    subject: row.subject,
-    message: row.message,
-    createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
-  };
+  const localInq = createLocalInquiry(data.name, data.phone, data.subject, data.message);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query(
+        `
+        INSERT INTO public.benflex_inquiries (name, phone, subject, message)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *;
+        `,
+        [data.name, data.phone, data.subject, data.message]
+      );
+      const row = res.rows[0];
+      return {
+        id: Number(row.id),
+        name: row.name,
+        phone: row.phone,
+        subject: row.subject,
+        message: row.message,
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
+      };
+    } catch (err) {
+      console.warn('[DB Inquiries] Error guardando consulta en Supabase:', err);
+    }
+  }
+
+  return localInq;
 }
 
 export async function getDbInquiries(): Promise<CustomerInquiry[]> {
-  await ensureSchema();
-  const pool = getPool();
-  const res = await pool.query(
-    'SELECT * FROM public.benflex_inquiries ORDER BY created_at DESC LIMIT 200'
-  );
-  return res.rows.map((row) => ({
-    id: Number(row.id),
-    name: row.name,
-    phone: row.phone,
-    subject: row.subject,
-    message: row.message,
-    createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
-  }));
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query(
+        'SELECT * FROM public.benflex_inquiries ORDER BY created_at DESC LIMIT 200'
+      );
+      if (res.rows.length > 0) {
+        return res.rows.map((row) => ({
+          id: Number(row.id),
+          name: row.name,
+          phone: row.phone,
+          subject: row.subject,
+          message: row.message,
+          createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
+        }));
+      }
+    } catch (err) {
+      console.warn('[DB Inquiries] Error consultando Supabase:', err);
+    }
+  }
+  return getLocalInquiries();
 }
