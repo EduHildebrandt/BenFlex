@@ -5,13 +5,20 @@ export type ProductCategory =
   | 'combos-benflex'
   | (string & {});
 
+export interface Category {
+  id: string;
+  label: string;
+  description?: string;
+}
+
 export type ProductTechnology =
   | 'alta_densidad'
   | 'resortes_pocket'
   | 'viscoelastica'
   | 'espuma_inteligente'
   | 'fibra_siliconada'
-  | 'anti_desgarro';
+  | 'anti_desgarro'
+  | (string & {});
 
 export type ProductMeasure =
   | '1 Plaza (80x190)'

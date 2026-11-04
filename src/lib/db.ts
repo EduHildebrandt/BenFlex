@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { Pool, PoolClient } from 'pg';
 import {
   Product,
+  Category,
   Order,
   OrderStatus,
   CartItem,
@@ -12,6 +13,10 @@ import {
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { safeCompareStrings } from '@/lib/auth';
 import {
+  DEFAULT_CATEGORIES,
+  getLocalCategories,
+  upsertLocalCategory,
+  deleteLocalCategory,
   getLocalProducts,
   upsertLocalProduct,
   deleteLocalProduct,
@@ -155,7 +160,17 @@ export async function ensureSchema(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS public.benflex_categories (
+      id TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      description TEXT,
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     -- Habilitar Row Level Security (RLS) en todas las tablas públicas (PostgREST Hardening)
+    ALTER TABLE public.benflex_categories ENABLE ROW LEVEL SECURITY;
     ALTER TABLE public.benflex_products ENABLE ROW LEVEL SECURITY;
     ALTER TABLE public.benflex_orders ENABLE ROW LEVEL SECURITY;
     ALTER TABLE public.benflex_inquiries ENABLE ROW LEVEL SECURITY;
@@ -178,6 +193,19 @@ export async function ensureSchema(): Promise<void> {
     $$;
   `);
 
+  // Seed inicial de categorías si la tabla está completamente vacía
+  const catCountRes = await pool.query('SELECT COUNT(*)::int AS cnt FROM public.benflex_categories');
+  if ((catCountRes.rows[0]?.cnt ?? 0) === 0) {
+    for (const cat of DEFAULT_CATEGORIES) {
+      await pool.query(
+        `INSERT INTO public.benflex_categories (id, label, description, is_active, updated_at)
+         VALUES ($1, $2, $3, true, NOW())
+         ON CONFLICT (id) DO NOTHING`,
+        [cat.id, cat.label, cat.description || null]
+      );
+    }
+  }
+
   // Seed inicial únicamente si la tabla de productos está completamente vacía
   const countRes = await pool.query('SELECT COUNT(*)::int AS cnt FROM public.benflex_products');
   if ((countRes.rows[0]?.cnt ?? 0) === 0) {
@@ -187,6 +215,91 @@ export async function ensureSchema(): Promise<void> {
   }
 
   globalForPg.schemaInitialized = true;
+}
+
+export async function getDbCategories(): Promise<Category[]> {
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query(
+        'SELECT id, label, description FROM public.benflex_categories WHERE is_active = true ORDER BY created_at ASC'
+      );
+      const map = new Map<string, Category>();
+      for (const row of res.rows) {
+        map.set(row.id, {
+          id: row.id,
+          label: row.label,
+          description: row.description || undefined,
+        });
+      }
+      // Incluir categorías presentes en productos activos por si alguna se creó directo desde producto
+      const prodCats = await pool.query(
+        'SELECT DISTINCT category, category_label FROM public.benflex_products WHERE is_active = true'
+      );
+      for (const r of prodCats.rows) {
+        if (r.category && !map.has(r.category)) {
+          map.set(r.category, { id: r.category, label: r.category_label || r.category });
+        }
+      }
+      return Array.from(map.values());
+    } catch (err) {
+      console.warn('[DB Categories] Error consultando Supabase, usando almacenamiento local:', err);
+    }
+  }
+  return getLocalCategories();
+}
+
+export async function upsertDbCategory(cat: Category): Promise<Category> {
+  const localSaved = upsertLocalCategory(cat);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      await pool.query(
+        `INSERT INTO public.benflex_categories (id, label, description, is_active, updated_at)
+         VALUES ($1, $2, $3, true, NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           label = EXCLUDED.label,
+           description = EXCLUDED.description,
+           is_active = true,
+           updated_at = NOW()`,
+        [cat.id, cat.label, cat.description || null]
+      );
+      // Actualizar en cascada todos los productos de esta categoría
+      await pool.query(
+        'UPDATE public.benflex_products SET category_label = $2, updated_at = NOW() WHERE category = $1',
+        [cat.id, cat.label]
+      );
+    } catch (err) {
+      console.warn('[DB Categories] Error guardando en Supabase, persistido en local store:', err);
+    }
+  }
+  return localSaved;
+}
+
+export async function deleteDbCategory(id: string, deleteProducts: boolean = false): Promise<void> {
+  deleteLocalCategory(id, deleteProducts);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      await pool.query(
+        'UPDATE public.benflex_categories SET is_active = false, updated_at = NOW() WHERE id = $1',
+        [id]
+      );
+      if (deleteProducts) {
+        await pool.query(
+          'UPDATE public.benflex_products SET is_active = false, updated_at = NOW() WHERE category = $1',
+          [id]
+        );
+      }
+    } catch (err) {
+      console.warn('[DB Categories] Error eliminando en Supabase, eliminado localmente:', err);
+    }
+  }
 }
 
 export function mapRowToProduct(row: any): Product {
@@ -253,9 +366,7 @@ export async function getDbProducts(): Promise<Product[]> {
       const res = await pool.query(
         'SELECT * FROM public.benflex_products WHERE is_active = true ORDER BY created_at ASC'
       );
-      if (res.rows.length > 0) {
-        return res.rows.map(mapRowToProduct);
-      }
+      return res.rows.map(mapRowToProduct);
     } catch (err) {
       console.warn('[DB Products] Error consultando Supabase, usando almacenamiento local:', err);
     }
@@ -264,6 +375,18 @@ export async function getDbProducts(): Promise<Product[]> {
 }
 
 async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promise<Product> {
+  // Asegurar que la categoría exista en benflex_categories
+  if (p.category) {
+    await db.query(
+      `INSERT INTO public.benflex_categories (id, label, is_active, updated_at)
+       VALUES ($1, $2, true, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         label = EXCLUDED.label,
+         is_active = true,
+         updated_at = NOW()`,
+      [p.category, p.categoryLabel || p.category]
+    );
+  }
   const res = await db.query(
     `
     INSERT INTO public.benflex_products (

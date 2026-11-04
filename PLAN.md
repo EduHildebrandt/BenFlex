@@ -17,6 +17,14 @@
 | Fase 5 | Infraestructura de Despliegue en Producción para VPS Ubuntu (DonWeb) bajo dominio `www.blenflex.online` (PM2, Nginx Reverse Proxy, Certbot SSL y Automatización Git) | ✅ Completado |
 
 ## [AUTO-HEALED] Revisión de Remediación Integral
+- **[AUTO-HEALED] ABM-01 (ABM Completo de Productos y Categorías en `/admin` y Backend):**
+  1. **ABM de Categorías (`/api/categories`, `src/lib/db.ts`, `src/lib/localStore.ts`, `src/context/ProductContext.tsx`, `src/app/admin/page.tsx`):**
+     - **Alta:** Creación de categorías personalizadas con nombre visible (`label`), descripción (`description`) y slug autogenerado (`id`).
+     - **Modificación:** Edición del nombre y descripción de cualquier categoría existente con actualización automática en cascada (`categoryLabel`) sobre todos los productos asociados en PostgreSQL (`public.benflex_categories` + `public.benflex_products`) y en el almacén local (`src/data/local_storage.json`).
+     - **Baja:** Eliminación de categorías vacías o con productos (permitiendo elegir si se dan de baja también sus productos o si solo se quita la categoría del listado).
+  2. **ABM Completo de Productos (`/api/products`, `src/app/admin/page.tsx`):**
+     - **Alta y Modificación integral en Modal:** Incorporados todos los atributos técnicos y comerciales editables (`Nombre`, `Categoría` con creación en vivo, `Tecnología`, `Medida Principal`, `Nivel de Firmeza`, `Soporte de Peso`, `Precio Base`, `% OFF Transferencia`, `Stock`, `Foto` por archivo o URL, `Variaciones de Medidas/Precios`, `Descripción Corta`, `Descripción Completa`, `Beneficios`, `Telas`, `Badge` y `Garantía`).
+     - **Edición Rápida Inline en Tabla:** Cambio directo sin abrir el modal para **Categoría**, **Precio de Lista**, **% OFF Transferencia** y **Stock**, más filtro por categoría y botones explícitos **Modificar** y **Baja**.
 - **[AUTO-HEALED] UX-ADMIN-02 (Login Limpio, Ventas Mensuales, Categorías Dinámicas & Main Minimalista):**
   1. Eliminadas las contraseñas visibles por defecto de la pantalla de login de `/admin`.
   2. Agrupadas las ventas por mes (`salesByMonth` y `groupedFilteredSalesByMonth`) en el Cuadro de Ventas de `/admin` con tarjetas mensuales interactivas, filtro por mes, tabla seccionada por mes y columna `Mes` en la exportación CSV.

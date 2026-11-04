@@ -2,27 +2,37 @@ import type {
   Product,
   ProductCategory,
   ProductTechnology,
+  Category,
   CreateOrderPayload,
   OrderStatus,
   PaymentMethod,
   DeliveryMethod,
 } from '@/types';
 
-const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
+export const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
   'colchones-sommiers': 'Colchones & Sommiers',
   'sillones-sofas': 'Sillones & Sofás Cama',
   'almohadas-confort': 'Almohadas & Confort',
   'combos-benflex': 'Combos BenFlex',
 };
 
-const VALID_TECHNOLOGIES: ProductTechnology[] = [
-  'alta_densidad',
-  'resortes_pocket',
-  'viscoelastica',
-  'espuma_inteligente',
-  'fibra_siliconada',
-  'anti_desgarro',
-];
+const DEFAULT_TECH_LABELS: Record<string, string> = {
+  alta_densidad: 'Espuma Alta Densidad (35 kg/m³)',
+  resortes_pocket: 'Resortes Pocket Ensacados',
+  viscoelastica: 'Viscoelástica (Memory Foam)',
+  espuma_inteligente: 'Espuma Inteligente Cervical',
+  fibra_siliconada: 'Fibra Siliconada / Algodón 400 Hilos',
+  anti_desgarro: 'Pana / Lino Anti-Desgarro Pet-Friendly',
+};
+
+export function slugifyText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
 const VALID_PAYMENT_METHODS: PaymentMethod[] = [
   'transferencia',
@@ -57,6 +67,36 @@ export function isSafeImageUrl(url: string): boolean {
   return false;
 }
 
+export function validateCategoryInput(
+  raw: any
+): { valid: true; data: Category } | { valid: false; error: string } {
+  if (!raw || typeof raw !== 'object') {
+    return { valid: false, error: 'Formato de categoría inválido.' };
+  }
+
+  const label = cleanText(raw.label || raw.name, 80);
+  if (label.length < 2) {
+    return { valid: false, error: 'El nombre de la categoría debe tener al menos 2 caracteres.' };
+  }
+
+  const rawId = cleanText(raw.id, 80);
+  const id = slugifyText(rawId || label);
+  if (!id || id.length < 2) {
+    return { valid: false, error: 'El identificador de la categoría es inválido.' };
+  }
+
+  const description = cleanText(raw.description, 250) || undefined;
+
+  return {
+    valid: true,
+    data: {
+      id,
+      label,
+      description,
+    },
+  };
+}
+
 export function validateProductInput(
   raw: any
 ): { valid: true; data: Product } | { valid: false; error: string } {
@@ -64,22 +104,19 @@ export function validateProductInput(
     return { valid: false, error: 'Formato de producto inválido.' };
   }
 
-  const id = cleanText(raw.id, 140);
   const name = cleanText(raw.name, 200);
-  if (!id || !/^[a-z0-9-]+$/.test(id)) {
-    return { valid: false, error: 'El identificador (slug/id) del producto es inválido.' };
+  if (name.length < 2) {
+    return { valid: false, error: 'El nombre del producto debe tener al menos 2 caracteres.' };
   }
-  if (name.length < 3) {
-    return { valid: false, error: 'El nombre del producto debe tener al menos 3 caracteres.' };
+
+  const rawId = cleanText(raw.id, 140);
+  const id = slugifyText(rawId || name);
+  if (!id) {
+    return { valid: false, error: 'El identificador (slug/id) del producto es inválido.' };
   }
 
   const rawCategoryText = cleanText(raw.category || raw.categoryLabel, 80);
-  const category = rawCategoryText
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '') as ProductCategory;
+  const category = slugifyText(rawCategoryText) as ProductCategory;
 
   if (!category || category.length < 2) {
     return { valid: false, error: 'Ingresá o seleccioná una categoría válida para el producto.' };
@@ -93,10 +130,12 @@ export function validateProductInput(
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
 
-  const technology = raw.technology as ProductTechnology;
-  if (!VALID_TECHNOLOGIES.includes(technology)) {
-    return { valid: false, error: 'Tecnología de producto no permitida.' };
-  }
+  const rawTechnology = cleanText(raw.technology, 80) || 'alta_densidad';
+  const technology = rawTechnology as ProductTechnology;
+  const technologyLabel =
+    cleanText(raw.technologyLabel, 100) ||
+    DEFAULT_TECH_LABELS[technology] ||
+    technology;
 
   const basePrice = Number(raw.basePrice);
   if (!Number.isFinite(basePrice) || basePrice <= 0 || basePrice > 50_000_000) {
@@ -161,7 +200,7 @@ export function validateProductInput(
       category,
       categoryLabel,
       technology,
-      technologyLabel: cleanText(raw.technologyLabel, 100) || technology,
+      technologyLabel,
       measure: cleanText(raw.measure, 80) || 'Estándar',
       firmness,
       basePrice: Math.round(basePrice),

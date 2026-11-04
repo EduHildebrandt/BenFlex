@@ -1,11 +1,35 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Product, Order, OrderStatus, CreateOrderPayload } from '@/types';
+import { Product, Category, Order, OrderStatus, CreateOrderPayload } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
+
+const INITIAL_CATEGORIES: Category[] = [
+  {
+    id: 'colchones-sommiers',
+    label: 'Colchones & Sommiers',
+    description: 'Colchones ortopédicos de alta densidad y resortes pocket',
+  },
+  {
+    id: 'sillones-sofas',
+    label: 'Sillones & Sofás Cama',
+    description: 'Sillones y esquineros con telas anti-desgarro',
+  },
+  {
+    id: 'almohadas-confort',
+    label: 'Almohadas & Confort',
+    description: 'Almohadas viscoelásticas y cervicales',
+  },
+  {
+    id: 'combos-benflex',
+    label: 'Combos BenFlex',
+    description: 'Conjuntos completos de descanso con regalo',
+  },
+];
 
 interface ProductContextType {
   products: Product[];
+  categories: Category[];
   orders: Order[];
   isLoading: boolean;
   dbConnected: boolean;
@@ -14,6 +38,11 @@ interface ProductContextType {
   fetchAdminOrders: () => Promise<{ success: boolean; orders?: Order[]; error?: string }>;
   saveProduct: (product: Product) => Promise<{ success: boolean; product?: Product; error?: string }>;
   deleteProduct: (id: string) => Promise<{ success: boolean; error?: string }>;
+  saveCategory: (category: Category) => Promise<{ success: boolean; category?: Category; error?: string }>;
+  deleteCategory: (
+    id: string,
+    deleteProducts?: boolean
+  ) => Promise<{ success: boolean; error?: string }>;
   submitOrder: (
     payload: CreateOrderPayload
   ) => Promise<{ success: boolean; order?: Order; accessToken?: string; error?: string }>;
@@ -28,6 +57,7 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(BENFLEX_PRODUCTS);
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState(false);
@@ -35,14 +65,25 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProducts = useCallback(async () => {
     try {
-      const pRes = await fetch('/api/products', { cache: 'no-store' });
+      const [pRes, cRes] = await Promise.all([
+        fetch('/api/products', { cache: 'no-store' }),
+        fetch('/api/categories', { cache: 'no-store' }),
+      ]);
+
       if (pRes.ok) {
         const pData = await pRes.json();
-        if (Array.isArray(pData.products) && pData.products.length > 0) {
+        if (Array.isArray(pData.products)) {
           setProducts(pData.products);
         }
         setDbConnected(pData.source === 'supabase');
         setDataSource(pData.source || 'local');
+      }
+
+      if (cRes.ok) {
+        const cData = await cRes.json();
+        if (Array.isArray(cData.categories)) {
+          setCategories(cData.categories);
+        }
       }
     } catch (e) {
       console.warn('No se pudo conectar al catálogo remoto, usando catálogo base:', e);
@@ -96,7 +137,14 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       const saved: Product = data.product;
       setProducts((prev) => {
         const exists = prev.some((p) => p.id === saved.id);
-        return exists ? prev.map((p) => (p.id === saved.id ? saved : p)) : [...prev, saved];
+        return exists ? prev.map((p) => (p.id === saved.id ? saved : p)) : [saved, ...prev];
+      });
+      setCategories((prev) => {
+        if (!saved.category) return prev;
+        const exists = prev.some((c) => c.id === saved.category);
+        return exists
+          ? prev
+          : [...prev, { id: saved.category, label: saved.categoryLabel || saved.category }];
       });
       return { success: true, product: saved };
     } catch {
@@ -122,6 +170,63 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const saveCategory = async (
+    category: Category
+  ): Promise<{ success: boolean; category?: Category; error?: string }> => {
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(category),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'No se pudo guardar la categoría.' };
+      }
+
+      const saved: Category = data.category;
+      setCategories((prev) => {
+        const exists = prev.some((c) => c.id === saved.id);
+        return exists ? prev.map((c) => (c.id === saved.id ? saved : c)) : [...prev, saved];
+      });
+      // Actualizar en cascada el categoryLabel de los productos en memoria
+      setProducts((prev) =>
+        prev.map((p) => (p.category === saved.id ? { ...p, categoryLabel: saved.label } : p))
+      );
+      return { success: true, category: saved };
+    } catch {
+      return { success: false, error: 'Error de conexión al guardar la categoría.' };
+    }
+  };
+
+  const deleteCategory = async (
+    id: string,
+    deleteProducts: boolean = false
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch(
+        `/api/categories?id=${encodeURIComponent(id)}&deleteProducts=${deleteProducts ? 'true' : 'false'}`,
+        {
+          method: 'DELETE',
+          credentials: 'same-origin',
+        }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'No se pudo eliminar la categoría.' };
+      }
+
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      if (deleteProducts) {
+        setProducts((prev) => prev.filter((p) => p.category !== id));
+      }
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Error de conexión al eliminar la categoría.' };
+    }
+  };
+
   const submitOrder = async (
     payload: CreateOrderPayload
   ): Promise<{ success: boolean; order?: Order; accessToken?: string; error?: string }> => {
@@ -133,7 +238,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        // Refrescamos productos por si hubo cambio de stock concurrente
         await refreshProducts();
         return {
           success: false,
@@ -141,7 +245,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Refrescamos el catálogo para reflejar de inmediato el nuevo stock descontado
       await refreshProducts();
       return {
         success: true,
@@ -174,7 +277,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
       const updated: Order = data.order;
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-      // Si se canceló o reactivó un pedido, el stock en Supabase cambió; refrescamos productos
       await refreshProducts();
       return { success: true, order: updated };
     } catch {
@@ -188,6 +290,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     <ProductContext.Provider
       value={{
         products,
+        categories,
         orders,
         isLoading,
         dbConnected,
@@ -196,6 +299,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         fetchAdminOrders,
         saveProduct,
         deleteProduct,
+        saveCategory,
+        deleteCategory,
         submitOrder,
         updateOrderStatus,
         getProductById,

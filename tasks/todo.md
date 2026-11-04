@@ -17,6 +17,7 @@
 | 12. Despliegue VPS Ubuntu (DonWeb) `www.benflex.online` | DevOps / SRE Lead | Completado | App online en https://www.benflex.online con systemd + Nginx + Certbot SSL |
 | 13. Remediación Crash Post-Login en `/admin` (Rules of Hooks) | Frontend Lead | Completado | Declaración de `useMemo` antes de returns de sesión y despliegue en VPS |
 | 14. Login `/admin` sin claves expuestas, Ventas por Mes, Categorías Dinámicas y Main Minimalista | Fullstack / UI Lead | Completado | Ventas agrupadas por mes, alta de categorías, ocultamiento de categorías vacías y Quiz post-catálogo |
+| 15. ABM Completo (Altas, Bajas y Modificaciones) de Productos y Categorías | Fullstack Senior | Completado | Endpoint `/api/categories`, pestaña Categorías ABM con cascada en productos, edición inline y modal completo de Productos |
 
 ---
 

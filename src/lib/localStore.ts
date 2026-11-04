@@ -3,6 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import type {
   Product,
+  Category,
   Order,
   OrderStatus,
   CartItem,
@@ -12,7 +13,31 @@ import type {
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { isSanJuanPostalCodeServer, OrderBusinessError } from '@/lib/db';
 
+export const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: 'colchones-sommiers',
+    label: 'Colchones & Sommiers',
+    description: 'Colchones ortopédicos de alta densidad y resortes pocket',
+  },
+  {
+    id: 'sillones-sofas',
+    label: 'Sillones & Sofás Cama',
+    description: 'Sillones y esquineros con telas anti-desgarro',
+  },
+  {
+    id: 'almohadas-confort',
+    label: 'Almohadas & Confort',
+    description: 'Almohadas viscoelásticas y cervicales',
+  },
+  {
+    id: 'combos-benflex',
+    label: 'Combos BenFlex',
+    description: 'Conjuntos completos de descanso con regalo',
+  },
+];
+
 interface LocalStoreData {
+  categories: Category[];
   products: Product[];
   orders: Order[];
   inquiries: CustomerInquiry[];
@@ -25,6 +50,7 @@ let memoryStore: LocalStoreData | null = null;
 
 function getInitialStore(): LocalStoreData {
   return {
+    categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
     products: JSON.parse(JSON.stringify(BENFLEX_PRODUCTS)),
     orders: [
       {
@@ -155,7 +181,10 @@ function loadStore(): LocalStoreData {
     if (fs.existsSync(LOCAL_STORE_PATH)) {
       const content = fs.readFileSync(LOCAL_STORE_PATH, 'utf8');
       const parsed = JSON.parse(content) as LocalStoreData;
-      if (Array.isArray(parsed.products) && parsed.products.length > 0) {
+      if (Array.isArray(parsed.products)) {
+        if (!Array.isArray(parsed.categories)) {
+          parsed.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+        }
         memoryStore = parsed;
         return memoryStore;
       }
@@ -184,7 +213,80 @@ function saveStore(data: LocalStoreData): void {
 }
 
 // ---------------------------------------------------------------------------
-// OPERACIONES ATM (ALTA, BAJA, MODIFICACIÓN) PARA PRODUCTOS
+// OPERACIONES ABM (ALTA, BAJA, MODIFICACIÓN) PARA CATEGORÍAS
+// ---------------------------------------------------------------------------
+
+export function getLocalCategories(): Category[] {
+  const store = loadStore();
+  const map = new Map<string, Category>();
+
+  for (const cat of store.categories || []) {
+    if ((cat as any).isActive !== false) {
+      map.set(cat.id, { id: cat.id, label: cat.label, description: cat.description });
+    }
+  }
+
+  // Asegurar que toda categoría usada por algún producto activo también aparezca
+  for (const p of store.products || []) {
+    if ((p as any).isActive !== false && p.category && !map.has(p.category)) {
+      map.set(p.category, {
+        id: p.category,
+        label: p.categoryLabel || p.category,
+      });
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+export function upsertLocalCategory(category: Category): Category {
+  const store = loadStore();
+  if (!Array.isArray(store.categories)) {
+    store.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+
+  const cleanCat: Category = {
+    id: category.id,
+    label: category.label,
+    description: category.description,
+  };
+  (cleanCat as any).isActive = true;
+
+  const idx = store.categories.findIndex((c) => c.id === cleanCat.id);
+  if (idx >= 0) {
+    store.categories[idx] = cleanCat;
+  } else {
+    store.categories.push(cleanCat);
+  }
+
+  // Actualizar en cascada el categoryLabel de todos los productos de esta categoría
+  for (const p of store.products) {
+    if (p.category === cleanCat.id) {
+      p.categoryLabel = cleanCat.label;
+    }
+  }
+
+  saveStore(store);
+  return cleanCat;
+}
+
+export function deleteLocalCategory(id: string, deleteProducts: boolean = false): void {
+  const store = loadStore();
+  if (Array.isArray(store.categories)) {
+    store.categories = store.categories.filter((c) => c.id !== id);
+  }
+  if (deleteProducts && Array.isArray(store.products)) {
+    for (const p of store.products) {
+      if (p.category === id) {
+        (p as any).isActive = false;
+      }
+    }
+  }
+  saveStore(store);
+}
+
+// ---------------------------------------------------------------------------
+// OPERACIONES ABM (ALTA, BAJA, MODIFICACIÓN) PARA PRODUCTOS
 // ---------------------------------------------------------------------------
 
 export function getLocalProducts(): Product[] {
@@ -211,6 +313,18 @@ export function upsertLocalProduct(product: Product): Product {
     store.products[index] = cleanProduct;
   } else {
     store.products.unshift(cleanProduct);
+  }
+
+  // Sincronizar categoría en store.categories si es nueva
+  if (!Array.isArray(store.categories)) {
+    store.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }
+  const catIdx = store.categories.findIndex((c) => c.id === cleanProduct.category);
+  if (catIdx === -1 && cleanProduct.category) {
+    store.categories.push({
+      id: cleanProduct.category,
+      label: cleanProduct.categoryLabel || cleanProduct.category,
+    });
   }
 
   saveStore(store);

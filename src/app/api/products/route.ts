@@ -54,7 +54,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = (searchParams.get('id') || '').trim();
-    if (!id || !/^[a-z0-9-]+$/.test(id)) {
+    if (!id || id.length > 140) {
       return NextResponse.json(
         { success: false, error: 'Identificador de producto inválido.' },
         { status: 400 }
