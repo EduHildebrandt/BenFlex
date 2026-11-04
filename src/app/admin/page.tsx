@@ -37,12 +37,48 @@ import {
   CustomerInquiry,
 } from '@/types';
 
-const CATEGORY_MAP: Record<ProductCategory, string> = {
+const CATEGORY_MAP: Record<string, string> = {
   'colchones-sommiers': 'Colchones & Sommiers',
   'sillones-sofas': 'Sillones & Sofás Cama',
   'almohadas-confort': 'Almohadas & Confort',
   'combos-benflex': 'Combos BenFlex',
 };
+
+const MONTH_NAMES_ES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
+
+function getOrderMonthInfo(dateStr: string): { monthKey: string; monthLabel: string } {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) {
+    return { monthKey: '0000-00', monthLabel: 'Sin Fecha' };
+  }
+  const year = d.getFullYear();
+  const monthIdx = d.getMonth();
+  const monthKey = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+  const monthLabel = `${MONTH_NAMES_ES[monthIdx]} ${year}`;
+  return { monthKey, monthLabel };
+}
+
+function slugifyCategory(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
 const TECH_MAP: Record<ProductTechnology, string> = {
   alta_densidad: 'Espuma Alta Densidad (35 kg/m³)',
@@ -82,7 +118,13 @@ export default function BenFlexAdminPage() {
 
   // Filtros del Cuadro de Ventas
   const [salesStatusFilter, setSalesStatusFilter] = useState<string>('ALL');
+  const [salesMonthFilter, setSalesMonthFilter] = useState<string>('ALL');
   const [salesSearch, setSalesSearch] = useState<string>('');
+
+  // Categorías personalizadas creadas durante la sesión
+  const [customCategories, setCustomCategories] = useState<Array<{ id: string; label: string }>>([]);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
 
   // Modal de Crear / Editar Producto
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -97,6 +139,7 @@ export default function BenFlexAdminPage() {
     description: '',
     shortDescription: '',
     category: 'colchones-sommiers' as ProductCategory,
+    categoryLabel: 'Colchones & Sommiers',
     technology: 'alta_densidad' as ProductTechnology,
     measure: '2 Plazas (140x190)',
     firmness: 'Firme' as 'Suave' | 'Media' | 'Firme' | 'Extra Firme',
@@ -220,12 +263,15 @@ export default function BenFlexAdminPage() {
   const openNewProductModal = () => {
     setEditingProduct(null);
     setModalError('');
+    setIsCreatingCategory(false);
+    setNewCategoryInput('');
     setForm({
       id: '',
       name: '',
       description: '',
       shortDescription: '',
       category: 'colchones-sommiers',
+      categoryLabel: 'Colchones & Sommiers',
       technology: 'alta_densidad',
       measure: '2 Plazas (140x190)',
       firmness: 'Firme',
@@ -252,12 +298,15 @@ export default function BenFlexAdminPage() {
   const openEditProductModal = (p: Product) => {
     setEditingProduct(p);
     setModalError('');
+    setIsCreatingCategory(false);
+    setNewCategoryInput('');
     setForm({
       id: p.id,
       name: p.name,
       description: p.description,
       shortDescription: p.shortDescription,
       category: p.category,
+      categoryLabel: p.categoryLabel || CATEGORY_MAP[p.category] || p.category,
       technology: p.technology,
       measure: p.measure,
       firmness: p.firmness || 'Firme',
@@ -346,6 +395,27 @@ export default function BenFlexAdminPage() {
       return;
     }
 
+    let finalCategory = form.category;
+    let finalCategoryLabel =
+      form.categoryLabel.trim() ||
+      CATEGORY_MAP[form.category] ||
+      customCategories.find((c) => c.id === form.category)?.label ||
+      form.category;
+
+    if (isCreatingCategory) {
+      const cleanNewName = newCategoryInput.trim();
+      const newSlug = slugifyCategory(cleanNewName);
+      if (!cleanNewName || newSlug.length < 2) {
+        setModalError('Por favor ingresá un nombre válido para la nueva categoría.');
+        return;
+      }
+      finalCategory = newSlug;
+      finalCategoryLabel = cleanNewName;
+      setCustomCategories((prev) =>
+        prev.some((c) => c.id === newSlug) ? prev : [...prev, { id: newSlug, label: cleanNewName }]
+      );
+    }
+
     setIsSaving(true);
     const rawSlug =
       form.id.trim() ||
@@ -375,8 +445,8 @@ export default function BenFlexAdminPage() {
         (form.description.trim()
           ? form.description.trim().slice(0, 100) + '...'
           : form.name.trim()),
-      category: form.category,
-      categoryLabel: CATEGORY_MAP[form.category],
+      category: finalCategory,
+      categoryLabel: finalCategoryLabel,
       technology: form.technology,
       technologyLabel: TECH_MAP[form.technology],
       measure: form.measure,
@@ -420,6 +490,7 @@ export default function BenFlexAdminPage() {
 
     const headers = [
       'ID Pedido',
+      'Mes',
       'Fecha',
       'Cliente',
       'Email',
@@ -441,6 +512,7 @@ export default function BenFlexAdminPage() {
     ];
 
     const rows = orders.map((o) => {
+      const { monthLabel } = getOrderMonthInfo(o.date);
       const itemsDetail = o.items
         .map(
           (i) =>
@@ -452,6 +524,7 @@ export default function BenFlexAdminPage() {
 
       return [
         `"${o.id}"`,
+        `"${monthLabel}"`,
         `"${new Date(o.date).toLocaleDateString('es-AR')} ${new Date(o.date).toLocaleTimeString('es-AR')}"`,
         `"${(o.customerName || '').replace(/"/g, '""')}"`,
         `"${(o.customerEmail || '').replace(/"/g, '""')}"`,
@@ -634,11 +707,78 @@ export default function BenFlexAdminPage() {
     };
   }, [orders]);
 
+  // Categorías disponibles (Base + Categorías de productos existentes + Personalizadas)
+  const availableCategories = useMemo(() => {
+    const map = new Map<string, string>();
+    Object.entries(CATEGORY_MAP).forEach(([id, label]) => map.set(id, label));
+    products.forEach((p) => {
+      if (p.category) {
+        map.set(p.category, p.categoryLabel || CATEGORY_MAP[p.category] || p.category);
+      }
+    });
+    customCategories.forEach((c) => {
+      map.set(c.id, c.label);
+    });
+    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
+  }, [products, customCategories]);
+
+  // Agrupación de ventas por mes (Resumen mensual global)
+  const salesByMonth = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        monthKey: string;
+        monthLabel: string;
+        ordersCount: number;
+        validCount: number;
+        approvedCount: number;
+        grossRevenue: number;
+        collectedRevenue: number;
+        unitsSold: number;
+      }
+    >();
+
+    orders.forEach((o) => {
+      const { monthKey, monthLabel } = getOrderMonthInfo(o.date);
+      if (!groups.has(monthKey)) {
+        groups.set(monthKey, {
+          monthKey,
+          monthLabel,
+          ordersCount: 0,
+          validCount: 0,
+          approvedCount: 0,
+          grossRevenue: 0,
+          collectedRevenue: 0,
+          unitsSold: 0,
+        });
+      }
+      const g = groups.get(monthKey)!;
+      g.ordersCount += 1;
+      if (o.status !== 'CANCELADO') {
+        g.validCount += 1;
+        g.grossRevenue += o.total;
+        g.unitsSold += o.items.reduce((sum, item) => sum + item.quantity, 0);
+      }
+      if (o.status === 'APROBADO' || o.status === 'ENTREGADO') {
+        g.approvedCount += 1;
+        g.collectedRevenue += o.total;
+      }
+    });
+
+    return Array.from(groups.values()).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  }, [orders]);
+
   // Órdenes filtradas para el Cuadro de Ventas
   const filteredSalesOrders = useMemo(() => {
     return orders.filter((o) => {
       if (salesStatusFilter !== 'ALL' && o.status !== salesStatusFilter) {
         return false;
+      }
+      if (salesMonthFilter !== 'ALL') {
+        const { monthKey } = getOrderMonthInfo(o.date);
+        if (monthKey !== salesMonthFilter) {
+          return false;
+        }
       }
       if (salesSearch.trim()) {
         const query = salesSearch.toLowerCase();
@@ -663,7 +803,42 @@ export default function BenFlexAdminPage() {
       }
       return true;
     });
-  }, [orders, salesStatusFilter, salesSearch]);
+  }, [orders, salesStatusFilter, salesMonthFilter, salesSearch]);
+
+  // Transacciones filtradas agrupadas por mes para la tabla analítica
+  const groupedFilteredSalesByMonth = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        monthKey: string;
+        monthLabel: string;
+        orders: Order[];
+        monthTotal: number;
+        monthUnits: number;
+      }
+    >();
+
+    filteredSalesOrders.forEach((o) => {
+      const { monthKey, monthLabel } = getOrderMonthInfo(o.date);
+      if (!groups.has(monthKey)) {
+        groups.set(monthKey, {
+          monthKey,
+          monthLabel,
+          orders: [],
+          monthTotal: 0,
+          monthUnits: 0,
+        });
+      }
+      const g = groups.get(monthKey)!;
+      g.orders.push(o);
+      if (o.status !== 'CANCELADO') {
+        g.monthTotal += o.total;
+        g.monthUnits += o.items.reduce((sum, item) => sum + item.quantity, 0);
+      }
+    });
+
+    return Array.from(groups.values()).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  }, [filteredSalesOrders]);
 
   if (checkingSession) {
     return (
@@ -765,65 +940,6 @@ export default function BenFlexAdminPage() {
               {isLoggingIn ? 'Validando acceso...' : 'Ingresar al Panel de Control'}
             </button>
           </form>
-
-          {/* Guía rápida de acceso para Dueño y Desarrollador */}
-          <div
-            style={{
-              marginTop: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#f8fafc',
-              borderRadius: '14px',
-              border: '1px solid #e2e8f0',
-              textAlign: 'left',
-            }}
-          >
-            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>
-              🔑 Accesos de Seguridad Configurados:
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#475569' }}>👑 <strong>Dueño / Admin:</strong></span>
-                <button
-                  type="button"
-                  onClick={() => setPasswordInput('dueno-benflex-2026')}
-                  style={{
-                    backgroundColor: '#e0f2fe',
-                    color: '#0369a1',
-                    border: 'none',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '6px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                  title="Copiar clave de dueño"
-                >
-                  dueno-benflex-2026
-                </button>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#475569' }}>🛠️ <strong>Desarrollador:</strong></span>
-                <button
-                  type="button"
-                  onClick={() => setPasswordInput('dev-benflex-2026')}
-                  style={{
-                    backgroundColor: '#f1f5f9',
-                    color: '#334155',
-                    border: 'none',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '6px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                  title="Copiar clave de desarrollador"
-                >
-                  dev-benflex-2026
-                </button>
-              </div>
-            </div>
-            <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '0.4rem', fontStyle: 'italic' }}>
-              * Podés cambiarlas en cualquier momento en el archivo <code>.env.local</code>.
-            </div>
-          </div>
 
           <div style={{ marginTop: '1.5rem' }}>
             <Link
@@ -1523,6 +1639,132 @@ export default function BenFlexAdminPage() {
               </div>
             </div>
 
+            {/* Resumen de Ventas Agrupadas por Mes */}
+            <div
+              style={{
+                padding: '1.35rem',
+                borderRadius: '14px',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                marginBottom: '2rem',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Calendar size={18} color="var(--brand-sage)" />
+                  <h3 style={{ fontSize: '0.96rem', fontWeight: 800, color: '#111827' }}>
+                    Ventas Agrupadas por Mes
+                  </h3>
+                </div>
+                {salesMonthFilter !== 'ALL' && (
+                  <button
+                    type="button"
+                    onClick={() => setSalesMonthFilter('ALL')}
+                    style={{
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      color: 'var(--brand-sage)',
+                      backgroundColor: '#e0f2fe',
+                      padding: '0.28rem 0.65rem',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Ver todos los meses
+                  </button>
+                )}
+              </div>
+
+              {salesByMonth.length === 0 ? (
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+                  Aún no hay ventas registradas por mes.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                    gap: '0.85rem',
+                  }}
+                >
+                  {salesByMonth.map((m) => {
+                    const isSelected = salesMonthFilter === m.monthKey;
+                    return (
+                      <button
+                        key={m.monthKey}
+                        type="button"
+                        onClick={() =>
+                          setSalesMonthFilter(isSelected ? 'ALL' : m.monthKey)
+                        }
+                        style={{
+                          textAlign: 'left',
+                          padding: '1rem 1.1rem',
+                          borderRadius: '12px',
+                          backgroundColor: '#ffffff',
+                          border: isSelected ? '2px solid var(--brand-sage)' : '1px solid #e2e8f0',
+                          boxShadow: isSelected
+                            ? '0 6px 16px rgba(2, 132, 199, 0.14)'
+                            : '0 2px 6px rgba(15, 23, 42, 0.03)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.35rem',
+                          }}
+                        >
+                          <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#111827' }}>
+                            {m.monthLabel}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              padding: '0.15rem 0.5rem',
+                              borderRadius: '9999px',
+                              backgroundColor: '#f1f5f9',
+                              color: '#475569',
+                            }}
+                          >
+                            {m.validCount} {m.validCount === 1 ? 'venta' : 'ventas'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--brand-sage)' }}>
+                          ${m.grossRevenue.toLocaleString('es-AR')}
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '0.72rem',
+                            color: '#64748b',
+                            marginTop: '0.35rem',
+                          }}
+                        >
+                          <span>Cobrado: ${m.collectedRevenue.toLocaleString('es-AR')}</span>
+                          <span>{m.unitsSold} unid.</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* Filtros de la Tabla de Ventas */}
             <div
               style={{
@@ -1536,7 +1778,31 @@ export default function BenFlexAdminPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  Filtrar por Estado:
+                  Mes:
+                </span>
+                <select
+                  value={salesMonthFilter}
+                  onChange={(e) => setSalesMonthFilter(e.target.value)}
+                  style={{
+                    padding: '0.38rem 0.7rem',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    backgroundColor: '#ffffff',
+                    color: '#111827',
+                    border: '1px solid #cbd5e1',
+                  }}
+                >
+                  <option value="ALL">Todos los meses</option>
+                  {salesByMonth.map((m) => (
+                    <option key={m.monthKey} value={m.monthKey}>
+                      {m.monthLabel} ({m.validCount})
+                    </option>
+                  ))}
+                </select>
+
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)', marginLeft: '0.35rem' }}>
+                  Estado:
                 </span>
                 {(['ALL', 'APROBADO', 'EN_PREPARACION', 'ENTREGADO', 'PENDIENTE_COMPROBANTE', 'CANCELADO'] as const).map(
                   (st) => (
@@ -1584,140 +1850,186 @@ export default function BenFlexAdminPage() {
               </div>
             </div>
 
-            {/* Tabla Analítica de Transacciones */}
-            {filteredSalesOrders.length === 0 ? (
+            {/* Tabla Analítica de Transacciones Agrupadas por Mes */}
+            {groupedFilteredSalesByMonth.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
                 No se encontraron ventas registradas con los filtros aplicados.
               </div>
             ) : (
-              <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
-                  <thead>
-                    <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#334155', fontWeight: 800 }}>
-                      <th style={{ padding: '0.8rem 1rem' }}>ID & Fecha</th>
-                      <th style={{ padding: '0.8rem 1rem' }}>Cliente</th>
-                      <th style={{ padding: '0.8rem 1rem' }}>Productos</th>
-                      <th style={{ padding: '0.8rem 1rem' }}>Pago & Entrega</th>
-                      <th style={{ padding: '0.8rem 1rem', textAlign: 'right' }}>Total ($)</th>
-                      <th style={{ padding: '0.8rem 1rem' }}>Estado</th>
-                      <th style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSalesOrders.map((o) => {
-                      const isCancelled = o.status === 'CANCELADO';
-                      return (
-                        <tr
-                          key={o.id}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {groupedFilteredSalesByMonth.map((group) => (
+                  <div
+                    key={group.monthKey}
+                    style={{
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Cabecera del Mes */}
+                    <div
+                      style={{
+                        backgroundColor: '#0f172a',
+                        color: '#ffffff',
+                        padding: '0.75rem 1.15rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Calendar size={16} color="#38bdf8" />
+                        <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>
+                          {group.monthLabel}
+                        </span>
+                        <span
                           style={{
-                            borderBottom: '1px solid #f1f5f9',
-                            backgroundColor: isCancelled ? '#fef2f2' : '#ffffff',
+                            fontSize: '0.74rem',
+                            color: '#cbd5e1',
+                            fontWeight: 600,
                           }}
                         >
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontWeight: 800, color: 'var(--brand-navy)' }}>#{o.id}</div>
-                            <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                              {new Date(o.date).toLocaleDateString('es-AR')} {new Date(o.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </td>
+                          ({group.orders.length} {group.orders.length === 1 ? 'pedido' : 'pedidos'} • {group.monthUnits} unid.)
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#38bdf8' }}>
+                        Total Mes: ${group.monthTotal.toLocaleString('es-AR')}
+                      </div>
+                    </div>
 
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontWeight: 700, color: '#111827' }}>{o.customerName}</div>
-                            <div style={{ fontSize: '0.74rem', color: '#64748b' }}>Tel: {o.customerPhone}</div>
-                            {o.customerDni && (
-                              <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>DNI: {o.customerDni}</div>
-                            )}
-                          </td>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#334155', fontWeight: 800 }}>
+                            <th style={{ padding: '0.8rem 1rem' }}>ID & Fecha</th>
+                            <th style={{ padding: '0.8rem 1rem' }}>Cliente</th>
+                            <th style={{ padding: '0.8rem 1rem' }}>Productos</th>
+                            <th style={{ padding: '0.8rem 1rem' }}>Pago & Entrega</th>
+                            <th style={{ padding: '0.8rem 1rem', textAlign: 'right' }}>Total ($)</th>
+                            <th style={{ padding: '0.8rem 1rem' }}>Estado</th>
+                            <th style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.orders.map((o) => {
+                            const isCancelled = o.status === 'CANCELADO';
+                            return (
+                              <tr
+                                key={o.id}
+                                style={{
+                                  borderBottom: '1px solid #f1f5f9',
+                                  backgroundColor: isCancelled ? '#fef2f2' : '#ffffff',
+                                }}
+                              >
+                                <td style={{ padding: '0.85rem 1rem' }}>
+                                  <div style={{ fontWeight: 800, color: 'var(--brand-navy)' }}>#{o.id}</div>
+                                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
+                                    {new Date(o.date).toLocaleDateString('es-AR')} {new Date(o.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </td>
 
-                          <td style={{ padding: '0.85rem 1rem', maxWidth: '240px' }}>
-                            {o.items.map((item, idx) => (
-                              <div key={idx} style={{ fontSize: '0.78rem', color: '#334155', lineHeight: 1.3 }}>
-                                <strong>{item.quantity}x</strong> {item.product.name}
-                                <span style={{ color: '#64748b' }}> ({item.variationName}{item.fabric ? ` - ${item.fabric}` : ''})</span>
-                              </div>
-                            ))}
-                          </td>
+                                <td style={{ padding: '0.85rem 1rem' }}>
+                                  <div style={{ fontWeight: 700, color: '#111827' }}>{o.customerName}</div>
+                                  <div style={{ fontSize: '0.74rem', color: '#64748b' }}>Tel: {o.customerPhone}</div>
+                                  {o.customerDni && (
+                                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>DNI: {o.customerDni}</div>
+                                  )}
+                                </td>
 
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontWeight: 700, fontSize: '0.78rem', color: o.paymentMethod === 'transferencia' ? '#059669' : '#0284c7' }}>
-                              {o.paymentMethod.toUpperCase()} {o.installments ? `(${o.installments}c)` : ''}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                              {o.deliveryMethod === 'showroom' ? 'Retiro Showroom' : `Envío: ${o.city}, ${o.province}`}
-                            </div>
-                          </td>
+                                <td style={{ padding: '0.85rem 1rem', maxWidth: '240px' }}>
+                                  {o.items.map((item, idx) => (
+                                    <div key={idx} style={{ fontSize: '0.78rem', color: '#334155', lineHeight: 1.3 }}>
+                                      <strong>{item.quantity}x</strong> {item.product.name}
+                                      <span style={{ color: '#64748b' }}> ({item.variationName}{item.fabric ? ` - ${item.fabric}` : ''})</span>
+                                    </div>
+                                  ))}
+                                </td>
 
-                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
-                            <div
-                              style={{
-                                fontWeight: 900,
-                                fontSize: '0.95rem',
-                                color: isCancelled ? '#9ca3af' : '#111827',
-                                textDecoration: isCancelled ? 'line-through' : 'none',
-                              }}
-                            >
-                              ${o.total.toLocaleString('es-AR')}
-                            </div>
-                            {o.transferDiscount > 0 && (
-                              <div style={{ fontSize: '0.68rem', color: '#059669', fontWeight: 700 }}>
-                                -${o.transferDiscount.toLocaleString('es-AR')} OFF
-                              </div>
-                            )}
-                          </td>
+                                <td style={{ padding: '0.85rem 1rem' }}>
+                                  <div style={{ fontWeight: 700, fontSize: '0.78rem', color: o.paymentMethod === 'transferencia' ? '#059669' : '#0284c7' }}>
+                                    {o.paymentMethod.toUpperCase()} {o.installments ? `(${o.installments}c)` : ''}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
+                                    {o.deliveryMethod === 'showroom' ? 'Retiro Showroom' : `Envío: ${o.city}, ${o.province}`}
+                                  </div>
+                                </td>
 
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <select
-                              value={o.status}
-                              onChange={(e) => handleOrderStatusChange(o, e.target.value as OrderStatus)}
-                              style={{
-                                padding: '0.28rem 0.55rem',
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                fontSize: '0.72rem',
-                                fontWeight: 800,
-                                backgroundColor: '#ffffff',
-                                color: isCancelled ? '#b91c1c' : '#111827',
-                              }}
-                            >
-                              <option value="PENDIENTE_COMPROBANTE">PENDIENTE COMPROBANTE</option>
-                              <option value="PENDIENTE_PAGO">PENDIENTE DE PAGO</option>
-                              <option value="APROBADO">APROBADO</option>
-                              <option value="EN_PREPARACION">EN PREPARACIÓN</option>
-                              <option value="ENTREGADO">ENTREGADO</option>
-                              <option value="CANCELADO">CANCELADO (Devuelve Stock)</option>
-                            </select>
-                          </td>
+                                <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                                  <div
+                                    style={{
+                                      fontWeight: 900,
+                                      fontSize: '0.95rem',
+                                      color: isCancelled ? '#9ca3af' : '#111827',
+                                      textDecoration: isCancelled ? 'line-through' : 'none',
+                                    }}
+                                  >
+                                    ${o.total.toLocaleString('es-AR')}
+                                  </div>
+                                  {o.transferDiscount > 0 && (
+                                    <div style={{ fontSize: '0.68rem', color: '#059669', fontWeight: 700 }}>
+                                      -${o.transferDiscount.toLocaleString('es-AR')} OFF
+                                    </div>
+                                  )}
+                                </td>
 
-                          <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                            <a
-                              href={`https://wa.me/${o.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                `¡Hola ${o.customerName}! Te escribimos de BenFlex San Juan por tu compra #${o.id}.`
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                                backgroundColor: '#25D366',
-                                color: '#ffffff',
-                                padding: '0.35rem 0.65rem',
-                                borderRadius: '8px',
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                              }}
-                              title="Contactar al cliente por WhatsApp"
-                            >
-                              <MessageCircle size={13} />
-                              <span>WhatsApp</span>
-                            </a>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                <td style={{ padding: '0.85rem 1rem' }}>
+                                  <select
+                                    value={o.status}
+                                    onChange={(e) => handleOrderStatusChange(o, e.target.value as OrderStatus)}
+                                    style={{
+                                      padding: '0.28rem 0.55rem',
+                                      borderRadius: '6px',
+                                      border: '1px solid #cbd5e1',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 800,
+                                      backgroundColor: '#ffffff',
+                                      color: isCancelled ? '#b91c1c' : '#111827',
+                                    }}
+                                  >
+                                    <option value="PENDIENTE_COMPROBANTE">PENDIENTE COMPROBANTE</option>
+                                    <option value="PENDIENTE_PAGO">PENDIENTE DE PAGO</option>
+                                    <option value="APROBADO">APROBADO</option>
+                                    <option value="EN_PREPARACION">EN PREPARACIÓN</option>
+                                    <option value="ENTREGADO">ENTREGADO</option>
+                                    <option value="CANCELADO">CANCELADO (Devuelve Stock)</option>
+                                  </select>
+                                </td>
+
+                                <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
+                                  <a
+                                    href={`https://wa.me/${o.customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                      `¡Hola ${o.customerName}! Te escribimos de BenFlex San Juan por tu compra #${o.id}.`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem',
+                                      backgroundColor: '#25D366',
+                                      color: '#ffffff',
+                                      padding: '0.35rem 0.65rem',
+                                      borderRadius: '8px',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none',
+                                    }}
+                                    title="Contactar al cliente por WhatsApp"
+                                  >
+                                    <MessageCircle size={13} />
+                                    <span>WhatsApp</span>
+                                  </a>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -2030,25 +2342,117 @@ export default function BenFlexAdminPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                      Categoría *
-                    </label>
-                    <select
-                      value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value as ProductCategory })}
+                    <div
                       style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        borderRadius: '10px',
-                        border: '1px solid #d1d5db',
-                        backgroundColor: '#ffffff',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.3rem',
                       }}
                     >
-                      <option value="colchones-sommiers">Colchones & Sommiers</option>
-                      <option value="sillones-sofas">Sillones & Sofás Cama</option>
-                      <option value="almohadas-confort">Almohadas & Confort / Ropa de Cama</option>
-                      <option value="combos-benflex">Combos BenFlex (Con Regalo)</option>
-                    </select>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700 }}>
+                        Categoría *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingCategory((prev) => !prev);
+                          setNewCategoryInput('');
+                        }}
+                        style={{
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          color: 'var(--brand-sage)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        {isCreatingCategory ? 'Elegir existente' : '+ Agregar otra categoría'}
+                      </button>
+                    </div>
+
+                    {!isCreatingCategory ? (
+                      <select
+                        value={form.category}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__NEW__') {
+                            setIsCreatingCategory(true);
+                            setNewCategoryInput('');
+                            return;
+                          }
+                          const found = availableCategories.find((c) => c.id === val);
+                          setForm({
+                            ...form,
+                            category: val as ProductCategory,
+                            categoryLabel: found?.label || CATEGORY_MAP[val] || val,
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          borderRadius: '10px',
+                          border: '1px solid #d1d5db',
+                          backgroundColor: '#ffffff',
+                        }}
+                      >
+                        {availableCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.label}
+                          </option>
+                        ))}
+                        <option value="__NEW__">+ Crear nueva categoría...</option>
+                      </select>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.45rem' }}>
+                        <input
+                          type="text"
+                          placeholder="Ej: Respaldos & Cabeceros"
+                          value={newCategoryInput}
+                          onChange={(e) => setNewCategoryInput(e.target.value)}
+                          autoFocus
+                          style={{
+                            flex: 1,
+                            padding: '0.72rem 0.75rem',
+                            borderRadius: '10px',
+                            border: '2px solid var(--brand-sage)',
+                            fontSize: '0.88rem',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cleanName = newCategoryInput.trim();
+                            const slug = slugifyCategory(cleanName);
+                            if (!cleanName || slug.length < 2) return;
+                            setCustomCategories((prev) =>
+                              prev.some((c) => c.id === slug)
+                                ? prev
+                                : [...prev, { id: slug, label: cleanName }]
+                            );
+                            setForm({
+                              ...form,
+                              category: slug,
+                              categoryLabel: cleanName,
+                            });
+                            setIsCreatingCategory(false);
+                            setNewCategoryInput('');
+                          }}
+                          style={{
+                            padding: '0 0.85rem',
+                            borderRadius: '10px',
+                            backgroundColor: '#111827',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                          }}
+                        >
+                          Usar
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
