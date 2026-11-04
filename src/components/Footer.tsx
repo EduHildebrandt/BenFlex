@@ -177,23 +177,39 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* 2. Main Footer Body with Showroom Details & Map */}
-      <div style={{ padding: '3.5rem 0 2.5rem 0' }}>
+      {/* 2. Main Footer Body: 4-Column Balanced & Elegant Grid */}
+      <style>{`
+        .footer-grid-container {
+          display: grid;
+          grid-template-columns: 1.35fr 0.9fr 1.35fr 1.15fr;
+          gap: 2.5rem;
+          align-items: start;
+        }
+        @media (max-width: 1080px) {
+          .footer-grid-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.25rem;
+          }
+        }
+        @media (max-width: 640px) {
+          .footer-grid-container {
+            grid-template-columns: 1fr;
+            gap: 2.25rem;
+          }
+        }
+      `}</style>
+
+      <div style={{ padding: '3.5rem 0 3rem 0' }}>
         <div className="container">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '2.5rem',
-            }}
-          >
-            {/* Columna 1: Identidad y Showroom Principal */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div className="footer-grid-container">
+
+            {/* Columna 1: Marca BenFlex & Filosofía de Descanso */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                 <div
                   style={{
-                    width: '48px',
-                    height: '48px',
+                    width: '46px',
+                    height: '46px',
                     borderRadius: '50%',
                     backgroundColor: '#ffffff',
                     display: 'flex',
@@ -201,6 +217,8 @@ export default function Footer() {
                     justifyContent: 'center',
                     overflow: 'hidden',
                     padding: '2px',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+                    flexShrink: 0,
                   }}
                 >
                   <img
@@ -209,114 +227,242 @@ export default function Footer() {
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 </div>
-                <span style={{ fontSize: '1.45rem', fontWeight: 900, fontStyle: 'italic', letterSpacing: '-0.02em', color: '#ffffff' }}>
-                  BenFlex
-                </span>
+                <div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: 900, fontStyle: 'italic', letterSpacing: '-0.02em', color: '#ffffff', lineHeight: 1.1 }}>
+                    BenFlex
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    Fábrica de Descanso • San Juan
+                  </div>
+                </div>
               </div>
-              <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+
+              <p style={{ fontSize: '0.86rem', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
                 Especialistas en descanso ergonómico, salud postural y confort de alta gama. Colchones, sommiers, sofás cama y almohadas inteligentes diseñadas para transformar tus noches.
               </p>
 
               <div
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px',
-                  padding: '1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  padding: '0.85rem 1rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.07)',
+                  borderRadius: '10px',
+                  fontSize: '0.76rem',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    color: '#86efac',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <Store size={18} />
-                  <span>Nuestro Showroom Oficial</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#facc15', fontWeight: 600 }}>
+                  <ShieldCheck size={16} />
+                  <span>Garantía Oficial de Fábrica hasta 5 años</span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.5 }}>
-                  <strong>Dirección:</strong> {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}, {BENFLEX_CONTACT.province}.
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#cbd5e1', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Clock size={14} color="#94a3b8" />
-                  <span>{BENFLEX_CONTACT.schedule}</span>
-                </div>
-                <div
-                  style={{
-                    marginTop: '0.75rem',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    backgroundColor: 'rgba(45, 90, 63, 0.3)',
-                    color: '#86efac',
-                    padding: '0.35rem 0.65rem',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  ✓ Opción de Retiro Gratis en Sucursal
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#86efac', fontWeight: 600 }}>
+                  <Truck size={16} />
+                  <span>Envíos bonificados en Gran San Juan</span>
                 </div>
               </div>
             </div>
 
-            {/* Columna 2: Mapa y Ubicación Interactiva */}
+            {/* Columna 2: Categorías de Descanso */}
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin size={18} color="#4ade80" />
-                Ubicación en Villa Krause
+              <h4
+                style={{
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  marginBottom: '1.25rem',
+                  color: '#ffffff',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                Categorías
               </h4>
+              <ul
+                style={{
+                  listStyle: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  fontSize: '0.88rem',
+                  color: '#94a3b8',
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {populatedCategories.map((cat) => (
+                  <li key={cat.id}>
+                    <Link
+                      href="/#catalogo"
+                      style={{
+                        transition: 'color 0.15s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        color: '#cbd5e1',
+                        textDecoration: 'none',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#38bdf8')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+                    >
+                      <span style={{ color: '#64748b', fontSize: '0.75rem' }}>›</span>
+                      <span>{cat.label}</span>
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link
+                    href="/#quiz-descanso"
+                    style={{
+                      transition: 'color 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      color: '#38bdf8',
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#7dd3fc')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = '#38bdf8')}
+                  >
+                    <span style={{ fontSize: '0.8rem' }}>★</span>
+                    <span>Colchón Ideal (Test)</span>
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Columna 3: Showroom & Retiro en San Juan (Tarjeta Unificada Elegante) */}
+            <div>
+              <h4
+                style={{
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  marginBottom: '1.25rem',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                <MapPin size={17} color="#4ade80" />
+                <span>Showroom & Retiro</span>
+              </h4>
+
               <div
                 style={{
                   borderRadius: '14px',
                   overflow: 'hidden',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  backgroundColor: '#1e293b',
-                  height: '190px',
-                  position: 'relative',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.7)',
+                  backdropFilter: 'blur(12px)',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  backgroundImage:
-                    'url(https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
                 }}
               >
+                {/* Visual del Mapa */}
                 <div
                   style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.4) 100%)',
+                    height: '115px',
+                    position: 'relative',
+                    backgroundImage:
+                      'url(https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                   }}
-                />
-                <div style={{ position: 'relative', zIndex: 1, padding: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
-                    Showroom Central BenFlex
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.35) 100%)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '0.65rem',
+                      left: '0.85rem',
+                      right: '0.85rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff' }}>
+                      Villa Krause, San Juan
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        backgroundColor: '#2563eb',
+                        color: '#ffffff',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '4px',
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      Fábrica Oficial
+                    </span>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginBottom: '0.65rem' }}>
-                    Castaño Oeste y Conector Sur • Fácil estacionamiento
+                </div>
+
+                {/* Info Showroom */}
+                <div
+                  style={{
+                    padding: '0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.55rem',
+                    fontSize: '0.8rem',
+                    color: '#cbd5e1',
+                  }}
+                >
+                  <div>
+                    <strong style={{ color: '#ffffff' }}>Dirección:</strong> {BENFLEX_CONTACT.address}, {BENFLEX_CONTACT.city}.
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.76rem' }}>
+                    <Clock size={13} color="#94a3b8" />
+                    <span>{BENFLEX_CONTACT.schedule}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                      border: '1px solid rgba(34, 197, 94, 0.25)',
+                      color: '#86efac',
+                      padding: '0.25rem 0.55rem',
+                      borderRadius: '6px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      width: 'fit-content',
+                    }}
+                  >
+                    ✓ Opción Retiro Gratis en el Día
+                  </div>
+
                   <a
                     href={BENFLEX_CONTACT.googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
+                      marginTop: '0.25rem',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
                       backgroundColor: '#2563eb',
                       color: '#ffffff',
-                      padding: '0.4rem 0.75rem',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
+                      padding: '0.45rem 0.75rem',
+                      borderRadius: '7px',
+                      fontSize: '0.76rem',
                       fontWeight: 600,
                       textDecoration: 'none',
+                      transition: 'background-color 0.15s ease',
                     }}
                   >
                     <span>Abrir en Google Maps</span>
@@ -326,33 +472,26 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Columna 3: Categorías y Navegación Rápida (solo categorías con productos) */}
+            {/* Columna 4: Atención & Contacto Directo */}
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: '#ffffff' }}>
-                Categorías de Descanso
+              <h4
+                style={{
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  marginBottom: '1.25rem',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                <MessageCircle size={17} color="#25D366" />
+                <span>Atención y Contacto</span>
               </h4>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: '#94a3b8' }}>
-                {populatedCategories.map((cat) => (
-                  <li key={cat.id}>
-                    <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                      {cat.label}
-                    </Link>
-                  </li>
-                ))}
-                <li>
-                  <Link href="/#quiz-descanso" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Descubrí tu colchón ideal (3 pasos)
-                  </Link>
-                </li>
-              </ul>
-            </div>
 
-            {/* Columna 4: Contacto Directo & Datos Fiscales */}
-            <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: '#ffffff' }}>
-                Atención y Contacto
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.85rem', color: '#94a3b8' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {/* Botón WhatsApp Asesor Directo */}
                 <a
                   href={whatsappUrl}
                   target="_blank"
@@ -360,47 +499,102 @@ export default function Footer() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
-                    color: '#25D366',
-                    fontWeight: 600,
+                    gap: '0.65rem',
+                    backgroundColor: 'rgba(37, 211, 102, 0.12)',
+                    border: '1px solid rgba(37, 211, 102, 0.35)',
+                    color: '#ffffff',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '9px',
+                    textDecoration: 'none',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <MessageCircle size={18} />
-                  <span>WhatsApp: {BENFLEX_CONTACT.phoneDisplay}</span>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: '#25D366',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <MessageCircle size={18} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                    <span style={{ fontSize: '0.68rem', color: '#86efac', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      Asesor Comercial
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      {BENFLEX_CONTACT.phoneDisplay}
+                    </span>
+                  </div>
                 </a>
+
+                {/* Instagram Oficial */}
                 <a
                   href="https://www.instagram.com/benflex_fabrica/"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    display: 'inline-flex',
+                    display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'space-between',
                     gap: '0.5rem',
-                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     color: '#ffffff',
-                    padding: '0.55rem 0.9rem',
+                    padding: '0.55rem 0.85rem',
                     borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.82rem',
-                    width: 'fit-content',
+                    textDecoration: 'none',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
                   }}
                 >
-                  <span>📸 Seguinos en @benflex_fabrica</span>
-                  <ExternalLink size={13} />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.05rem' }}>📸</span>
+                    <span>@benflex_fabrica</span>
+                  </span>
+                  <ExternalLink size={12} color="#94a3b8" />
                 </a>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Mail size={16} />
+
+                {/* Email de Soporte */}
+                <a
+                  href={`mailto:${BENFLEX_CONTACT.email}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#cbd5e1',
+                    textDecoration: 'none',
+                    fontSize: '0.8rem',
+                    padding: '0.2rem 0',
+                  }}
+                >
+                  <Mail size={15} color="#94a3b8" />
                   <span>{BENFLEX_CONTACT.email}</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.5, marginTop: '0.5rem' }}>
-                  <strong>Titular:</strong> {BENFLEX_LEGAL.ownerName}
+                </a>
+
+                <div
+                  style={{
+                    fontSize: '0.73rem',
+                    color: '#64748b',
+                    lineHeight: 1.45,
+                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                    paddingTop: '0.5rem',
+                    marginTop: '0.2rem',
+                  }}
+                >
+                  Atención online y asesoramiento postural:
                   <br />
-                  <strong>CUIT:</strong> {BENFLEX_LEGAL.cuit}
-                  <br />
-                  {BENFLEX_LEGAL.addressDisplay}
+                  <strong style={{ color: '#94a3b8' }}>Lunes a Sábado de 09:00 a 21:00 hs</strong>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </div>
