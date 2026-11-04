@@ -197,9 +197,9 @@ export const BENFLEX_LEGAL = {
 };
 
 export const BENFLEX_CONTACT = {
-  phone: '+54 9 264 543-9821',
-  phoneDisplay: '+54 9 264 543-9821',
-  whatsappRaw: '5492645439821',
+  phone: '+54 9 264 443-6961',
+  phoneDisplay: '+54 9 264 443-6961',
+  whatsappRaw: '5492644436961',
   email: 'contacto@benflex.com.ar',
   address: 'Castaño Oeste y Conector Sur',
   city: 'Villa Krause',

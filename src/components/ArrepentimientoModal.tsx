@@ -558,7 +558,7 @@ export default function ArrepentimientoModal({
               <input
                 type="text"
                 required
-                placeholder="Ej: tuemail@gmail.com o 2645439821"
+                placeholder="Ej: tuemail@gmail.com o 2644436961"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 style={{

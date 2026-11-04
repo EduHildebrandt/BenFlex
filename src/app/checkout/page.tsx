@@ -329,7 +329,7 @@ export default function CheckoutPage() {
                     </label>
                     <input
                       type="tel"
-                      placeholder="Ej: 264 543-9821"
+                      placeholder="Ej: 264 443-6961"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       style={{

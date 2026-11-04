@@ -40,7 +40,7 @@ Este documento resume la totalidad del contexto técnico, de negocio, arquitectu
     * **Alias:** `BENFLEX.DESCANSO.SJ`
   * **Tarjetas:** Hasta 12 cuotas fijas / pasarela Mercado Pago.
 * **Canales de Atención:**
-  * **WhatsApp:** `+54 9 264 543-9821` (`5492645439821`) con prellenado automático de consultas y pedidos.
+  * **WhatsApp:** `+54 9 264 443-6961` (`5492644436961`) con prellenado automático de consultas y pedidos.
   * **Email:** `contacto@benflex.com.ar`
   * **Instagram:** `@benflex_fabrica`
 
