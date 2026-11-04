@@ -2,7 +2,8 @@ export type ProductCategory =
   | 'colchones-sommiers'
   | 'sillones-sofas'
   | 'almohadas-confort'
-  | 'combos-benflex';
+  | 'combos-benflex'
+  | (string & {});
 
 export type ProductTechnology =
   | 'alta_densidad'

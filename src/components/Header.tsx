@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useLocation } from '@/context/LocationContext';
@@ -69,6 +69,25 @@ export default function Header() {
       setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [searchOpen]);
+
+  // Mostrar únicamente categorías que tienen al menos un producto cargado
+  const populatedCategories = useMemo(() => {
+    const map = new Map<string, { id: string; label: string; count: number }>();
+    products.forEach((p) => {
+      if (!p.category) return;
+      const existing = map.get(p.category);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(p.category, {
+          id: p.category,
+          label: p.categoryLabel || p.category,
+          count: 1,
+        });
+      }
+    });
+    return Array.from(map.values()).filter((c) => c.count > 0);
+  }, [products]);
 
   const searchResults = searchQuery.trim()
     ? products.filter(
@@ -145,23 +164,15 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Centro (Solo Desktop): Navegación limpia en una sola línea */}
+          {/* Centro (Solo Desktop): Navegación limpia en una sola línea (solo categorías con productos) */}
           <nav className="bf-desktop-nav" aria-label="Categorías principales">
-            <Link href="/#catalogo" className="bf-nav-link">
-              Colchones &amp; Sommiers
-            </Link>
-            <Link href="/#catalogo" className="bf-nav-link">
-              Sillones
-            </Link>
-            <Link href="/#catalogo" className="bf-nav-link">
-              Almohadas
-            </Link>
-            <Link href="/#catalogo" className="bf-nav-link bf-nav-link-accent">
-              <Sparkles size={13} />
-              <span>Combos</span>
-            </Link>
+            {populatedCategories.map((cat) => (
+              <Link key={cat.id} href="/#catalogo" className="bf-nav-link">
+                {cat.label}
+              </Link>
+            ))}
             <Link href="/#quiz-descanso" className="bf-nav-link">
-              Quiz Ideal
+              Colchón Ideal
             </Link>
             <Link href="/contacto" className="bf-nav-link">
               Showroom
@@ -383,41 +394,22 @@ export default function Header() {
               boxShadow: '0 14px 28px rgba(17, 24, 39, 0.1)',
             }}
           >
-            <Link
-              href="/#catalogo"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5' }}
-            >
-              Colchones &amp; Sommiers
-            </Link>
-            <Link
-              href="/#catalogo"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5' }}
-            >
-              Sillones &amp; Sofás Cama
-            </Link>
-            <Link
-              href="/#catalogo"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5' }}
-            >
-              Almohadas &amp; Ropa de Cama
-            </Link>
-            <Link
-              href="/#catalogo"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--brand-sage)', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            >
-              <Sparkles size={15} />
-              <span>Combos BenFlex (Con Regalo)</span>
-            </Link>
+            {populatedCategories.map((cat) => (
+              <Link
+                key={cat.id}
+                href="/#catalogo"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5' }}
+              >
+                {cat.label}
+              </Link>
+            ))}
             <Link
               href="/#quiz-descanso"
               onClick={() => setMobileMenuOpen(false)}
               style={{ fontWeight: 600, fontSize: '0.9rem', padding: '0.5rem 0', borderBottom: '1px solid #f4f4f5' }}
             >
-              🎯 Test: Colchón Ideal en 3 pasos
+              Descubrí tu colchón ideal (3 pasos)
             </Link>
             <Link
               href="/contacto"

@@ -32,6 +32,10 @@ export default function SleepQuiz() {
     setAnswers({ position: '', priority: '', size: '' });
   };
 
+  if (products.length === 0) {
+    return null;
+  }
+
   // Lógica de recomendación de producto
   const recommendedProduct: Product = (() => {
     if (answers.priority === 'combo') {
@@ -43,7 +47,8 @@ export default function SleepQuiz() {
     if (answers.priority === 'pareja' || answers.position === 'lado') {
       return (
         products.find((p) => p.id === 'colchon-nuage-resortes-pocket') ||
-        products[1]
+        products[1] ||
+        products[0]
       );
     }
     return (
@@ -61,45 +66,39 @@ export default function SleepQuiz() {
       id="quiz-descanso"
       style={{
         padding: '4.5rem 0',
-        backgroundColor: '#f7f4ed',
-        borderTop: '1px solid #e8e1d5',
-        borderBottom: '1px solid #e8e1d5',
+        backgroundColor: '#fafafa',
+        borderTop: '1px solid #f1f5f9',
         position: 'relative',
       }}
     >
-      <div className="container" style={{ maxWidth: '860px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div
+      <div className="container" style={{ maxWidth: '840px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.25rem' }}>
+          <span
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              backgroundColor: 'var(--bg-sage-light)',
-              color: 'var(--brand-sage)',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '9999px',
-              fontSize: '0.8rem',
+              display: 'inline-block',
+              fontSize: '0.72rem',
               fontWeight: 700,
-              marginBottom: '0.75rem',
-              border: '1px solid rgba(45, 90, 63, 0.2)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: '#64748b',
+              marginBottom: '0.6rem',
             }}
           >
-            <Sparkles size={15} />
-            <span>Asesor Ergonómico Inteligente</span>
-          </div>
+            Asesor Postural en 3 Pasos
+          </span>
           <h2
             style={{
-              fontSize: '2.2rem',
+              fontSize: '1.9rem',
               fontWeight: 800,
-              color: 'var(--brand-navy)',
+              color: '#0f172a',
               letterSpacing: '-0.02em',
-              marginBottom: '0.65rem',
+              marginBottom: '0.5rem',
             }}
           >
-            Descubrí tu colchón ideal en 3 preguntas
+            Descubrí tu colchón ideal
           </h2>
-          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
-            Elegir la firmeza y estructura adecuada previene contracturas y multiplica tu energía cada mañana.
+          <p style={{ fontSize: '0.94rem', color: '#64748b' }}>
+            Respondé 3 preguntas breves para encontrar la densidad y soporte recomendados para vos.
           </p>
 
           {/* Progress Dots */}
@@ -108,18 +107,18 @@ export default function SleepQuiz() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.65rem',
-              marginTop: '1.5rem',
+              gap: '0.5rem',
+              marginTop: '1.25rem',
             }}
           >
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
                 style={{
-                  height: '8px',
-                  width: step === s ? '36px' : '14px',
+                  height: '6px',
+                  width: step === s ? '32px' : '12px',
                   borderRadius: '9999px',
-                  backgroundColor: step >= s ? 'var(--brand-sage)' : '#cbd5e1',
+                  backgroundColor: step >= s ? '#0f172a' : '#cbd5e1',
                   transition: 'all 0.3s ease',
                 }}
               />
@@ -129,11 +128,11 @@ export default function SleepQuiz() {
 
         {/* CONTENEDOR DEL QUIZ */}
         <div
-          className="glass-card"
           style={{
-            padding: '2.5rem',
+            padding: '2.25rem',
             backgroundColor: '#ffffff',
-            boxShadow: '0 12px 35px rgba(15, 23, 42, 0.08)',
+            borderRadius: '20px',
+            border: '1px solid #e4e4e7',
           }}
         >
           {/* PASO 1 */}

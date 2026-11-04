@@ -8,12 +8,12 @@ import type {
   DeliveryMethod,
 } from '@/types';
 
-const VALID_CATEGORIES: ProductCategory[] = [
-  'colchones-sommiers',
-  'sillones-sofas',
-  'almohadas-confort',
-  'combos-benflex',
-];
+const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
+  'colchones-sommiers': 'Colchones & Sommiers',
+  'sillones-sofas': 'Sillones & Sofás Cama',
+  'almohadas-confort': 'Almohadas & Confort',
+  'combos-benflex': 'Combos BenFlex',
+};
 
 const VALID_TECHNOLOGIES: ProductTechnology[] = [
   'alta_densidad',
@@ -73,10 +73,25 @@ export function validateProductInput(
     return { valid: false, error: 'El nombre del producto debe tener al menos 3 caracteres.' };
   }
 
-  const category = raw.category as ProductCategory;
-  if (!VALID_CATEGORIES.includes(category)) {
-    return { valid: false, error: 'Categoría de producto no permitida.' };
+  const rawCategoryText = cleanText(raw.category || raw.categoryLabel, 80);
+  const category = rawCategoryText
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') as ProductCategory;
+
+  if (!category || category.length < 2) {
+    return { valid: false, error: 'Ingresá o seleccioná una categoría válida para el producto.' };
   }
+
+  const categoryLabel =
+    cleanText(raw.categoryLabel, 80) ||
+    DEFAULT_CATEGORY_LABELS[category] ||
+    category
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
 
   const technology = raw.technology as ProductTechnology;
   if (!VALID_TECHNOLOGIES.includes(technology)) {
@@ -144,7 +159,7 @@ export function validateProductInput(
       description,
       shortDescription,
       category,
-      categoryLabel: cleanText(raw.categoryLabel, 80) || category,
+      categoryLabel,
       technology,
       technologyLabel: cleanText(raw.technologyLabel, 100) || technology,
       measure: cleanText(raw.measure, 80) || 'Estándar',

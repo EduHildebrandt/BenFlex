@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { useProducts } from '@/context/ProductContext';
 import {
   MapPin,
   Clock,
@@ -16,6 +17,25 @@ import {
 import { BENFLEX_CONTACT, BENFLEX_BANK_INFO } from '@/types';
 
 export default function Footer() {
+  const { products } = useProducts();
+  const populatedCategories = useMemo(() => {
+    const map = new Map<string, { id: string; label: string; count: number }>();
+    products.forEach((p) => {
+      if (!p.category) return;
+      const existing = map.get(p.category);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(p.category, {
+          id: p.category,
+          label: p.categoryLabel || p.category,
+          count: 1,
+        });
+      }
+    });
+    return Array.from(map.values()).filter((c) => c.count > 0);
+  }, [products]);
+
   const whatsappUrl = `https://wa.me/${BENFLEX_CONTACT.whatsappRaw}?text=${encodeURIComponent(
     'Hola BenFlex, quisiera hacer una consulta sobre el showroom en San Juan y opciones de envío o retiro.'
   )}`;
@@ -294,40 +314,22 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Columna 3: Categorías y Navegación Rápida */}
+            {/* Columna 3: Categorías y Navegación Rápida (solo categorías con productos) */}
             <div>
               <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: '#ffffff' }}>
                 Categorías de Descanso
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.88rem', color: '#94a3b8' }}>
-                <li>
-                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Colchones &amp; Sommiers Ortopédicos
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Resortes Pocket Ensacados Parejas
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Sillones &amp; Sofás Cama Anti-Desgarro
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Almohadas Viscoelásticas y Cervicales
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block', color: '#86efac' }}>
-                    Combos BenFlex con Almohadas de Regalo
-                  </Link>
-                </li>
+                {populatedCategories.map((cat) => (
+                  <li key={cat.id}>
+                    <Link href="/#catalogo" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
+                      {cat.label}
+                    </Link>
+                  </li>
+                ))}
                 <li>
                   <Link href="/#quiz-descanso" style={{ transition: 'color 0.2s', display: 'inline-block' }}>
-                    Quiz: Test del Colchón Ideal (3 pasos)
+                    Descubrí tu colchón ideal (3 pasos)
                   </Link>
                 </li>
               </ul>
