@@ -12,8 +12,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let body: any;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Cuerpo de la solicitud inválido o ausente.' },
+      { status: 400 }
+    );
+  }
+
+  try {
     const action = body?.action || 'lookup';
     const orderId = typeof body?.orderId === 'string' ? body.orderId.trim() : '';
     const contact = typeof body?.contact === 'string' ? body.contact.trim() : '';
