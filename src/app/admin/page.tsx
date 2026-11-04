@@ -566,6 +566,105 @@ export default function BenFlexAdminPage() {
     }));
   };
 
+  const activeOrdersCount = orders.filter((o) => o.status !== 'CANCELADO').length;
+  const totalRevenue = orders
+    .filter((o) => o.status !== 'CANCELADO')
+    .reduce((acc, o) => acc + o.total, 0);
+
+  const filteredCatalog = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      p.categoryLabel.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
+  // Métricas avanzadas para el Cuadro de Ventas (Hooks declarados siempre antes de cualquier early return)
+  const salesMetrics = useMemo(() => {
+    const validOrders = orders.filter((o) => o.status !== 'CANCELADO');
+    const approvedOrders = orders.filter(
+      (o) => o.status === 'APROBADO' || o.status === 'ENTREGADO'
+    );
+
+    const totalGrossRevenue = validOrders.reduce((acc, o) => acc + o.total, 0);
+    const totalCollected = approvedOrders.reduce((acc, o) => acc + o.total, 0);
+    const totalUnitsSold = validOrders.reduce(
+      (acc, o) => acc + o.items.reduce((sum, item) => sum + item.quantity, 0),
+      0
+    );
+    const averageTicket =
+      validOrders.length > 0 ? Math.round(totalGrossRevenue / validOrders.length) : 0;
+    const totalTransferDiscounts = validOrders.reduce(
+      (acc, o) => acc + (o.transferDiscount || 0),
+      0
+    );
+    const totalShippingDiscounts = validOrders.reduce(
+      (acc, o) => acc + (o.shippingDiscount || 0),
+      0
+    );
+
+    // Desglose por Medio de Pago
+    const byPayment: Record<string, { count: number; total: number }> = {
+      transferencia: { count: 0, total: 0 },
+      credito: { count: 0, total: 0 },
+      debito: { count: 0, total: 0 },
+      mercadopago: { count: 0, total: 0 },
+    };
+    validOrders.forEach((o) => {
+      const pm = o.paymentMethod || 'transferencia';
+      if (!byPayment[pm]) byPayment[pm] = { count: 0, total: 0 };
+      byPayment[pm].count += 1;
+      byPayment[pm].total += o.total;
+    });
+
+    // Desglose por Método de Entrega
+    const showroomOrders = validOrders.filter((o) => o.deliveryMethod === 'showroom');
+    const deliveryOrders = validOrders.filter((o) => o.deliveryMethod === 'delivery');
+
+    return {
+      validOrdersCount: validOrders.length,
+      approvedOrdersCount: approvedOrders.length,
+      totalGrossRevenue,
+      totalCollected,
+      totalUnitsSold,
+      averageTicket,
+      totalTransferDiscounts,
+      totalShippingDiscounts,
+      byPayment,
+      showroomCount: showroomOrders.length,
+      deliveryCount: deliveryOrders.length,
+    };
+  }, [orders]);
+
+  // Órdenes filtradas para el Cuadro de Ventas
+  const filteredSalesOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (salesStatusFilter !== 'ALL' && o.status !== salesStatusFilter) {
+        return false;
+      }
+      if (salesSearch.trim()) {
+        const query = salesSearch.toLowerCase();
+        const matchesClient = o.customerName.toLowerCase().includes(query);
+        const matchesEmail = o.customerEmail.toLowerCase().includes(query);
+        const matchesPhone = o.customerPhone.toLowerCase().includes(query);
+        const matchesId = o.id.toLowerCase().includes(query);
+        const matchesDni = (o.customerDni || '').toLowerCase().includes(query);
+        const matchesProduct = o.items.some((i) =>
+          i.product.name.toLowerCase().includes(query)
+        );
+        if (
+          !matchesClient &&
+          !matchesEmail &&
+          !matchesPhone &&
+          !matchesId &&
+          !matchesDni &&
+          !matchesProduct
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [orders, salesStatusFilter, salesSearch]);
+
   if (checkingSession) {
     return (
       <div style={{ padding: '6rem 1rem', textAlign: 'center', backgroundColor: '#fafaf9', minHeight: '80vh' }}>
@@ -738,105 +837,6 @@ export default function BenFlexAdminPage() {
       </div>
     );
   }
-
-  const activeOrdersCount = orders.filter((o) => o.status !== 'CANCELADO').length;
-  const totalRevenue = orders
-    .filter((o) => o.status !== 'CANCELADO')
-    .reduce((acc, o) => acc + o.total, 0);
-
-  const filteredCatalog = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      p.categoryLabel.toLowerCase().includes(searchFilter.toLowerCase())
-  );
-
-  // Métricas avanzadas para el Cuadro de Ventas
-  const salesMetrics = useMemo(() => {
-    const validOrders = orders.filter((o) => o.status !== 'CANCELADO');
-    const approvedOrders = orders.filter(
-      (o) => o.status === 'APROBADO' || o.status === 'ENTREGADO'
-    );
-
-    const totalGrossRevenue = validOrders.reduce((acc, o) => acc + o.total, 0);
-    const totalCollected = approvedOrders.reduce((acc, o) => acc + o.total, 0);
-    const totalUnitsSold = validOrders.reduce(
-      (acc, o) => acc + o.items.reduce((sum, item) => sum + item.quantity, 0),
-      0
-    );
-    const averageTicket =
-      validOrders.length > 0 ? Math.round(totalGrossRevenue / validOrders.length) : 0;
-    const totalTransferDiscounts = validOrders.reduce(
-      (acc, o) => acc + (o.transferDiscount || 0),
-      0
-    );
-    const totalShippingDiscounts = validOrders.reduce(
-      (acc, o) => acc + (o.shippingDiscount || 0),
-      0
-    );
-
-    // Desglose por Medio de Pago
-    const byPayment: Record<string, { count: number; total: number }> = {
-      transferencia: { count: 0, total: 0 },
-      credito: { count: 0, total: 0 },
-      debito: { count: 0, total: 0 },
-      mercadopago: { count: 0, total: 0 },
-    };
-    validOrders.forEach((o) => {
-      const pm = o.paymentMethod || 'transferencia';
-      if (!byPayment[pm]) byPayment[pm] = { count: 0, total: 0 };
-      byPayment[pm].count += 1;
-      byPayment[pm].total += o.total;
-    });
-
-    // Desglose por Método de Entrega
-    const showroomOrders = validOrders.filter((o) => o.deliveryMethod === 'showroom');
-    const deliveryOrders = validOrders.filter((o) => o.deliveryMethod === 'delivery');
-
-    return {
-      validOrdersCount: validOrders.length,
-      approvedOrdersCount: approvedOrders.length,
-      totalGrossRevenue,
-      totalCollected,
-      totalUnitsSold,
-      averageTicket,
-      totalTransferDiscounts,
-      totalShippingDiscounts,
-      byPayment,
-      showroomCount: showroomOrders.length,
-      deliveryCount: deliveryOrders.length,
-    };
-  }, [orders]);
-
-  // Órdenes filtradas para el Cuadro de Ventas
-  const filteredSalesOrders = useMemo(() => {
-    return orders.filter((o) => {
-      if (salesStatusFilter !== 'ALL' && o.status !== salesStatusFilter) {
-        return false;
-      }
-      if (salesSearch.trim()) {
-        const query = salesSearch.toLowerCase();
-        const matchesClient = o.customerName.toLowerCase().includes(query);
-        const matchesEmail = o.customerEmail.toLowerCase().includes(query);
-        const matchesPhone = o.customerPhone.toLowerCase().includes(query);
-        const matchesId = o.id.toLowerCase().includes(query);
-        const matchesDni = (o.customerDni || '').toLowerCase().includes(query);
-        const matchesProduct = o.items.some((i) =>
-          i.product.name.toLowerCase().includes(query)
-        );
-        if (
-          !matchesClient &&
-          !matchesEmail &&
-          !matchesPhone &&
-          !matchesId &&
-          !matchesDni &&
-          !matchesProduct
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [orders, salesStatusFilter, salesSearch]);
 
   // =========================================================================
   // VISTA PRINCIPAL DEL PANEL DE CONTROL (DUEÑO Y DESARROLLADOR)
