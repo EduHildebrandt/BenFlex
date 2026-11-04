@@ -19,6 +19,7 @@
 | 14. Login `/admin` sin claves expuestas, Ventas por Mes, Categorías Dinámicas y Main Minimalista | Fullstack / UI Lead | Completado | Ventas agrupadas por mes, alta de categorías, ocultamiento de categorías vacías y Quiz post-catálogo |
 | 15. ABM Completo (Altas, Bajas y Modificaciones) de Productos y Categorías | Fullstack Senior | Completado | Endpoint `/api/categories`, pestaña Categorías ABM con cascada en productos, edición inline y modal completo de Productos |
 | 16. Adecuación a Legislaciones Argentinas (ARCA QR 960/D, Titular Gabriel Perez Zapata, Arrepentimiento en Carrito, Garantía Legal, Términos y Privacidad Ley 25.326) | Compliance / Fullstack | Completado | Formulario 960/D interactivo, datos del titular, modal/página de arrepentimiento y pedidos, letra mínima legal en footer |
+| 17. Footer Legal Desplegable (ARCA QR 960/D, Titular, Leyes de Comercio Electrónico) | UI/UX & Frontend | Completado | Barra compacta con trigger "Ver detalle y QR", Botón de Arrepentimiento visible y contenido desplegable hacia abajo |
 
 ---
 
@@ -27,3 +28,4 @@
 - **Flete Bonificado**: Flete del 10% simulado y 100% bonificado en todas las vistas con visual tachada.
 - **Transferencia Bancaria**: 15% OFF en tiempo real con datos bancarios listos para copiar (Alias: BENFLEX.DESCANSO.SJ).
 - **Flujo de WhatsApp**: Botón flotante persistente de atención al cliente + botón de consulta técnica en PDP + botón principal en la confirmación de orden con mensaje codificado URL encode.
+- **Footer Legal**: Bloque inferior compactado en acordeón desplegable hacia abajo para mantener la página limpia sin perder la conformidad legal obligatoria (Res. 424/2020 SCI, Ley 24.240, Ley 25.326 y AFIP/ARCA).
