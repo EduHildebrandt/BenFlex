@@ -176,6 +176,26 @@ export const BENFLEX_BANK_INFO: BenFlexBankData = {
   alias: 'BENFLEX.DESCANSO.SJ',
 };
 
+export const BENFLEX_LEGAL = {
+  ownerName: 'Gabriel Perez Zapata',
+  cuit: '20-28773718-2',
+  cuitNumber: '20287737182',
+  address: 'Castaño Oeste y Conector Sur',
+  city: 'Villa Krause',
+  province: 'San Juan',
+  postalCode: '5425',
+  country: 'República Argentina',
+  addressDisplay: 'Castaño Oeste y Conector Sur, Villa Krause, CP 5425, San Juan, Argentina',
+  coolingOffPeriodDays: 10,
+  warrantyLegalMonths: 6,
+  warrantyFactoryYears: 3,
+  consumerProtectionUrl: 'https://www.argentina.gob.ar/produccion/defensadelconsumidor',
+  consumidorGovUrl: 'https://www.argentina.gob.ar/produccion/defensadelconsumidor',
+  consumerProtectionSanJuanUrl: 'https://defensadelconsumidor.sanjuan.gob.ar/',
+  defensaConsumidorSanJuanUrl: 'https://defensadelconsumidor.sanjuan.gob.ar/',
+  arcaDataFiscalUrl: 'https://serviciosweb.afip.gob.ar/clavefiscal/qr/mobilePublico.aspx?cuit=20287737182',
+};
+
 export const BENFLEX_CONTACT = {
   phone: '+54 9 264 543-9821',
   phoneDisplay: '+54 9 264 543-9821',

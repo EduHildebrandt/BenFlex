@@ -24,6 +24,8 @@ import {
   getLocalOrderByIdAndToken,
   createValidatedLocalOrder,
   updateLocalOrderStatus,
+  lookupLocalOrder,
+  revokeLocalOrder,
   getLocalInquiries,
   createLocalInquiry,
 } from '@/lib/localStore';
@@ -928,4 +930,106 @@ export async function getDbInquiries(): Promise<CustomerInquiry[]> {
     }
   }
   return getLocalInquiries();
+}
+
+// ---------------------------------------------------------------------------
+// OPERACIONES DE ARREPENTIMIENTO Y SEGUIMIENTO (RES. 424/2020)
+// ---------------------------------------------------------------------------
+
+function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+export async function lookupDbOrder(
+  orderId: string,
+  contact: string
+): Promise<{ order: Order; daysRemaining: number; canRevoke: boolean } | null> {
+  const cleanId = orderId.trim().toUpperCase().replace(/^#/, '');
+  const cleanContact = contact.trim().toLowerCase();
+  const phoneDigits = normalizePhoneDigits(cleanContact);
+
+  if (isDbConfigured()) {
+    try {
+      await ensureSchema();
+      const pool = getPool();
+      const res = await pool.query(
+        'SELECT * FROM public.benflex_orders WHERE UPPER(id) = $1 LIMIT 1',
+        [cleanId]
+      );
+      if (res.rows.length > 0) {
+        const row = res.rows[0];
+        const emailMatch = (row.customer_email || '').toLowerCase().trim() === cleanContact;
+        const foundPhoneDigits = normalizePhoneDigits(row.customer_phone || '');
+        const phoneMatch =
+          phoneDigits.length >= 6 &&
+          (foundPhoneDigits.endsWith(phoneDigits) || phoneDigits.endsWith(foundPhoneDigits));
+        const dniMatch =
+          row.customer_dni &&
+          phoneDigits.length >= 6 &&
+          row.customer_dni.replace(/\D/g, '') === phoneDigits;
+
+        if (emailMatch || phoneMatch || dniMatch) {
+          const mapped = mapRowToOrder(row);
+          const orderTime = new Date(mapped.date).getTime();
+          const now = Date.now();
+          const diffDays = Math.floor((now - orderTime) / (1000 * 60 * 60 * 24));
+          const daysRemaining = Math.max(0, 10 - diffDays);
+          const canRevoke = mapped.status !== 'CANCELADO';
+          return { order: mapped, daysRemaining, canRevoke };
+        }
+        return null;
+      }
+    } catch (err) {
+      console.warn('[DB Lookup Order] Error consultando Supabase, probando en local:', err);
+    }
+  }
+
+  return lookupLocalOrder(orderId, contact);
+}
+
+export async function revokeDbOrder(
+  orderId: string,
+  contact: string,
+  reason?: string
+): Promise<{ success: boolean; revocationCode: string; order: Order; error?: string }> {
+  const lookup = await lookupDbOrder(orderId, contact);
+  if (!lookup) {
+    return {
+      success: false,
+      revocationCode: '',
+      order: null as any,
+      error: 'No se encontró ningún pedido con el número y dato de contacto ingresados.',
+    };
+  }
+
+  if (lookup.order.status === 'CANCELADO') {
+    return {
+      success: false,
+      revocationCode: '',
+      order: lookup.order,
+      error: `El pedido #${lookup.order.id} ya se encuentra cancelado.`,
+    };
+  }
+
+  // Cancelar pedido y restituir stock automáticamente
+  const updatedOrder = await updateDbOrderStatus(lookup.order.id, 'CANCELADO');
+  const revocationCode = `REV-${updatedOrder.id}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+
+  // Registrar notificación en consultas
+  await createDbInquiry({
+    name: `ARREPENTIMIENTO - ${updatedOrder.customerName}`,
+    phone: updatedOrder.customerPhone,
+    subject: `Trámite de Revocación ${revocationCode}`,
+    message: `El cliente ejerció el Derecho de Arrepentimiento (Res. 424/2020 - Art. 34 Ley 24.240) sobre el pedido #${updatedOrder.id}.\nMotivo: ${
+      reason?.trim() || 'Sin expresión de causa (facultad legal dentro de los 10 días)'
+    }.\nTotal a reintegrar: $${updatedOrder.total.toLocaleString('es-AR')}.\nContacto: ${
+      updatedOrder.customerEmail
+    } / ${updatedOrder.customerPhone}.`,
+  });
+
+  return {
+    success: true,
+    revocationCode,
+    order: updatedOrder,
+  };
 }

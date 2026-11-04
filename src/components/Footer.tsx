@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
 import {
@@ -13,11 +13,20 @@ import {
   MessageCircle,
   Store,
   ExternalLink,
+  Undo2,
+  FileText,
+  Lock,
+  Scale,
 } from 'lucide-react';
-import { BENFLEX_CONTACT, BENFLEX_BANK_INFO } from '@/types';
+import { BENFLEX_CONTACT, BENFLEX_BANK_INFO, BENFLEX_LEGAL } from '@/types';
+import DataFiscalQR from './DataFiscalQR';
+import ArrepentimientoModal from './ArrepentimientoModal';
+import LegalModal, { LegalModalType } from './LegalModals';
 
 export default function Footer() {
   const { products } = useProducts();
+  const [isArrepentimientoOpen, setIsArrepentimientoOpen] = useState(false);
+  const [activeLegalModal, setActiveLegalModal] = useState<LegalModalType>(null);
   const populatedCategories = useMemo(() => {
     const map = new Map<string, { id: string; label: string; count: number }>();
     products.forEach((p) => {
@@ -381,11 +390,11 @@ export default function Footer() {
                   <span>{BENFLEX_CONTACT.email}</span>
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.5, marginTop: '0.5rem' }}>
-                  <strong>Razón Social:</strong> {BENFLEX_BANK_INFO.holder}
+                  <strong>Titular:</strong> {BENFLEX_LEGAL.ownerName}
                   <br />
-                  <strong>CUIT:</strong> {BENFLEX_BANK_INFO.cuit}
+                  <strong>CUIT:</strong> {BENFLEX_LEGAL.cuit}
                   <br />
-                  San Juan, República Argentina.
+                  {BENFLEX_LEGAL.addressDisplay}
                 </div>
               </div>
             </div>
@@ -437,6 +446,186 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* 4. Bloque Legal Obligatorio en Letra Mínima Legible (Legislación de Comercio Electrónico Argentina) */}
+      <div
+        style={{
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          backgroundColor: '#050811',
+          padding: '1.75rem 0 2.25rem',
+          fontSize: '0.72rem',
+          color: '#64748b',
+          lineHeight: '1.55',
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '1.75rem',
+              alignItems: 'flex-start',
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* Formulario 960/D Data Fiscal ARCA / AFIP interactivo */}
+            <div style={{ flexShrink: 0 }}>
+              <DataFiscalQR />
+            </div>
+
+            {/* Texto Legal Normativo */}
+            <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div style={{ color: '#94a3b8', fontSize: '0.76rem' }}>
+                <strong style={{ color: '#cbd5e1' }}>Titular del Sitio:</strong> {BENFLEX_LEGAL.ownerName} &nbsp;|&nbsp;{' '}
+                <strong style={{ color: '#cbd5e1' }}>CUIT:</strong> {BENFLEX_LEGAL.cuit} &nbsp;|&nbsp;{' '}
+                <strong style={{ color: '#cbd5e1' }}>Domicilio Comercial:</strong> {BENFLEX_LEGAL.addressDisplay}.
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                <div>
+                  <strong style={{ color: '#cbd5e1' }}>Derecho de Arrepentimiento (Ley 24.240 y Res. 424/2020 SCI):</strong> En las contrataciones a distancia y compras online, el consumidor tiene derecho a revocar la aceptación dentro del plazo de 10 (diez) días corridos computados a partir de la recepción del producto, sin costo alguno ni expresión de causa. Los gastos de devolución corren por cuenta del vendedor.
+                </div>
+                <div>
+                  <strong style={{ color: '#cbd5e1' }}>Garantía Legal y de Fábrica (Ley 24.240, art. 11):</strong> Todos los productos nuevos cuentan con una garantía legal mínima de seis (6) meses. BenFlex otorga además garantía extendida escrita directa de fábrica de hasta 3 y 5 años según línea de producto.
+                </div>
+                <div>
+                  <strong style={{ color: '#cbd5e1' }}>Trato Digno e Información Clara (Ley 24.240, arts. 4 y 8 bis):</strong> Proveemos información veraz, transparente y detallada en idioma nacional sobre características de productos, costos de envío y plazos de entrega, con trato digno y no discriminatorio.
+                </div>
+                <div>
+                  <strong style={{ color: '#cbd5e1' }}>Protección de Datos Personales (Ley 25.326):</strong> Los datos recabados son tratados conforme a la Ley de Protección de los Datos Personales. El titular tiene derecho al acceso, rectificación y supresión de sus datos personales.
+                </div>
+              </div>
+
+              {/* Barra de Acciones y Enlaces Legales */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.85rem',
+                  flexWrap: 'wrap',
+                  marginTop: '0.5rem',
+                  paddingTop: '0.65rem',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                }}
+              >
+                {/* Botón de Arrepentimiento Destacado */}
+                <button
+                  type="button"
+                  onClick={() => setIsArrepentimientoOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    color: '#f87171',
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '6px',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Ejercer el Derecho de Arrepentimiento o consultar pedido previo"
+                >
+                  <Undo2 size={13} />
+                  <span>Botón de Arrepentimiento</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveLegalModal('terminos')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Términos y Condiciones
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveLegalModal('privacidad')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Política de Privacidad
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveLegalModal('garantia')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Garantía BenFlex
+                </button>
+
+                <a
+                  href={BENFLEX_LEGAL.consumidorGovUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#60a5fa',
+                    textDecoration: 'underline',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <span>Defensa del Consumidor</span>
+                  <ExternalLink size={10} />
+                </a>
+
+                <a
+                  href={BENFLEX_LEGAL.defensaConsumidorSanJuanUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#60a5fa',
+                    textDecoration: 'underline',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <span>Defensa del Consumidor San Juan</span>
+                  <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modales Legales y de Arrepentimiento */}
+      <ArrepentimientoModal
+        isOpen={isArrepentimientoOpen}
+        onClose={() => setIsArrepentimientoOpen(false)}
+      />
+      <LegalModal
+        type={activeLegalModal}
+        onClose={() => setActiveLegalModal(null)}
+      />
     </footer>
   );
 }

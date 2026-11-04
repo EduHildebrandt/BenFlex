@@ -543,6 +543,98 @@ export function updateLocalOrderStatus(orderId: string, status: OrderStatus): Or
 }
 
 // ---------------------------------------------------------------------------
+// OPERACIONES DE ARREPENTIMIENTO Y SEGUIMIENTO DE PEDIDOS (RES. 424/2020)
+// ---------------------------------------------------------------------------
+
+function normalizePhoneDigits(phone: string): string {
+  return phone.replace(/\D/g, '');
+}
+
+export function lookupLocalOrder(
+  orderId: string,
+  contact: string
+): { order: Order; daysRemaining: number; canRevoke: boolean } | null {
+  const store = loadStore();
+  const cleanId = orderId.trim().toUpperCase().replace(/^#/, '');
+  const cleanContact = contact.trim().toLowerCase();
+  const phoneDigits = normalizePhoneDigits(cleanContact);
+
+  const found = store.orders.find((o) => o.id.toUpperCase() === cleanId);
+  if (!found) return null;
+
+  const emailMatch = found.customerEmail.toLowerCase().trim() === cleanContact;
+  const foundPhoneDigits = normalizePhoneDigits(found.customerPhone);
+  const phoneMatch =
+    phoneDigits.length >= 6 &&
+    (foundPhoneDigits.endsWith(phoneDigits) || phoneDigits.endsWith(foundPhoneDigits));
+  const dniMatch =
+    found.customerDni &&
+    phoneDigits.length >= 6 &&
+    found.customerDni.replace(/\D/g, '') === phoneDigits;
+
+  if (!emailMatch && !phoneMatch && !dniMatch) {
+    return null;
+  }
+
+  const orderTime = new Date(found.date).getTime();
+  const now = Date.now();
+  const diffDays = Math.floor((now - orderTime) / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.max(0, 10 - diffDays);
+  const canRevoke = found.status !== 'CANCELADO';
+
+  return {
+    order: found,
+    daysRemaining,
+    canRevoke,
+  };
+}
+
+export function revokeLocalOrder(
+  orderId: string,
+  contact: string,
+  reason?: string
+): { success: boolean; revocationCode: string; order: Order; error?: string } {
+  const lookup = lookupLocalOrder(orderId, contact);
+  if (!lookup) {
+    return {
+      success: false,
+      revocationCode: '',
+      order: null as any,
+      error: 'No se encontró ningún pedido con el número y dato de contacto ingresados.',
+    };
+  }
+
+  if (lookup.order.status === 'CANCELADO') {
+    return {
+      success: false,
+      revocationCode: '',
+      order: lookup.order,
+      error: `El pedido #${lookup.order.id} ya se encuentra cancelado.`,
+    };
+  }
+
+  const updatedOrder = updateLocalOrderStatus(lookup.order.id, 'CANCELADO');
+  const revocationCode = `REV-${updatedOrder.id}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+
+  createLocalInquiry(
+    `ARREPENTIMIENTO - ${updatedOrder.customerName}`,
+    updatedOrder.customerPhone,
+    `Trámite de Revocación ${revocationCode}`,
+    `El cliente ejerció el Derecho de Arrepentimiento (Res. 424/2020 - Art. 34 Ley 24.240) sobre el pedido #${updatedOrder.id}.\nMotivo: ${
+      reason?.trim() || 'Sin expresión de causa (facultad legal dentro de los 10 días)'
+    }.\nTotal a reintegrar: $${updatedOrder.total.toLocaleString('es-AR')}.\nContacto: ${
+      updatedOrder.customerEmail
+    } / ${updatedOrder.customerPhone}.`
+  );
+
+  return {
+    success: true,
+    revocationCode,
+    order: updatedOrder,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // OPERACIONES DE CONSULTAS WEB (LOCAL STORE)
 // ---------------------------------------------------------------------------
 

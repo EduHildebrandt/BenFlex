@@ -18,6 +18,7 @@
 | 13. Remediación Crash Post-Login en `/admin` (Rules of Hooks) | Frontend Lead | Completado | Declaración de `useMemo` antes de returns de sesión y despliegue en VPS |
 | 14. Login `/admin` sin claves expuestas, Ventas por Mes, Categorías Dinámicas y Main Minimalista | Fullstack / UI Lead | Completado | Ventas agrupadas por mes, alta de categorías, ocultamiento de categorías vacías y Quiz post-catálogo |
 | 15. ABM Completo (Altas, Bajas y Modificaciones) de Productos y Categorías | Fullstack Senior | Completado | Endpoint `/api/categories`, pestaña Categorías ABM con cascada en productos, edición inline y modal completo de Productos |
+| 16. Adecuación a Legislaciones Argentinas (ARCA QR 960/D, Titular Gabriel Perez Zapata, Arrepentimiento en Carrito, Garantía Legal, Términos y Privacidad Ley 25.326) | Compliance / Fullstack | En progreso | Formulario 960/D interactivo, datos del titular, modal/página de arrepentimiento y pedidos, letra mínima legal en footer |
 
 ---
 

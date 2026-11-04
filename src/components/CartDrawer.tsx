@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useLocation } from '@/context/LocationContext';
+import ArrepentimientoModal from './ArrepentimientoModal';
 import {
   X,
   Trash2,
@@ -15,6 +16,7 @@ import {
   ArrowRight,
   ShieldCheck,
   MapPin,
+  Undo2,
 } from 'lucide-react';
 
 export default function CartDrawer() {
@@ -35,6 +37,7 @@ export default function CartDrawer() {
   const { location, setModalOpen } = useLocation();
 
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [isArrepentimientoOpen, setIsArrepentimientoOpen] = useState(false);
 
   // Cerrar al apretar tecla ESC
   useEffect(() => {
@@ -247,6 +250,46 @@ export default function CartDrawer() {
               >
                 Explorar Catálogo
               </button>
+
+              {/* Botón de Arrepentimiento y Consulta de Pedidos (Ley 24.240 y Res. 424/20) */}
+              <div
+                style={{
+                  marginTop: '1.75rem',
+                  paddingTop: '1.25rem',
+                  borderTop: '1px dashed #e2e8f0',
+                  width: '100%',
+                  maxWidth: '320px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  ¿Tenés un pedido previo o querés revocar una compra?
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsArrepentimientoOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #cbd5e1',
+                    color: 'var(--brand-navy)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                  title="Consultar estado o ejercer Derecho de Arrepentimiento (10 días corridos)"
+                >
+                  <Undo2 size={15} color="var(--brand-sage)" />
+                  <span>Botón de Arrepentimiento / Mis Pedidos</span>
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -480,6 +523,43 @@ export default function CartDrawer() {
                   </div>
                 </div>
               )}
+
+              {/* Acceso a Botón de Arrepentimiento / Mis Pedidos (Ley 24.240 y Res. 424/20) */}
+              <div
+                style={{
+                  marginTop: '0.75rem',
+                  padding: '0.65rem 0.85rem',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                  <Undo2 size={15} color="var(--brand-sage)" style={{ flexShrink: 0 }} />
+                  <span>¿Consultar pedido o ejercer arrepentimiento?</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsArrepentimientoOpen(true)}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    color: 'var(--brand-navy)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Botón Arrepentimiento
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -602,6 +682,12 @@ export default function CartDrawer() {
           </div>
         )}
       </div>
+
+      {/* Modal Interactivo de Arrepentimiento y Consulta de Pedidos */}
+      <ArrepentimientoModal
+        isOpen={isArrepentimientoOpen}
+        onClose={() => setIsArrepentimientoOpen(false)}
+      />
     </div>
   );
 }

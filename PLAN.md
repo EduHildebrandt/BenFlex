@@ -17,6 +17,12 @@
 | Fase 5 | Infraestructura de Despliegue en Producción para VPS Ubuntu (DonWeb) bajo dominio `www.blenflex.online` (PM2, Nginx Reverse Proxy, Certbot SSL y Automatización Git) | ✅ Completado |
 
 ## [AUTO-HEALED] Revisión de Remediación Integral
+- **[AUTO-HEALED] LEGAL-01 (Adecuación a Normativa y Legislaciones de Comercio Electrónico en Argentina):**
+  1. **Datos del Titular:** Gabriel Perez Zapata, CUIT: 20-28773718-2, domicilio en Castaño Oeste y Conector Sur, Villa Krause, CP 5425, San Juan.
+  2. **Formulario 960/D ARCA / AFIP (Data Fiscal):** Código QR interactivo normalizado de Data Fiscal exhibido en el footer para cumplimiento de la RG AFIP 3377/4141.
+  3. **Derecho de Arrepentimiento (Resolución 424/2020 Secretaría de Comercio & Ley 24.240):** Plazo legal de 10 días corridos para revocar compras online sin costo. Botón de Arrepentimiento integrado en el carrito de compra (`CartDrawer`), footer y vista dedicada `/arrepentimiento` para consulta de pedidos y revocación instantánea con número de trámite.
+  4. **Garantía Legal & Trato Digno (Ley 24.240 arts. 4, 8 bis y 11):** Mínimo legal de 6 meses exhibido + 3 a 5 años de garantía oficial escrita BenFlex; información en castellano de características, costos y plazos de entrega.
+  5. **Términos y Condiciones + Protección de Datos Personales (Ley 25.326):** Redacción exhaustiva y modales interactivos en letra mínima legible al pie de página.
 - **[AUTO-HEALED] ABM-01 (ABM Completo de Productos y Categorías en `/admin` y Backend):**
   1. **ABM de Categorías (`/api/categories`, `src/lib/db.ts`, `src/lib/localStore.ts`, `src/context/ProductContext.tsx`, `src/app/admin/page.tsx`):**
      - **Alta:** Creación de categorías personalizadas con nombre visible (`label`), descripción (`description`) y slug autogenerado (`id`).
