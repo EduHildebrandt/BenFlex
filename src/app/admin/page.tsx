@@ -25,9 +25,13 @@ import {
   CreditCard,
   Calendar,
   Filter,
+  FolderPlus,
+  Edit3,
+  Layers,
 } from 'lucide-react';
 import {
   BENFLEX_BANK_INFO,
+  Category,
   Order,
   OrderStatus,
   Product,
@@ -92,12 +96,15 @@ const TECH_MAP: Record<ProductTechnology, string> = {
 export default function BenFlexAdminPage() {
   const {
     products,
+    categories,
     orders,
     dbConnected,
     dataSource,
     fetchAdminOrders,
     saveProduct,
     deleteProduct,
+    saveCategory,
+    deleteCategory,
     updateOrderStatus,
   } = useProducts();
 
@@ -112,8 +119,9 @@ export default function BenFlexAdminPage() {
   const [inquiries, setInquiries] = useState<CustomerInquiry[]>([]);
 
   // Pestañas del panel
-  const [activeTab, setActiveTab] = useState<'catalog' | 'sales' | 'orders' | 'inquiries'>('catalog');
+  const [activeTab, setActiveTab] = useState<'catalog' | 'categories' | 'sales' | 'orders' | 'inquiries'>('catalog');
   const [searchFilter, setSearchFilter] = useState('');
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState('ALL');
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
   // Filtros del Cuadro de Ventas
@@ -121,10 +129,15 @@ export default function BenFlexAdminPage() {
   const [salesMonthFilter, setSalesMonthFilter] = useState<string>('ALL');
   const [salesSearch, setSalesSearch] = useState<string>('');
 
-  // Categorías personalizadas creadas durante la sesión
+  // Categorías personalizadas y ABM de Categorías
   const [customCategories, setCustomCategories] = useState<Array<{ id: string; label: string }>>([]);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState('');
+
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [catForm, setCatForm] = useState({ id: '', label: '', description: '' });
+  const [catSaving, setCatSaving] = useState(false);
+  const [catError, setCatError] = useState('');
 
   // Modal de Crear / Editar Producto
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -265,13 +278,18 @@ export default function BenFlexAdminPage() {
     setModalError('');
     setIsCreatingCategory(false);
     setNewCategoryInput('');
+    const defaultCat =
+      (catalogCategoryFilter !== 'ALL'
+        ? availableCategories.find((c) => c.id === catalogCategoryFilter)
+        : undefined) ||
+      availableCategories[0] || { id: 'colchones-sommiers', label: 'Colchones & Sommiers' };
     setForm({
       id: '',
       name: '',
       description: '',
       shortDescription: '',
-      category: 'colchones-sommiers',
-      categoryLabel: 'Colchones & Sommiers',
+      category: defaultCat.id,
+      categoryLabel: defaultCat.label,
       technology: 'alta_densidad',
       measure: '2 Plazas (140x190)',
       firmness: 'Firme',
@@ -398,8 +416,8 @@ export default function BenFlexAdminPage() {
     let finalCategory = form.category;
     let finalCategoryLabel =
       form.categoryLabel.trim() ||
+      availableCategories.find((c) => c.id === form.category)?.label ||
       CATEGORY_MAP[form.category] ||
-      customCategories.find((c) => c.id === form.category)?.label ||
       form.category;
 
     if (isCreatingCategory) {
@@ -414,6 +432,7 @@ export default function BenFlexAdminPage() {
       setCustomCategories((prev) =>
         prev.some((c) => c.id === newSlug) ? prev : [...prev, { id: newSlug, label: cleanNewName }]
       );
+      await saveCategory({ id: newSlug, label: cleanNewName });
     }
 
     setIsSaving(true);
@@ -559,7 +578,7 @@ export default function BenFlexAdminPage() {
     showToast('📊 Cuadro de ventas exportado exitosamente a CSV');
   };
 
-  // Ajuste rápido de precio o stock desde la tarjeta
+  // Ajuste rápido de precio, descuento, categoría o stock desde la tarjeta
   const handleQuickPriceUpdate = async (product: Product, newPrice: number) => {
     if (!Number.isFinite(newPrice) || newPrice <= 0 || newPrice === product.basePrice) return;
     const res = await saveProduct({ ...product, basePrice: Math.round(newPrice) });
@@ -567,6 +586,40 @@ export default function BenFlexAdminPage() {
       showToast(`💰 Precio de "${product.name}" actualizado a $${Math.round(newPrice).toLocaleString('es-AR')}`);
     } else {
       showToast(`❌ ${res.error || 'No se pudo actualizar el precio'}`);
+    }
+  };
+
+  const handleQuickDiscountUpdate = async (product: Product, newDiscount: number) => {
+    if (
+      !Number.isFinite(newDiscount) ||
+      newDiscount < 0 ||
+      newDiscount > 60 ||
+      Math.round(newDiscount) === (product.transferDiscountPercent ?? 15)
+    ) {
+      return;
+    }
+    const cleanDiscount = Math.round(newDiscount);
+    const res = await saveProduct({ ...product, transferDiscountPercent: cleanDiscount });
+    if (res.success) {
+      showToast(`🏷️ Descuento de "${product.name}" actualizado a ${cleanDiscount}% OFF`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo actualizar el descuento'}`);
+    }
+  };
+
+  const handleQuickCategoryUpdate = async (product: Product, newCatId: string) => {
+    if (!newCatId || newCatId === product.category) return;
+    const foundCat = availableCategories.find((c) => c.id === newCatId);
+    const newLabel = foundCat?.label || CATEGORY_MAP[newCatId] || newCatId;
+    const res = await saveProduct({
+      ...product,
+      category: newCatId,
+      categoryLabel: newLabel,
+    });
+    if (res.success) {
+      showToast(`📂 Categoría de "${product.name}" cambiada a "${newLabel}"`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo cambiar la categoría'}`);
     }
   };
 
@@ -583,14 +636,97 @@ export default function BenFlexAdminPage() {
 
   const handleDeleteProduct = async (product: Product) => {
     const confirmed = window.confirm(
-      `¿Estás seguro de ocultar/eliminar "${product.name}" del catálogo público?`
+      `¿Estás seguro de dar de baja / eliminar "${product.name}" del catálogo?`
     );
     if (!confirmed) return;
     const res = await deleteProduct(product.id);
     if (res.success) {
-      showToast(`🗑️ Producto "${product.name}" ocultado del catálogo`);
+      showToast(`🗑️ Producto "${product.name}" dado de baja del catálogo`);
     } else {
       showToast(`❌ ${res.error || 'No se pudo eliminar el producto'}`);
+    }
+  };
+
+  // =========================================================================
+  // ABM DE CATEGORÍAS (ALTA, BAJA Y MODIFICACIÓN)
+  // =========================================================================
+  const handleStartEditCategory = (cat: { id: string; label: string; description?: string }) => {
+    setEditingCategory({ id: cat.id, label: cat.label, description: cat.description });
+    setCatForm({
+      id: cat.id,
+      label: cat.label,
+      description: cat.description || '',
+    });
+    setCatError('');
+  };
+
+  const handleCancelEditCategory = () => {
+    setEditingCategory(null);
+    setCatForm({ id: '', label: '', description: '' });
+    setCatError('');
+  };
+
+  const handleSaveCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCatError('');
+
+    const cleanLabel = catForm.label.trim();
+    const cleanId = editingCategory
+      ? editingCategory.id
+      : slugifyCategory(catForm.id.trim() || cleanLabel);
+
+    if (cleanLabel.length < 2 || cleanId.length < 2) {
+      setCatError('Por favor ingresá un nombre válido (mínimo 2 caracteres) para la categoría.');
+      return;
+    }
+
+    setCatSaving(true);
+    const res = await saveCategory({
+      id: cleanId,
+      label: cleanLabel,
+      description: catForm.description.trim() || undefined,
+    });
+    setCatSaving(false);
+
+    if (!res.success) {
+      setCatError(res.error || 'No se pudo guardar la categoría.');
+      showToast(`❌ ${res.error || 'Error al guardar la categoría'}`);
+      return;
+    }
+
+    showToast(
+      editingCategory
+        ? `✅ Categoría "${cleanLabel}" modificada exitosamente`
+        : `✅ Categoría "${cleanLabel}" dada de alta exitosamente`
+    );
+    setEditingCategory(null);
+    setCatForm({ id: '', label: '', description: '' });
+  };
+
+  const handleDeleteCategory = async (cat: { id: string; label: string; count: number }) => {
+    if (cat.count > 0) {
+      const confirmWithProducts = window.confirm(
+        `La categoría "${cat.label}" tiene ${cat.count} producto(s) asociado(s).\n\n¿Querés dar de baja la categoría Y TAMBIÉN dar de baja sus ${cat.count} producto(s)?\n(Si preferís conservar los productos, presioná Cancelar y cambiales la categoría primero).`
+      );
+      if (!confirmWithProducts) return;
+      const res = await deleteCategory(cat.id, true);
+      if (res.success) {
+        if (catalogCategoryFilter === cat.id) setCatalogCategoryFilter('ALL');
+        showToast(`🗑️ Categoría "${cat.label}" y sus productos dados de baja`);
+      } else {
+        showToast(`❌ ${res.error || 'No se pudo eliminar la categoría'}`);
+      }
+      return;
+    }
+
+    const confirmed = window.confirm(`¿Estás seguro de dar de baja la categoría "${cat.label}"?`);
+    if (!confirmed) return;
+    const res = await deleteCategory(cat.id, false);
+    if (res.success) {
+      if (catalogCategoryFilter === cat.id) setCatalogCategoryFilter('ALL');
+      showToast(`🗑️ Categoría "${cat.label}" eliminada`);
+    } else {
+      showToast(`❌ ${res.error || 'No se pudo eliminar la categoría'}`);
     }
   };
 
@@ -644,11 +780,18 @@ export default function BenFlexAdminPage() {
     .filter((o) => o.status !== 'CANCELADO')
     .reduce((acc, o) => acc + o.total, 0);
 
-  const filteredCatalog = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      p.categoryLabel.toLowerCase().includes(searchFilter.toLowerCase())
-  );
+  const filteredCatalog = products.filter((p) => {
+    if (catalogCategoryFilter !== 'ALL' && p.category !== catalogCategoryFilter) {
+      return false;
+    }
+    if (!searchFilter.trim()) return true;
+    const q = searchFilter.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.categoryLabel.toLowerCase().includes(q) ||
+      p.id.toLowerCase().includes(q)
+    );
+  });
 
   // Métricas avanzadas para el Cuadro de Ventas (Hooks declarados siempre antes de cualquier early return)
   const salesMetrics = useMemo(() => {
@@ -707,20 +850,36 @@ export default function BenFlexAdminPage() {
     };
   }, [orders]);
 
-  // Categorías disponibles (Base + Categorías de productos existentes + Personalizadas)
+  // Categorías disponibles con conteo de productos (Sincronizadas con ABM de Categorías)
   const availableCategories = useMemo(() => {
-    const map = new Map<string, string>();
-    Object.entries(CATEGORY_MAP).forEach(([id, label]) => map.set(id, label));
-    products.forEach((p) => {
-      if (p.category) {
-        map.set(p.category, p.categoryLabel || CATEGORY_MAP[p.category] || p.category);
+    const map = new Map<string, { id: string; label: string; description?: string; count: number }>();
+
+    categories.forEach((c) => {
+      map.set(c.id, { id: c.id, label: c.label, description: c.description, count: 0 });
+    });
+
+    customCategories.forEach((c) => {
+      if (!map.has(c.id)) {
+        map.set(c.id, { id: c.id, label: c.label, count: 0 });
       }
     });
-    customCategories.forEach((c) => {
-      map.set(c.id, c.label);
+
+    products.forEach((p) => {
+      if (!p.category) return;
+      const existing = map.get(p.category);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(p.category, {
+          id: p.category,
+          label: p.categoryLabel || CATEGORY_MAP[p.category] || p.category,
+          count: 1,
+        });
+      }
     });
-    return Array.from(map.entries()).map(([id, label]) => ({ id, label }));
-  }, [products, customCategories]);
+
+    return Array.from(map.values());
+  }, [categories, products, customCategories]);
 
   // Agrupación de ventas por mes (Resumen mensual global)
   const salesByMonth = useMemo(() => {
@@ -1054,7 +1213,7 @@ export default function BenFlexAdminPage() {
               }}
             >
               <Plus size={18} />
-              <span>Cargar Nuevo Producto (ATM)</span>
+              <span>Alta de Producto</span>
             </button>
 
             <button
@@ -1069,7 +1228,26 @@ export default function BenFlexAdminPage() {
                 border: '1px solid #d1d5db',
               }}
             >
-              Productos y Precios ({products.length})
+              Productos ABM ({products.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('categories')}
+              style={{
+                padding: '0.65rem 1.15rem',
+                borderRadius: '10px',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                backgroundColor: activeTab === 'categories' ? '#111827' : '#ffffff',
+                color: activeTab === 'categories' ? '#ffffff' : 'var(--text-primary)',
+                border: '1px solid #d1d5db',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <Layers size={16} />
+              <span>Categorías ABM ({availableCategories.length})</span>
             </button>
 
             <button
@@ -1155,6 +1333,19 @@ export default function BenFlexAdminPage() {
           </div>
 
           <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0284c7', marginBottom: '0.25rem' }}>
+              <Layers size={18} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Categorías Registradas</span>
+            </div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#111827' }}>
+              {availableCategories.length}{' '}
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
+                ({availableCategories.filter((c) => c.count > 0).length} activas en tienda)
+              </span>
+            </div>
+          </div>
+
+          <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#059669', marginBottom: '0.25rem' }}>
               <ShoppingBag size={18} />
               <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Pedidos Activos</span>
@@ -1171,18 +1362,10 @@ export default function BenFlexAdminPage() {
               ${totalRevenue.toLocaleString('es-AR')}
             </div>
           </div>
-
-          <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#111827', marginBottom: '0.25rem' }}>
-              <Building size={18} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>Alias Activo</span>
-            </div>
-            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#111827' }}>{BENFLEX_BANK_INFO.alias}</div>
-          </div>
         </div>
 
         {/* ================================================================= */}
-        {/* TAB 1: GESTIÓN DE PRODUCTOS, PRECIOS Y FOTOS                      */}
+        {/* TAB 1: ABM DE PRODUCTOS (ALTAS, BAJAS Y MODIFICACIONES)           */}
         {/* ================================================================= */}
         {activeTab === 'catalog' && (
           <div className="glass-card" style={{ padding: '1.75rem', backgroundColor: '#ffffff' }}>
@@ -1193,172 +1376,584 @@ export default function BenFlexAdminPage() {
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: '1rem',
-                marginBottom: '1.5rem',
+                marginBottom: '1.25rem',
               }}
             >
               <div>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827' }}>
-                  Catálogo de Productos, Precios y Fotos
+                  ABM de Productos (Altas, Bajas y Modificaciones)
                 </h2>
                 <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                  Modificá el precio de lista o stock directamente, o hacé clic en <strong>Editar Producto / Foto</strong> para cambiar imágenes, telas y medidas.
+                  Creá nuevos productos, modificá categoría/precio/descuento/stock directamente en la fila o abrí el editor completo para fotos, medidas y telas.
                 </p>
               </div>
 
-              {/* Buscador interno */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '10px',
-                  padding: '0.5rem 0.85rem',
-                  minWidth: '260px',
-                }}
-              >
-                <Search size={16} color="var(--text-muted)" />
-                <input
-                  type="text"
-                  placeholder="Filtrar por nombre o categoría..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem' }}
-                />
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('categories')}
+                  style={{
+                    padding: '0.55rem 0.95rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#f8fafc',
+                    color: '#0f172a',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FolderPlus size={15} />
+                  <span>Gestionar Categorías</span>
+                </button>
+
+                {/* Buscador interno */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '10px',
+                    padding: '0.5rem 0.85rem',
+                    minWidth: '250px',
+                  }}
+                >
+                  <Search size={16} color="var(--text-muted)" />
+                  <input
+                    type="text"
+                    placeholder="Buscar producto o categoría..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    style={{ border: 'none', outline: 'none', width: '100%', fontSize: '0.85rem' }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {filteredCatalog.map((p) => {
-                const discountPct = p.transferDiscountPercent ?? 15;
-                const transferPrice = Math.round(p.basePrice * (1 - discountPct / 100));
+            {/* Filtro rápido por Categoría dentro de Productos */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                flexWrap: 'wrap',
+                marginBottom: '1.5rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid #f1f5f9',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setCatalogCategoryFilter('ALL')}
+                style={{
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  backgroundColor: catalogCategoryFilter === 'ALL' ? '#111827' : '#f8fafc',
+                  color: catalogCategoryFilter === 'ALL' ? '#ffffff' : '#475569',
+                  border: '1px solid #e2e8f0',
+                  cursor: 'pointer',
+                }}
+              >
+                Todas ({products.length})
+              </button>
+              {availableCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCatalogCategoryFilter(cat.id)}
+                  style={{
+                    padding: '0.4rem 0.85rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    backgroundColor: catalogCategoryFilter === cat.id ? '#111827' : '#f8fafc',
+                    color: catalogCategoryFilter === cat.id ? '#ffffff' : '#475569',
+                    border: '1px solid #e2e8f0',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {cat.label} ({cat.count})
+                </button>
+              ))}
+            </div>
+
+            {filteredCatalog.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                <p style={{ marginBottom: '1rem' }}>No hay productos en esta vista.</p>
+                <button
+                  type="button"
+                  onClick={openNewProductModal}
+                  style={{
+                    backgroundColor: 'var(--brand-sage)',
+                    color: '#ffffff',
+                    padding: '0.65rem 1.25rem',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  + Dar de Alta Producto
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {filteredCatalog.map((p) => {
+                  const discountPct = p.transferDiscountPercent ?? 15;
+                  const transferPrice = Math.round(p.basePrice * (1 - discountPct / 100));
+                  return (
+                    <div
+                      key={p.id}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '88px 1.4fr 1.3fr auto',
+                        gap: '1.15rem',
+                        alignItems: 'center',
+                        padding: '1rem',
+                        borderRadius: '14px',
+                        border: '1px solid #e4e4e7',
+                        backgroundColor: '#fafafa',
+                      }}
+                    >
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        style={{
+                          width: '88px',
+                          height: '72px',
+                          borderRadius: '10px',
+                          objectFit: 'cover',
+                          border: '1px solid #e2e8f0',
+                        }}
+                      />
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+                          <select
+                            aria-label="Cambiar categoría del producto"
+                            value={p.category}
+                            onChange={(e) => handleQuickCategoryUpdate(p, e.target.value)}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              padding: '0.2rem 0.55rem',
+                              borderRadius: '9999px',
+                              border: '1px solid #bae6fd',
+                              backgroundColor: '#e0f2fe',
+                              color: '#0369a1',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {availableCategories.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.label}
+                              </option>
+                            ))}
+                          </select>
+
+                          {p.badge && (
+                            <span className="badge-pill badge-navy" style={{ fontSize: '0.68rem' }}>
+                              {p.badge}
+                            </span>
+                          )}
+                          {p.stock <= 0 && (
+                            <span
+                              className="badge-pill"
+                              style={{ fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#b91c1c' }}
+                            >
+                              Sin Stock
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#111827' }}>{p.name}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          {p.technologyLabel} • {p.measure} • {p.variations.length} variante(s)
+                        </div>
+                      </div>
+
+                      {/* Modificación rápida de Precio de Lista, % Descuento y Stock */}
+                      <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                            PRECIO LISTA ($)
+                          </label>
+                          <input
+                            key={`price-${p.id}-${p.basePrice}`}
+                            type="number"
+                            defaultValue={p.basePrice}
+                            onBlur={(e) => handleQuickPriceUpdate(p, Number(e.target.value))}
+                            style={{
+                              width: '115px',
+                              padding: '0.42rem 0.55rem',
+                              borderRadius: '8px',
+                              border: '1px solid #cbd5e1',
+                              fontWeight: 800,
+                              fontSize: '0.86rem',
+                              backgroundColor: '#ffffff',
+                            }}
+                          />
+                          <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>
+                            Transf: ${transferPrice.toLocaleString('es-AR')}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                            % OFF TRANSF.
+                          </label>
+                          <input
+                            key={`disc-${p.id}-${discountPct}`}
+                            type="number"
+                            min={0}
+                            max={60}
+                            defaultValue={discountPct}
+                            onBlur={(e) => handleQuickDiscountUpdate(p, Number(e.target.value))}
+                            style={{
+                              width: '68px',
+                              padding: '0.42rem 0.55rem',
+                              borderRadius: '8px',
+                              border: '1px solid #cbd5e1',
+                              fontWeight: 700,
+                              fontSize: '0.86rem',
+                              backgroundColor: '#ffffff',
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                            STOCK
+                          </label>
+                          <input
+                            key={`stock-${p.id}-${p.stock}`}
+                            type="number"
+                            min={0}
+                            defaultValue={p.stock}
+                            onBlur={(e) => handleQuickStockUpdate(p, Number(e.target.value))}
+                            style={{
+                              width: '68px',
+                              padding: '0.42rem 0.55rem',
+                              borderRadius: '8px',
+                              border: '1px solid #cbd5e1',
+                              fontWeight: 700,
+                              fontSize: '0.86rem',
+                              backgroundColor: '#ffffff',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Acciones ABM: Modificar Completo / Dar de Baja */}
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => openEditProductModal(p)}
+                          style={{
+                            backgroundColor: '#111827',
+                            color: '#ffffff',
+                            padding: '0.55rem 0.9rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Edit3 size={14} />
+                          <span>Modificar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(p)}
+                          style={{
+                            backgroundColor: '#fee2e2',
+                            color: '#b91c1c',
+                            padding: '0.55rem 0.75rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            cursor: 'pointer',
+                          }}
+                          title="Dar de baja este producto"
+                        >
+                          <Trash2 size={15} />
+                          <span>Baja</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB 1B: ABM DE CATEGORÍAS (ALTAS, BAJAS Y MODIFICACIONES)         */}
+        {/* ================================================================= */}
+        {activeTab === 'categories' && (
+          <div className="glass-card" style={{ padding: '1.75rem', backgroundColor: '#ffffff' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827' }}>
+                ABM de Categorías (Altas, Bajas y Modificaciones)
+              </h2>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                Creá nuevas categorías, renombrá las existentes (se actualizan todos sus productos automáticamente) o dalas de baja. Recordá que en la tienda pública solo se muestran las categorías que tienen al menos 1 producto cargado.
+              </p>
+            </div>
+
+            {/* Formulario de Alta / Modificación de Categoría */}
+            <form
+              onSubmit={handleSaveCategorySubmit}
+              style={{
+                padding: '1.25rem',
+                borderRadius: '14px',
+                backgroundColor: editingCategory ? '#f0f9ff' : '#f8fafc',
+                border: editingCategory ? '2px solid #0284c7' : '1px solid #e2e8f0',
+                marginBottom: '1.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
+                  {editingCategory
+                    ? `✏️ Modificando Categoría: ${editingCategory.label} (ID: ${editingCategory.id})`
+                    : '➕ Dar de Alta Nueva Categoría'}
+                </span>
+                {editingCategory && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEditCategory}
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      textDecoration: 'underline',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancelar edición
+                  </button>
+                )}
+              </div>
+
+              {catError && (
+                <div
+                  style={{
+                    padding: '0.65rem 0.9rem',
+                    marginBottom: '0.85rem',
+                    borderRadius: '8px',
+                    backgroundColor: '#fee2e2',
+                    color: '#991b1b',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  {catError}
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: '0.85rem',
+                  alignItems: 'end',
+                }}
+              >
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                    Nombre Visible de la Categoría *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Respaldos & Sommiers"
+                    value={catForm.label}
+                    onChange={(e) => setCatForm({ ...catForm, label: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.68rem 0.8rem',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      fontSize: '0.88rem',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                    Descripción Corta (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Respaldos tapizados en lino y pana"
+                    value={catForm.description}
+                    onChange={(e) => setCatForm({ ...catForm, description: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.68rem 0.8rem',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      fontSize: '0.88rem',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="submit"
+                    disabled={catSaving}
+                    style={{
+                      padding: '0.72rem 1.35rem',
+                      borderRadius: '10px',
+                      backgroundColor: editingCategory ? '#0284c7' : '#111827',
+                      color: '#ffffff',
+                      fontWeight: 800,
+                      fontSize: '0.86rem',
+                      cursor: catSaving ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {catSaving
+                      ? 'Guardando...'
+                      : editingCategory
+                      ? 'Guardar Modificación'
+                      : '+ Dar de Alta Categoría'}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Listado de Categorías con Acciones de Modificación y Baja */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {availableCategories.map((cat) => {
+                const isVisibleInStore = cat.count > 0;
                 return (
                   <div
-                    key={p.id}
+                    key={cat.id}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '88px 1.5fr 1fr auto',
-                      gap: '1.25rem',
+                      display: 'flex',
                       alignItems: 'center',
-                      padding: '1rem',
-                      borderRadius: '14px',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '1rem',
+                      padding: '1rem 1.25rem',
+                      borderRadius: '12px',
                       border: '1px solid #e4e4e7',
                       backgroundColor: '#fafafa',
                     }}
                   >
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      style={{
-                        width: '88px',
-                        height: '72px',
-                        borderRadius: '10px',
-                        objectFit: 'cover',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    />
-
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                        <span className="badge-pill badge-sage" style={{ fontSize: '0.68rem' }}>
-                          {p.categoryLabel}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '1.02rem', fontWeight: 800, color: '#111827' }}>
+                          {cat.label}
                         </span>
-                        {p.badge && (
-                          <span className="badge-pill badge-navy" style={{ fontSize: '0.68rem' }}>
-                            {p.badge}
-                          </span>
-                        )}
-                        {p.stock <= 0 && (
-                          <span
-                            className="badge-pill"
-                            style={{ fontSize: '0.68rem', backgroundColor: '#fee2e2', color: '#b91c1c' }}
-                          >
-                            Agotado
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#111827' }}>{p.name}</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {p.technologyLabel} • {p.variations.length} medidas configuradas
-                      </div>
-                    </div>
-
-                    {/* Edición rápida de Precio de Lista y Stock */}
-                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                          PRECIO LISTA ($)
-                        </label>
-                        <input
-                          key={`price-${p.id}-${p.basePrice}`}
-                          type="number"
-                          defaultValue={p.basePrice}
-                          onBlur={(e) => handleQuickPriceUpdate(p, Number(e.target.value))}
+                        <code
                           style={{
-                            width: '125px',
-                            padding: '0.45rem 0.6rem',
-                            borderRadius: '8px',
-                            border: '1px solid #cbd5e1',
-                            fontWeight: 800,
-                            fontSize: '0.88rem',
-                            backgroundColor: '#ffffff',
+                            fontSize: '0.72rem',
+                            backgroundColor: '#f1f5f9',
+                            color: '#475569',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '6px',
                           }}
-                        />
-                        <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>
-                          Transf ({discountPct}% OFF): ${transferPrice.toLocaleString('es-AR')}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                          STOCK
-                        </label>
-                        <input
-                          key={`stock-${p.id}-${p.stock}`}
-                          type="number"
-                          defaultValue={p.stock}
-                          onBlur={(e) => handleQuickStockUpdate(p, Number(e.target.value))}
+                        >
+                          {cat.id}
+                        </code>
+                        <span
                           style={{
-                            width: '74px',
-                            padding: '0.45rem 0.6rem',
-                            borderRadius: '8px',
-                            border: '1px solid #cbd5e1',
+                            fontSize: '0.7rem',
                             fontWeight: 700,
-                            fontSize: '0.88rem',
-                            backgroundColor: '#ffffff',
+                            padding: '0.18rem 0.55rem',
+                            borderRadius: '9999px',
+                            backgroundColor: isVisibleInStore ? '#dcfce7' : '#f1f5f9',
+                            color: isVisibleInStore ? '#15803d' : '#64748b',
                           }}
-                        />
+                        >
+                          {isVisibleInStore
+                            ? `Visible en Tienda (${cat.count} prod.)`
+                            : 'Oculta en Tienda (0 productos)'}
+                        </span>
                       </div>
+                      {cat.description && (
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
+                          {cat.description}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Acciones: Editar Completo / Eliminar */}
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button
                         type="button"
-                        onClick={() => openEditProductModal(p)}
+                        onClick={() => {
+                          setCatalogCategoryFilter(cat.id);
+                          setActiveTab('catalog');
+                        }}
                         style={{
+                          padding: '0.48rem 0.85rem',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          backgroundColor: '#ffffff',
+                          color: '#334155',
+                          fontWeight: 700,
+                          fontSize: '0.78rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Ver productos ({cat.count})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditCategory(cat)}
+                        style={{
+                          padding: '0.48rem 0.85rem',
+                          borderRadius: '8px',
                           backgroundColor: '#111827',
                           color: '#ffffff',
-                          padding: '0.55rem 0.95rem',
-                          borderRadius: '8px',
                           fontWeight: 700,
-                          fontSize: '0.8rem',
+                          fontSize: '0.78rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          cursor: 'pointer',
                         }}
                       >
-                        Editar Producto / Foto
+                        <Edit3 size={14} />
+                        <span>Modificar</span>
                       </button>
+
                       <button
                         type="button"
-                        onClick={() => handleDeleteProduct(p)}
+                        onClick={() => handleDeleteCategory(cat)}
                         style={{
+                          padding: '0.48rem 0.75rem',
+                          borderRadius: '8px',
                           backgroundColor: '#fee2e2',
                           color: '#b91c1c',
-                          padding: '0.55rem 0.7rem',
-                          borderRadius: '8px',
+                          fontWeight: 700,
+                          fontSize: '0.78rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          cursor: 'pointer',
                         }}
-                        title="Ocultar producto"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
+                        <span>Dar de Baja</span>
                       </button>
                     </div>
                   </div>
@@ -2423,7 +3018,7 @@ export default function BenFlexAdminPage() {
                         />
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             const cleanName = newCategoryInput.trim();
                             const slug = slugifyCategory(cleanName);
                             if (!cleanName || slug.length < 2) return;
@@ -2432,6 +3027,7 @@ export default function BenFlexAdminPage() {
                                 ? prev
                                 : [...prev, { id: slug, label: cleanName }]
                             );
+                            await saveCategory({ id: slug, label: cleanName });
                             setForm({
                               ...form,
                               category: slug,
@@ -2477,6 +3073,71 @@ export default function BenFlexAdminPage() {
                       <option value="espuma_inteligente">Espuma Inteligente Cervical</option>
                       <option value="fibra_siliconada">Fibra Siliconada / Algodón 400 Hilos</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Medida Principal
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: 2 Plazas (140x190)"
+                      value={form.measure}
+                      onChange={(e) => setForm({ ...form, measure: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.72rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.88rem',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Nivel de Firmeza
+                    </label>
+                    <select
+                      value={form.firmness}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          firmness: e.target.value as 'Suave' | 'Media' | 'Firme' | 'Extra Firme',
+                        })
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1d5db',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <option value="Suave">Suave</option>
+                      <option value="Media">Media</option>
+                      <option value="Firme">Firme</option>
+                      <option value="Extra Firme">Extra Firme</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Soporte de Peso
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Hasta 130 kg por lado"
+                      value={form.weightSupport}
+                      onChange={(e) => setForm({ ...form, weightSupport: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.72rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.88rem',
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -2706,6 +3367,25 @@ export default function BenFlexAdminPage() {
 
                 {/* Descripción, Características y Telas */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                      Descripción Corta (Resumen en tarjeta de catálogo)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Soporte ortopédico de 35 kg/m³ con tejido respirable"
+                      value={form.shortDescription}
+                      onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.7rem',
+                        borderRadius: '10px',
+                        border: '1px solid #d1d5db',
+                        fontSize: '0.88rem',
+                      }}
+                    />
+                  </div>
+
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '0.3rem' }}>
                       Descripción Completa
