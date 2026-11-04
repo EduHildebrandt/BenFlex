@@ -14,7 +14,8 @@
 | 9. Diagnóstico y Remediación de Carga de Productos (ATM) | Tech Lead / Fullstack | Completado | Fallback híbrido local, compresión canvas y banner error inline |
 | 10. Acceso Dual Panel (Dueño y Desarrollador) | Security Engineer | Completado | Claves en .env.local y selector rápido en pantalla de bloqueo |
 | 11. Cuadro Analítico de Ventas Web | Frontend Lead | Completado | 5 KPIs comerciales, métricas de pagos/logística y exportación CSV |
-| 12. Despliegue VPS Ubuntu (DonWeb) `www.blenflex.online` | DevOps / SRE Lead | Completado | App online en http://vps-6592055-x.dattaweb.com y http://179.43.120.63 con systemd + Nginx |
+| 12. Despliegue VPS Ubuntu (DonWeb) `www.benflex.online` | DevOps / SRE Lead | Completado | App online en https://www.benflex.online con systemd + Nginx + Certbot SSL |
+| 13. Remediación Crash Post-Login en `/admin` (Rules of Hooks) | Frontend Lead | Completado | Declaración de `useMemo` antes de returns de sesión y despliegue en VPS |
 
 ---
 
