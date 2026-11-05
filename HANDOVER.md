@@ -150,6 +150,11 @@ DATABASE_URL=postgresql://postgres.xxx:pass@aws-0-sa-east-1.pooler.supabase.com:
 ADMIN_SESSION_SECRET=benflex-super-secret-key-production-change-32-chars-min
 ADMIN_OWNER_KEY=dueno-benflex-2026
 ADMIN_DEV_KEY=dev-benflex-2026
+
+# Mercado Pago Checkout Pro (API REST Oficial Preferences & Webhooks)
+MERCADOPAGO_ACCESS_TOKEN=APP_USR-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+NEXT_PUBLIC_SITE_URL=https://www.benflex.online
 ```
 
 ### Paso 4: Ejecutar en Desarrollo o Compilar

@@ -27,13 +27,17 @@ const PAYMENT_LABELS: Record<Order['paymentMethod'], string> = {
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
-  const orderId = (searchParams.get('id') || '').trim();
+  const orderId = (searchParams.get('id') || searchParams.get('orderId') || '').trim();
   const token = (searchParams.get('token') || '').trim();
+  const mpStatus = (searchParams.get('status') || searchParams.get('collection_status') || '').trim();
+  const mpPaymentId = (searchParams.get('payment_id') || searchParams.get('collection_id') || '').trim();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isGeneratingPreference, setIsGeneratingPreference] = useState(false);
+  const [preferenceError, setPreferenceError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) {
@@ -154,6 +158,10 @@ function OrderConfirmationContent() {
   }
 
   const isTransfer = order.paymentMethod === 'transferencia';
+  const isPaid = order.status === 'APROBADO' || mpStatus === 'approved';
+  const isPendingMp = mpStatus === 'pending' || order.status === 'PENDIENTE_PAGO';
+  const isFailureMp = mpStatus === 'failure' || mpStatus === 'rejected';
+
   const isFreeShippingOrder =
     order.deliveryMethod === 'showroom' || isSanJuanPostalCode(order.postalCode);
   const destination =
@@ -168,8 +176,36 @@ function OrderConfirmationContent() {
         })`
       : PAYMENT_LABELS[order.paymentMethod];
 
-  // Mensaje dinámico según medio de pago y zona geográfica (San Juan bonificado vs resto del país a cotizar)
-  const whatsappText = isTransfer
+  const handlePayWithMercadoPago = async () => {
+    if (!order) return;
+    setIsGeneratingPreference(true);
+    setPreferenceError(null);
+    try {
+      const res = await fetch('/api/payments/mercadopago/preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          accessToken: order.accessToken || token,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.initPoint) {
+        window.location.href = data.initPoint;
+        return;
+      }
+      setPreferenceError(data.error || 'No se pudo generar el enlace de pago con Mercado Pago.');
+    } catch {
+      setPreferenceError('Error de conexión con Mercado Pago. Podés intentar nuevamente o coordinar por WhatsApp.');
+    } finally {
+      setIsGeneratingPreference(false);
+    }
+  };
+
+  // Mensaje dinámico según medio de pago, estado de acreditación y zona geográfica
+  const whatsappText = isPaid
+    ? `¡Hola BenFlex! Ya completé el pago de mi pedido #${order.id} por $${order.total.toLocaleString('es-AR')} a través de Mercado Pago${mpPaymentId ? ` (Operación #${mpPaymentId})` : ''}. Quisiera consultar los avances y coordinar la entrega en ${destination}.`
+    : isTransfer
     ? isFreeShippingOrder
       ? `¡Hola BenFlex! Acabo de realizar el pedido #${order.id} por un total de $${order.total.toLocaleString('es-AR')} mediante Transferencia Bancaria. Adjunto mi comprobante para coordinar la entrega en ${destination}.`
       : `¡Hola BenFlex! Acabo de realizar el pedido #${order.id} por $${order.total.toLocaleString('es-AR')} (productos) mediante Transferencia Bancaria. Adjunto mi comprobante y solicito cotizar el envío a ${destination}.`
@@ -212,8 +248,8 @@ function OrderConfirmationContent() {
 
           <span
             style={{
-              backgroundColor: isTransfer ? '#ecfdf5' : '#e0f2fe',
-              color: isTransfer ? '#047857' : '#0369a1',
+              backgroundColor: isPaid ? '#ecfdf5' : isTransfer ? '#ecfdf5' : '#e0f2fe',
+              color: isPaid ? '#047857' : isTransfer ? '#047857' : '#0369a1',
               padding: '0.35rem 0.9rem',
               borderRadius: '9999px',
               fontSize: '0.78rem',
@@ -221,7 +257,7 @@ function OrderConfirmationContent() {
               letterSpacing: '0.04em',
             }}
           >
-            PEDIDO #{order.id} • {isTransfer ? 'PENDIENTE DE COMPROBANTE' : 'RESERVA PENDIENTE DE PAGO'}
+            PEDIDO #{order.id} • {isPaid ? 'PAGO APROBADO' : isTransfer ? 'PENDIENTE DE COMPROBANTE' : 'RESERVA PENDIENTE DE PAGO'}
           </span>
 
           <h1
@@ -233,77 +269,248 @@ function OrderConfirmationContent() {
               letterSpacing: '-0.02em',
             }}
           >
-            ¡Gracias por elegir BenFlex, {order.customerName.split(' ')[0]}!
+            {isPaid
+              ? `¡Pago Acreditado, ${order.customerName.split(' ')[0]}!`
+              : `¡Gracias por elegir BenFlex, ${order.customerName.split(' ')[0]}!`}
           </h1>
 
           <p style={{ fontSize: '0.98rem', color: 'var(--text-secondary)', maxWidth: '540px', margin: '0 auto 1.75rem auto' }}>
-            Ya descontamos y reservamos tus productos en nuestro centro logístico de Villa Krause, San Juan.
+            {isPaid
+              ? 'Tu pago fue recibido exitosamente por Mercado Pago. Ya estamos procesando la preparación de tu pedido en Villa Krause, San Juan.'
+              : 'Ya descontamos y reservamos tus productos en nuestro centro logístico de Villa Krause, San Juan.'}
           </p>
 
-          {/* CTA Principal adaptado al Medio de Pago elegido */}
-          <div
-            style={{
-              backgroundColor: isTransfer ? '#f0fdf4' : '#f0f9ff',
-              border: isTransfer ? '2px dashed #86efac' : '2px dashed #7dd3fc',
-              borderRadius: '18px',
-              padding: '1.75rem',
-              marginBottom: '1.5rem',
-            }}
-          >
+          {/* CTA Principal adaptado al Estado y Medio de Pago elegido */}
+          {isPaid ? (
             <div
               style={{
-                fontSize: '0.95rem',
-                fontWeight: 800,
-                color: isTransfer ? '#166534' : '#0c4a6e',
-                marginBottom: '0.5rem',
+                backgroundColor: '#f0fdf4',
+                border: '2px solid #86efac',
+                borderRadius: '18px',
+                padding: '1.75rem',
+                marginBottom: '1.5rem',
               }}
             >
-              {isTransfer
-                ? 'Paso final: Envío de Comprobante de Transferencia'
-                : `Paso final: Recibir Link de Pago Oficial (${paymentSummaryLabel})`}
-            </div>
-            <p
-              style={{
-                fontSize: '0.85rem',
-                color: isTransfer ? '#15803d' : '#0369a1',
-                marginBottom: '1.25rem',
-                lineHeight: 1.45,
-              }}
-            >
-              {isTransfer
-                ? 'Hacé clic en el botón debajo para abrir WhatsApp con tu número de pedido ya cargado y adjuntar el comprobante bancario:'
-                : 'Por seguridad PCI-DSS no procesamos tarjetas en formularios abiertos. Hacé clic debajo para recibir tu link de cobro oficial encriptado por WhatsApp:'}
-            </p>
+              <div
+                style={{
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  color: '#166534',
+                  marginBottom: '0.4rem',
+                }}
+              >
+                ¡Pago Acreditado con Éxito por Mercado Pago!
+              </div>
+              <p
+                style={{
+                  fontSize: '0.88rem',
+                  color: '#15803d',
+                  marginBottom: '1.25rem',
+                  lineHeight: 1.5,
+                }}
+              >
+                {mpPaymentId ? `Comprobante de cobro Nº ${mpPaymentId}. ` : ''}
+                Tu transacción fue verificada correctamente. Tus productos ya están en cola de preparación para ser despachados desde nuestro centro logístico en Villa Krause.
+              </p>
 
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.65rem',
+                  backgroundColor: '#25D366',
+                  color: '#ffffff',
+                  padding: '1.1rem 2rem',
+                  borderRadius: '14px',
+                  fontWeight: 800,
+                  fontSize: '1.02rem',
+                  boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45)',
+                  textDecoration: 'none',
+                  width: '100%',
+                  maxWidth: '500px',
+                }}
+              >
+                <MessageCircle size={22} />
+                <span>Consultar avance de entrega por WhatsApp</span>
+              </a>
+            </div>
+          ) : order.paymentMethod === 'mercadopago' ? (
+            <div
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.65rem',
-                backgroundColor: '#25D366',
-                color: '#ffffff',
-                padding: '1.1rem 2rem',
-                borderRadius: '14px',
-                fontWeight: 800,
-                fontSize: '1.02rem',
-                boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45)',
-                textDecoration: 'none',
-                width: '100%',
-                maxWidth: '500px',
+                backgroundColor: isFailureMp ? '#fef2f2' : '#f0f9ff',
+                border: isFailureMp ? '2px dashed #fca5a5' : '2px dashed #7dd3fc',
+                borderRadius: '18px',
+                padding: '1.75rem',
+                marginBottom: '1.5rem',
               }}
             >
-              <MessageCircle size={22} />
-              <span>
+              <div
+                style={{
+                  fontSize: '0.98rem',
+                  fontWeight: 800,
+                  color: isFailureMp ? '#991b1b' : '#0c4a6e',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {isFailureMp
+                  ? 'El pago en Mercado Pago no pudo procesarse'
+                  : mpStatus === 'pending'
+                  ? 'Pago en Proceso en Mercado Pago'
+                  : 'Paso final: Realizar el Pago con Mercado Pago'}
+              </div>
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: isFailureMp ? '#b91c1c' : '#0369a1',
+                  marginBottom: '1.25rem',
+                  lineHeight: 1.45,
+                }}
+              >
+                {isFailureMp
+                  ? 'Tu reserva sigue activa. Podés reintentar abonar con Mercado Pago o escribirnos para coordinar por transferencia:'
+                  : mpStatus === 'pending'
+                  ? 'Mercado Pago está procesando tu operación. En cuanto se confirme, actualizaremos tu pedido automáticamente.'
+                  : 'Hacé clic debajo para pagar de forma 100% segura mediante Mercado Pago (tarjetas, débito o dinero en cuenta):'}
+              </p>
+
+              {preferenceError && (
+                <div
+                  style={{
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#fee2e2',
+                    color: '#991b1b',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    marginBottom: '1rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {preferenceError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={handlePayWithMercadoPago}
+                  disabled={isGeneratingPreference}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.65rem',
+                    backgroundColor: '#009ee3',
+                    color: '#ffffff',
+                    padding: '1.1rem 2rem',
+                    borderRadius: '14px',
+                    fontWeight: 800,
+                    fontSize: '1.02rem',
+                    boxShadow: '0 8px 25px rgba(0, 158, 227, 0.4)',
+                    border: 'none',
+                    cursor: isGeneratingPreference ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                    maxWidth: '500px',
+                  }}
+                >
+                  <CreditCard size={22} />
+                  <span>{isGeneratingPreference ? 'Abriendo Mercado Pago...' : 'Pagar ahora con Mercado Pago'}</span>
+                </button>
+
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    backgroundColor: '#ffffff',
+                    color: '#15803d',
+                    border: '1px solid #86efac',
+                    padding: '0.8rem 1.5rem',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    textDecoration: 'none',
+                    width: '100%',
+                    maxWidth: '500px',
+                  }}
+                >
+                  <MessageCircle size={18} />
+                  <span>O coordinar con un asesor por WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                backgroundColor: isTransfer ? '#f0fdf4' : '#f0f9ff',
+                border: isTransfer ? '2px dashed #86efac' : '2px dashed #7dd3fc',
+                borderRadius: '18px',
+                padding: '1.75rem',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  color: isTransfer ? '#166534' : '#0c4a6e',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 {isTransfer
-                  ? 'Enviar comprobante y coordinar por WhatsApp'
-                  : 'Solicitar link de pago seguro por WhatsApp'}
-              </span>
-            </a>
-          </div>
+                  ? 'Paso final: Envío de Comprobante de Transferencia'
+                  : `Paso final: Recibir Link de Pago Oficial (${paymentSummaryLabel})`}
+              </div>
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: isTransfer ? '#15803d' : '#0369a1',
+                  marginBottom: '1.25rem',
+                  lineHeight: 1.45,
+                }}
+              >
+                {isTransfer
+                  ? 'Hacé clic en el botón debajo para abrir WhatsApp con tu número de pedido ya cargado y adjuntar el comprobante bancario:'
+                  : 'Por seguridad PCI-DSS no procesamos tarjetas en formularios abiertos. Hacé clic debajo para recibir tu link de cobro oficial encriptado por WhatsApp:'}
+              </p>
+
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.65rem',
+                  backgroundColor: '#25D366',
+                  color: '#ffffff',
+                  padding: '1.1rem 2rem',
+                  borderRadius: '14px',
+                  fontWeight: 800,
+                  fontSize: '1.02rem',
+                  boxShadow: '0 8px 25px rgba(37, 211, 102, 0.45)',
+                  textDecoration: 'none',
+                  width: '100%',
+                  maxWidth: '500px',
+                }}
+              >
+                <MessageCircle size={22} />
+                <span>
+                  {isTransfer
+                    ? 'Enviar comprobante y coordinar por WhatsApp'
+                    : 'Solicitar link de pago seguro por WhatsApp'}
+                </span>
+              </a>
+            </div>
+          )}
 
           <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             Un asesor oficial de nuestro showroom en Villa Krause verificará tu acreditación y coordinará el despacho.

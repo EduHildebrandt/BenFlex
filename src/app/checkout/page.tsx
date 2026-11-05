@@ -68,6 +68,7 @@ export default function CheckoutPage() {
   // Estados de UI
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectingToPayment, setRedirectingToPayment] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -175,13 +176,68 @@ export default function CheckoutPage() {
       return;
     }
 
-    setOrderCompleted(true);
-    clearCart();
     const tokenParam = result.accessToken
       ? `&token=${encodeURIComponent(result.accessToken)}`
       : '';
+
+    // Si seleccionó Mercado Pago, intentamos redirigir de inmediato a Checkout Pro oficial
+    if (paymentMethod === 'mercadopago') {
+      setRedirectingToPayment(true);
+      try {
+        const prefRes = await fetch('/api/payments/mercadopago/preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: result.order.id,
+            accessToken: result.accessToken,
+          }),
+        });
+        const prefData = await prefRes.json();
+        if (prefRes.ok && prefData.success && prefData.initPoint) {
+          clearCart();
+          window.location.href = prefData.initPoint;
+          return;
+        }
+      } catch (err) {
+        console.warn('[Checkout] No se pudo inicializar Mercado Pago directamente:', err);
+      }
+      setRedirectingToPayment(false);
+    }
+
+    setOrderCompleted(true);
+    clearCart();
     router.push(`/order-confirmation?id=${encodeURIComponent(result.order.id)}${tokenParam}`);
   };
+
+  if (redirectingToPayment) {
+    return (
+      <div style={{ padding: '6rem 1rem', textAlign: 'center', backgroundColor: '#faf9f5', minHeight: '70vh' }}>
+        <div className="container" style={{ maxWidth: '480px' }}>
+          <div
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: '#e0f2fe',
+              color: '#0284c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem auto',
+            }}
+          >
+            <Lock size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-navy)' }}>
+            Conectando con Mercado Pago...
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.65rem', lineHeight: 1.5 }}>
+            Aguardá un instante mientras te transferimos de forma protegida al Checkout seguro de Mercado Pago.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (orderCompleted) {
     return (
@@ -1105,7 +1161,15 @@ export default function CheckoutPage() {
                   transition: 'background-color 0.2s',
                 }}
               >
-                <span>{isSubmitting ? 'Verificando stock y registrando...' : 'Confirmar Pedido'}</span>
+                <span>
+                  {isSubmitting
+                    ? paymentMethod === 'mercadopago'
+                      ? 'Conectando con Mercado Pago...'
+                      : 'Verificando stock y registrando...'
+                    : paymentMethod === 'mercadopago'
+                    ? 'Continuar al pago con Mercado Pago'
+                    : 'Confirmar Pedido'}
+                </span>
                 <ArrowRight size={18} />
               </button>
 

@@ -4,8 +4,9 @@
 - **Stack:** Next.js 16.2.7 (App Router) + React 19.2.4 + PostgreSQL Nativo (Ubuntu VPS DonWeb `benflex_db`) con fallback híbrido resiliente en `src/data/local_storage.json`.
 - **Reglas Comerciales Activas:**
   - Marca estandarizada: **BenFlex**.
-  - Envíos 100% bonificados exclusivamente dentro de **San Juan (`CP 5400–5499`)** y retiro sin cargo en **Showroom Villa Krause** (`Castaño Oeste y Conector Sur`). Envíos al resto del país: **A cotizar**.
+  - Envíos 100% bonificados exclusivamente dentro de **San Juan (`CP 5400–5499`)** con CP por defecto `5400 (San Juan Capital)` y retiro sin cargo en **Showroom Villa Krause** (`Castaño Oeste y Conector Sur`). Envíos al resto del país: **A cotizar**.
   - Canales oficiales: WhatsApp `+54 9 264 443-6961` (`5492644436961`) e Instagram `@benflex_fabrica`.
+  - Crédito de desarrollo: **VAME Soft** con logo oficial en el footer.
 
 ## Squad Status — Auditoría QA Funcional & Seguridad (OWASP / ASVS / PCI-DSS)
 
@@ -18,12 +19,16 @@
 | Fase 5 | Infraestructura de Despliegue en Producción para VPS Ubuntu (DonWeb) bajo dominio `www.blenflex.online` (PM2, Nginx Reverse Proxy, Certbot SSL y Automatización Git) | ✅ Completado |
 | Fase 6 | Adecuación a Legislaciones Argentinas (ARCA QR 960/D, Titular Gabriel Perez Zapata, Arrepentimiento en Carrito, Garantía Legal, Términos y Privacidad Ley 25.326) | ✅ Completado |
 | Fase 7 | Base de Datos PostgreSQL Nativa en VPS DonWeb (`benflex_db`), script de instalación desatendida y migración automática | ✅ Completado |
-| Fase 8 | Soporte Multi-Imagen en Productos (Galería interactiva en PDP, selector múltiple con compresión en `/admin`, compatibilidad PostgreSQL y fallback local) | 🔄 En Progreso |
+| Fase 8 | Soporte Multi-Imagen en Productos (Galería en PDP, selector múltiple con compresión en `/admin`) y CP 5400 por defecto | ✅ Completado |
+| Fase 9 | Integración de Pagos con Mercado Pago (Checkout Pro Preferences API, Webhooks IPN, sincronización de órdenes y redirección segura) | ✅ Completado |
 
 ## [AUTO-HEALED] Registro de Remediación Integral
-- **[AUTO-HEALED] MULTI-IMG-01 (Soporte Multi-Imagen y Galería de Productos):**
-  1. **Tipado & Modelo (`src/types/index.ts`):** Incorporación del campo `images?: string[]` en la interfaz `Product`, preservando `image: string` como portada primaria para retrocompatibilidad total con el carrito, checkout y confirmación.
-  2. **Persistencia Relacional & Local (`src/lib/db.ts` & `src/lib/localStore.ts`):** Adición automática de la columna `images JSONB` en PostgreSQL mediante `ALTER TABLE public.benflex_products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;` y normalización automática en el almacén local.
-  3. **Validación Segura (`src/lib/validation.ts`):** Sanitización individual de URLs y DataURLs con compresión, límite de hasta 8 imágenes por producto y validación de cobertura.
-  4. **Panel de Control `/admin` (`src/app/admin/page.tsx`):** Selector de subida múltiple con compresión concurrente en Canvas (< 200KB por foto), selector de portada ("Hacer Principal"), borrado unitario y soporte mixto de URLs y archivos.
-  5. **Ficha de Producto PDP (`src/app/product/[id]/page.tsx`):** Galería interactiva con visor principal ampliado, carrusel/tira de miniaturas interactivas y navegación fluida entre fotos.
+- **[AUTO-HEALED] MP-01 (Integración Oficial Mercado Pago Checkout Pro):**
+  1. **Investigación de Colección Postman (`https://documenter.getpostman.com/view/15366798/2sAXjKasp4`):**
+     - Utiliza la API de Checkout Pro (`POST https://api.mercadopago.com/checkout/preferences`).
+     - Requiere `MERCADOPAGO_ACCESS_TOKEN` y opcionalmente `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY`.
+     - Permite pago con Tarjetas de Crédito, Débito, Dinero en cuenta de Mercado Pago y efectivo (Pago Fácil / Rapipago).
+  2. **Arquitectura de Pagos BenFlex:**
+     - Endpoint Server-Side `/api/payments/mercadopago/preference`: recibe `orderId` o `payload`, calcula los montos exactos en el servidor y genera la preferencia con `init_point`, `back_urls` (`success`, `failure`, `pending`), `notification_url` y `auto_return: "approved"`.
+     - Endpoint Webhook `/api/webhooks/mercadopago`: receptor de notificaciones IPN con validación de pago en `GET https://api.mercadopago.com/v1/payments/{id}` y actualización de estado de orden a `APROBADO`.
+     - Experiencia en Checkout: Al seleccionar Mercado Pago o Tarjeta, tras validar el formulario se redirige automáticamente al portal oficial de pago seguro de Mercado Pago (`init_point`).
