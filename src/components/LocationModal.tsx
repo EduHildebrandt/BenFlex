@@ -195,7 +195,7 @@ export default function LocationModal() {
                 justifyContent: 'space-between',
               }}
             >
-              <span>⭐ Villa Krause (Gratis)</span>
+              <span>Villa Krause (Gratis)</span>
               {location.postalCode === '5425' && <Check size={14} color="#059669" />}
             </button>
 
@@ -215,7 +215,7 @@ export default function LocationModal() {
                 justifyContent: 'space-between',
               }}
             >
-              <span>San Juan Cap. (Gratis)</span>
+              <span>⭐ San Juan Capital (Gratis)</span>
               {location.postalCode === '5400' && <Check size={14} color="#059669" />}
             </button>
 

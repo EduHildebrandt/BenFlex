@@ -132,7 +132,7 @@ export default function Header() {
       <header ref={headerRef} className={`bf-header${isScrolled ? ' is-scrolled' : ''}`}>
         <div className="container bf-header-inner">
           {/* Izquierda: Menú Mobile + Marca BenFlex */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
             <button
               onClick={() => {
                 setMobileMenuOpen((v) => !v);
@@ -148,7 +148,7 @@ export default function Header() {
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0, textDecoration: 'none' }}
             >
               <div className="bf-logo-avatar">
                 <img
@@ -157,7 +157,7 @@ export default function Header() {
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <span className="bf-logo-wordmark">BenFlex</span>
                 <span className="bf-logo-sub">Fábrica &amp; Showroom</span>
               </div>
@@ -206,7 +206,7 @@ export default function Header() {
               }
             >
               <MapPin size={14} color={location.isSanJuan ? '#059669' : 'var(--brand-sage)'} />
-              <span className="bf-collapsible-label">{location.city} ·</span>
+              <span className="bf-collapsible-city">{location.isSanJuan ? 'San Juan' : location.city} ·</span>
               <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>
                 {location.postalCode}
               </span>

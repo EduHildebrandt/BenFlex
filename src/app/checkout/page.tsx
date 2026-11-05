@@ -466,7 +466,7 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="text"
-                        placeholder="Ej: 5425"
+                        placeholder="Ej: 5400"
                         value={postalCode}
                         onChange={handlePostalCodeChange}
                         style={{

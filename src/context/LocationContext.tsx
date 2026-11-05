@@ -12,8 +12,8 @@ interface LocationContextType {
 }
 
 export const DEFAULT_LOCATION: LocationState = {
-  postalCode: '5425',
-  city: 'Villa Krause',
+  postalCode: '5400',
+  city: 'San Juan Capital',
   province: 'San Juan',
   isSanJuan: true,
 };
@@ -101,10 +101,15 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem('benflex_location');
       if (saved) {
         const parsed = JSON.parse(saved) as LocationState;
-        setLocationState({
-          ...parsed,
-          isSanJuan: isSanJuanPostalCode(parsed.postalCode),
-        });
+        if (parsed.postalCode === '5425' && (parsed.city === 'Villa Krause' || parsed.city === 'Villa Krause (Rawson)')) {
+          setLocationState(DEFAULT_LOCATION);
+          localStorage.setItem('benflex_location', JSON.stringify(DEFAULT_LOCATION));
+        } else {
+          setLocationState({
+            ...parsed,
+            isSanJuan: isSanJuanPostalCode(parsed.postalCode),
+          });
+        }
       }
     } catch (e) {
       console.warn('Could not read location from storage', e);
