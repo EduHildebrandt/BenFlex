@@ -49,11 +49,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim().startsWith('TEST-');
+    const initPoint = isSandbox && prefResult.sandboxInitPoint
+      ? prefResult.sandboxInitPoint
+      : (prefResult.initPoint || prefResult.sandboxInitPoint);
+
     return NextResponse.json({
       success: true,
       preferenceId: prefResult.preferenceId,
-      initPoint: prefResult.initPoint,
+      initPoint,
       sandboxInitPoint: prefResult.sandboxInitPoint,
+      isSandbox,
     });
   } catch (err: any) {
     console.error('[API /payments/mercadopago/preference] Error:', err);
