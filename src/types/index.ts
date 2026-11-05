@@ -56,6 +56,7 @@ export interface Product {
   features: string[];
   fabrics?: string[]; // Telas disponibles para sillones o fundas
   image: string;
+  images?: string[]; // Galería completa de imágenes (images[0] = portada)
   badge?: string;
   stock: number;
   weightSupport?: string; // Ej: "Hasta 120 kg por plaza"

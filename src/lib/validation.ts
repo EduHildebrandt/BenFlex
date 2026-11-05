@@ -156,13 +156,29 @@ export function validateProductInput(
     return { valid: false, error: 'El stock debe ser un entero mayor o igual a 0.' };
   }
 
-  const image = typeof raw.image === 'string' ? raw.image.trim() : '';
-  if (!isSafeImageUrl(image)) {
+  // Validación de fotos: Soporte de imagen única (image) y galería múltiple (images)
+  const incomingImages: string[] = [];
+  if (Array.isArray(raw.images)) {
+    for (const item of raw.images) {
+      if (typeof item === 'string' && isSafeImageUrl(item.trim())) {
+        incomingImages.push(item.trim());
+      }
+    }
+  }
+  const singleImage = typeof raw.image === 'string' ? raw.image.trim() : '';
+  if (singleImage && isSafeImageUrl(singleImage) && !incomingImages.includes(singleImage)) {
+    incomingImages.unshift(singleImage);
+  }
+
+  if (incomingImages.length === 0) {
     return {
       valid: false,
-      error: 'La imagen debe ser una URL HTTP/HTTPS válida o una foto JPEG/PNG/WebP seleccionada desde tu dispositivo.',
+      error: 'El producto debe contar con al menos una imagen válida (URL HTTP/HTTPS o foto seleccionada).',
     };
   }
+
+  const safeImages = incomingImages.slice(0, 8);
+  const primaryImage = safeImages[0];
 
   const variations = Array.isArray(raw.variations)
     ? raw.variations
@@ -208,7 +224,8 @@ export function validateProductInput(
       variations: variations.length > 0 ? variations : [{ name: 'Estándar', priceModifier: 0 }],
       features,
       fabrics: fabrics && fabrics.length > 0 ? fabrics : undefined,
-      image,
+      image: primaryImage,
+      images: safeImages,
       badge: cleanText(raw.badge, 60) || undefined,
       stock,
       weightSupport: cleanText(raw.weightSupport, 100) || undefined,

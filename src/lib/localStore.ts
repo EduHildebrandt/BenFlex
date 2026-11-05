@@ -291,7 +291,10 @@ export function deleteLocalCategory(id: string, deleteProducts: boolean = false)
 
 export function getLocalProducts(): Product[] {
   const store = loadStore();
-  return store.products.filter((p) => (p as any).isActive !== false);
+  return store.products.filter((p) => (p as any).isActive !== false).map((p) => ({
+    ...p,
+    images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image ? [p.image] : []),
+  }));
 }
 
 export function upsertLocalProduct(product: Product): Product {
@@ -305,6 +308,7 @@ export function upsertLocalProduct(product: Product): Product {
     basePrice: Number(product.basePrice),
     transferDiscountPercent: Number(product.transferDiscountPercent ?? 15),
     stock: Math.max(0, Math.floor(Number(product.stock) || 0)),
+    images: Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
   };
 
   (cleanProduct as any).isActive = true;

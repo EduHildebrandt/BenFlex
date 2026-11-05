@@ -152,6 +152,9 @@ export async function ensureSchema(): Promise<void> {
       ADD COLUMN IF NOT EXISTS idempotency_key TEXT,
       ADD COLUMN IF NOT EXISTS stock_deducted BOOLEAN NOT NULL DEFAULT true;
 
+    ALTER TABLE public.benflex_products
+      ADD COLUMN IF NOT EXISTS images JSONB NOT NULL DEFAULT '[]'::jsonb;
+
     CREATE UNIQUE INDEX IF NOT EXISTS idx_benflex_orders_idempotency
       ON public.benflex_orders(idempotency_key)
       WHERE idempotency_key IS NOT NULL;
@@ -382,6 +385,7 @@ export function mapRowToProduct(row: any): Product {
     features: Array.isArray(row.features) ? row.features : [],
     fabrics: Array.isArray(row.fabrics) ? row.fabrics : undefined,
     image: row.image,
+    images: Array.isArray(row.images) && row.images.length > 0 ? row.images : (row.image ? [row.image] : []),
     badge: row.badge || undefined,
     stock: Number(row.stock),
     weightSupport: row.weight_support || undefined,
@@ -454,14 +458,14 @@ async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promi
       id, slug, name, description, short_description,
       category, category_label, technology, technology_label,
       measure, firmness, base_price, transfer_discount_percent,
-      variations, features, fabrics, image, badge,
+      variations, features, fabrics, image, images, badge,
       stock, weight_support, warranty, rating, reviews_count, is_active, updated_at
     ) VALUES (
       $1, $2, $3, $4, $5,
       $6, $7, $8, $9,
       $10, $11, $12, $13,
-      $14::jsonb, $15::jsonb, $16::jsonb, $17, $18,
-      $19, $20, $21, $22, $23, true, NOW()
+      $14::jsonb, $15::jsonb, $16::jsonb, $17, $18::jsonb, $19,
+      $20, $21, $22, $23, $24, true, NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
       slug = EXCLUDED.slug,
@@ -480,6 +484,7 @@ async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promi
       features = EXCLUDED.features,
       fabrics = EXCLUDED.fabrics,
       image = EXCLUDED.image,
+      images = EXCLUDED.images,
       badge = EXCLUDED.badge,
       stock = EXCLUDED.stock,
       weight_support = EXCLUDED.weight_support,
@@ -508,6 +513,7 @@ async function upsertDbProductInternal(db: Pool | PoolClient, p: Product): Promi
       JSON.stringify(p.features || []),
       p.fabrics ? JSON.stringify(p.fabrics) : null,
       p.image,
+      JSON.stringify(p.images && p.images.length > 0 ? p.images : [p.image]),
       p.badge || null,
       p.stock ?? 10,
       p.weightSupport || null,

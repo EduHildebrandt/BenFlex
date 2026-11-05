@@ -28,6 +28,9 @@ import {
   FolderPlus,
   Edit3,
   Layers,
+  Star,
+  Upload,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   BENFLEX_BANK_INFO,
@@ -141,6 +144,8 @@ export default function BenFlexAdminPage() {
 
   // Modal de Crear / Editar Producto
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [isCompressingImages, setIsCompressingImages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -159,6 +164,7 @@ export default function BenFlexAdminPage() {
     basePrice: 380000,
     transferDiscountPercent: 15,
     image: '',
+    images: [] as string[],
     badge: 'Destacado BenFlex',
     stock: 15,
     weightSupport: 'Hasta 130 kg por lado',
@@ -297,6 +303,9 @@ export default function BenFlexAdminPage() {
       transferDiscountPercent: 15,
       image:
         'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80',
+      images: [
+        'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80',
+      ],
       badge: 'Nuevo Ingreso',
       stock: 10,
       weightSupport: 'Hasta 130 kg por lado',
@@ -331,6 +340,7 @@ export default function BenFlexAdminPage() {
       basePrice: p.basePrice,
       transferDiscountPercent: p.transferDiscountPercent ?? 15,
       image: p.image,
+      images: Array.isArray(p.images) && p.images.length > 0 ? [...p.images] : (p.image ? [p.image] : []),
       badge: p.badge || '',
       stock: p.stock,
       weightSupport: p.weightSupport || '',
@@ -345,54 +355,133 @@ export default function BenFlexAdminPage() {
     setIsModalOpen(true);
   };
 
-  // Subir foto desde archivo local (compresión inteligente en Canvas a Base64 JPEG ligero optimizado)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Comprimir archivo de imagen a Canvas Base64 JPEG < 200KB
+  const compressSingleImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const raw = typeof ev.target?.result === 'string' ? ev.target.result : '';
+        if (!raw) return resolve('');
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const maxDim = 850;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxDim) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.75));
+              return;
+            }
+            resolve(raw);
+          } catch {
+            resolve(raw);
+          }
+        };
+        img.onerror = () => resolve(raw);
+        img.src = raw;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Subir una o varias fotos desde archivo local (compresión múltiple)
+  const handleMultipleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setModalError('');
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const maxDim = 850;
-          let width = img.width;
-          let height = img.height;
+    setIsCompressingImages(true);
 
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            setForm((prev) => ({ ...prev, image: compressedDataUrl }));
-          }
-        } catch {
-          const rawResult = ev.target?.result;
-          if (typeof rawResult === 'string') {
-            setForm((prev) => ({ ...prev, image: rawResult }));
-          }
-        }
-      };
-      if (typeof ev.target?.result === 'string') {
-        img.src = ev.target.result;
+    try {
+      const compressedList: string[] = [];
+      for (const file of files) {
+        const result = await compressSingleImage(file);
+        if (result) compressedList.push(result);
       }
-    };
-    reader.readAsDataURL(file);
+
+      setForm((prev) => {
+        const currentImages = Array.isArray(prev.images) && prev.images.length > 0 ? prev.images : (prev.image ? [prev.image] : []);
+        const combined = [...currentImages, ...compressedList].slice(0, 8);
+        return {
+          ...prev,
+          images: combined,
+          image: combined[0] || '',
+        };
+      });
+      showToast(`📸 ${compressedList.length} imagen(es) procesada(s) con éxito`);
+    } catch {
+      setModalError('Error al procesar las imágenes seleccionadas.');
+    } finally {
+      setIsCompressingImages(false);
+      // Reset input para permitir subir la misma foto nuevamente si se desea
+      e.target.value = '';
+    }
+  };
+
+  // Agregar imagen por URL
+  const handleAddImageUrl = () => {
+    const url = newImageUrl.trim();
+    if (!url) return;
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:image/')) {
+      setModalError('La URL debe comenzar con https:// o http://');
+      return;
+    }
+    setForm((prev) => {
+      const currentImages = Array.isArray(prev.images) && prev.images.length > 0 ? prev.images : (prev.image ? [prev.image] : []);
+      if (currentImages.includes(url)) return prev;
+      const combined = [...currentImages, url].slice(0, 8);
+      return {
+        ...prev,
+        images: combined,
+        image: combined[0] || '',
+      };
+    });
+    setNewImageUrl('');
+  };
+
+  // Establecer foto como portada principal (índice 0)
+  const handleSetCoverImage = (indexToCover: number) => {
+    setForm((prev) => {
+      const list = [...(prev.images || [])];
+      if (indexToCover <= 0 || indexToCover >= list.length) return prev;
+      const target = list[indexToCover];
+      list.splice(indexToCover, 1);
+      list.unshift(target);
+      return {
+        ...prev,
+        images: list,
+        image: list[0] || '',
+      };
+    });
+  };
+
+  // Eliminar una foto de la galería
+  const handleRemoveImage = (indexToRemove: number) => {
+    setForm((prev) => {
+      const list = (prev.images || []).filter((_, i) => i !== indexToRemove);
+      return {
+        ...prev,
+        images: list,
+        image: list[0] || '',
+      };
+    });
   };
 
   // Guardar producto (Crear o Actualizar en Catálogo / Supabase)
@@ -478,7 +567,8 @@ export default function BenFlexAdminPage() {
         .map((s) => s.trim())
         .filter(Boolean),
       fabrics: parsedFabrics.length > 0 ? parsedFabrics : undefined,
-      image: form.image.trim(),
+      image: (form.images && form.images.length > 0) ? form.images[0] : form.image.trim(),
+      images: (form.images && form.images.length > 0) ? form.images : (form.image.trim() ? [form.image.trim()] : []),
       badge: form.badge.trim() || undefined,
       stock: Math.max(0, Math.floor(Number(form.stock) || 0)),
       weightSupport: form.weightSupport.trim() || undefined,
@@ -3237,65 +3327,207 @@ export default function BenFlexAdminPage() {
                     border: '1px solid #bae6fd',
                   }}
                 >
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, color: '#0369a1', marginBottom: '0.5rem' }}>
-                    📸 Foto del Producto (Subí una imagen desde tu dispositivo o pegá un link HTTPS)
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <ImageIcon size={16} />
+                      <span>Galería de Fotos del Producto (Subí varias imágenes o URLs)</span>
+                    </label>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0284c7', backgroundColor: '#e0f2fe', padding: '0.2rem 0.55rem', borderRadius: '6px' }}>
+                      {(form.images || []).length} de 8 fotos
+                    </span>
+                  </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '1rem', alignItems: 'center' }}>
-                    {form.image ? (
-                      <img
-                        src={form.image}
-                        alt="Vista previa"
+                  {/* Barra de Subida de Fotos */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <label
                         style={{
-                          width: '110px',
-                          height: '90px',
-                          objectFit: 'cover',
-                          borderRadius: '10px',
-                          border: '2px solid #ffffff',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: '110px',
-                          height: '90px',
-                          borderRadius: '10px',
-                          backgroundColor: '#e0f2fe',
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          color: '#0369a1',
+                          gap: '0.45rem',
+                          backgroundColor: '#0284c7',
+                          color: '#ffffff',
+                          padding: '0.5rem 0.95rem',
+                          borderRadius: '8px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: isCompressingImages ? 'wait' : 'pointer',
+                          boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
                         }}
                       >
-                        Sin Foto
-                      </div>
-                    )}
+                        <Upload size={14} />
+                        <span>{isCompressingImages ? 'Optimizando fotos...' : 'Subir fotos desde dispositivo'}</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleMultipleFileUpload}
+                          disabled={isCompressingImages}
+                          style={{ display: 'none' }}
+                        />
+                      </label>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        style={{ fontSize: '0.82rem' }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="O pegá la URL segura de la foto (https://...)"
-                        value={form.image}
-                        onChange={(e) => setForm({ ...form, image: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.6rem 0.75rem',
-                          borderRadius: '8px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '0.82rem',
-                          backgroundColor: '#ffffff',
-                        }}
-                      />
+                      <div style={{ display: 'flex', flex: 1, minWidth: '240px', gap: '0.45rem' }}>
+                        <input
+                          type="text"
+                          placeholder="O pegá un link HTTPS de foto..."
+                          value={newImageUrl}
+                          onChange={(e) => setNewImageUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddImageUrl();
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.8rem',
+                            backgroundColor: '#ffffff',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddImageUrl}
+                          style={{
+                            backgroundColor: '#0f172a',
+                            color: '#ffffff',
+                            padding: '0.5rem 0.85rem',
+                            borderRadius: '8px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          + Agregar URL
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                      Tip: La primera foto será la <strong>portada principal</strong> en la tienda. Podés cambiar el orden haciendo clic en <em>"Hacer Portada"</em>.
                     </div>
                   </div>
+
+                  {/* Cuadrícula de Fotos Cargadas */}
+                  {(form.images && form.images.length > 0) ? (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(115px, 1fr))',
+                        gap: '0.75rem',
+                        backgroundColor: '#f8fafc',
+                        padding: '0.85rem',
+                        borderRadius: '12px',
+                        border: '1px solid #e2e8f0',
+                      }}
+                    >
+                      {form.images.map((imgUrl, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            position: 'relative',
+                            borderRadius: '10px',
+                            overflow: 'hidden',
+                            backgroundColor: '#ffffff',
+                            border: idx === 0 ? '2.5px solid #0284c7' : '1px solid #cbd5e1',
+                            boxShadow: idx === 0 ? '0 3px 12px rgba(2, 132, 199, 0.2)' : '0 2px 6px rgba(0,0,0,0.06)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}
+                        >
+                          <div style={{ height: '85px', position: 'relative' }}>
+                            <img
+                              src={imgUrl}
+                              alt={`Foto ${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                            {idx === 0 && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: '4px',
+                                  left: '4px',
+                                  backgroundColor: '#0284c7',
+                                  color: '#ffffff',
+                                  fontSize: '0.62rem',
+                                  fontWeight: 800,
+                                  padding: '0.15rem 0.4rem',
+                                  borderRadius: '4px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '2px',
+                                }}
+                              >
+                                <Star size={10} fill="#ffffff" />
+                                <span>PORTADA</span>
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              title="Eliminar foto"
+                              style={{
+                                position: 'absolute',
+                                top: '4px',
+                                right: '4px',
+                                backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '20px',
+                                height: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+
+                          {idx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetCoverImage(idx)}
+                              style={{
+                                padding: '0.3rem 0',
+                                fontSize: '0.68rem',
+                                fontWeight: 700,
+                                backgroundColor: '#f1f5f9',
+                                color: '#0369a1',
+                                border: 'none',
+                                borderTop: '1px solid #e2e8f0',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.15s ease',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0f2fe')}
+                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                            >
+                              Hacer Portada
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        padding: '1.5rem',
+                        textAlign: 'center',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '12px',
+                        border: '2px dashed #cbd5e1',
+                        color: '#64748b',
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      Sin fotos cargadas. Hacé clic en <strong>"Subir fotos desde dispositivo"</strong> para seleccionar una o más imágenes.
+                    </div>
+                  )}
                 </div>
 
                 {/* Variaciones de Medidas y Precios */}

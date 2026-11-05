@@ -18,6 +18,8 @@ import {
   Sparkles,
   ArrowLeft,
   Share2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { BENFLEX_CONTACT } from '@/types';
 
@@ -40,6 +42,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   // Selección de Variación (Medida)
   const [selectedVariationName, setSelectedVariationName] = useState<string>('');
   const [selectedFabric, setSelectedFabric] = useState<string>('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(1);
   const [addedAnimation, setAddedAnimation] = useState<boolean>(false);
 
@@ -79,6 +82,17 @@ export default function ProductPage({ params }: ProductPageProps) {
       </div>
     );
   }
+
+  // Galería de fotos del producto
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      return product.images;
+    }
+    return product.image ? [product.image] : [];
+  }, [product]);
+
+  const currentDisplayImage = galleryImages[selectedImageIndex] || product?.image || '';
 
   // Cálculo del precio según la variación seleccionada
   const activeVariation = product.variations.find((v) => v.name === selectedVariationName);
@@ -161,32 +175,37 @@ export default function ProductPage({ params }: ProductPageProps) {
           >
             {/* COLUMNA IZQUIERDA: FOTO AMBIENTADA & BADGES */}
             <div>
+              {/* Galería Interactiva con Visor Principal */}
               <div
                 style={{
                   position: 'relative',
-                  borderRadius: '16px',
+                  borderRadius: '18px',
                   overflow: 'hidden',
                   backgroundColor: '#f1f5f9',
                   aspectRatio: '4/3',
-                  marginBottom: '1rem',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                  marginBottom: galleryImages.length > 1 ? '0.75rem' : '1rem',
+                  boxShadow: '0 6px 24px rgba(0,0,0,0.07)',
+                  border: '1px solid #e2e8f0',
                 }}
               >
                 <img
-                  src={product.image}
+                  src={currentDisplayImage}
                   alt={product.name}
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
+                    transition: 'all 0.25s ease',
                   }}
                 />
+
                 {product.badge && (
                   <div
                     style={{
                       position: 'absolute',
                       top: '16px',
                       left: '16px',
+                      zIndex: 2,
                     }}
                   >
                     <span className="badge-pill badge-navy" style={{ fontSize: '0.8rem' }}>
@@ -194,7 +213,155 @@ export default function ProductPage({ params }: ProductPageProps) {
                     </span>
                   </div>
                 )}
+
+                {/* Flechas de Navegación si hay más de 1 foto */}
+                {galleryImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedImageIndex((prev) =>
+                          prev > 0 ? prev - 1 : galleryImages.length - 1
+                        )
+                      }
+                      title="Foto anterior"
+                      aria-label="Foto anterior"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '12px',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.88)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#0f172a',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        borderRadius: '50%',
+                        width: '38px',
+                        height: '38px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                        zIndex: 2,
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.88)')
+                      }
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedImageIndex((prev) =>
+                          prev < galleryImages.length - 1 ? prev + 1 : 0
+                        )
+                      }
+                      title="Siguiente foto"
+                      aria-label="Siguiente foto"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        right: '12px',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.88)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#0f172a',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        borderRadius: '50%',
+                        width: '38px',
+                        height: '38px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                        zIndex: 2,
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.88)')
+                      }
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+
+                    {/* Badge contador de fotos */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        right: '12px',
+                        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                        backdropFilter: 'blur(6px)',
+                        color: '#ffffff',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '9999px',
+                        zIndex: 2,
+                      }}
+                    >
+                      {selectedImageIndex + 1} / {galleryImages.length}
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Tira de Miniaturas (Thumbnails) */}
+              {galleryImages.length > 1 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.65rem',
+                    overflowX: 'auto',
+                    padding: '0.2rem 0 0.85rem 0',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  {galleryImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(idx)}
+                      style={{
+                        flexShrink: 0,
+                        width: '74px',
+                        height: '62px',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        padding: 0,
+                        backgroundColor: '#f1f5f9',
+                        border:
+                          idx === selectedImageIndex
+                            ? '2.5px solid #2563eb'
+                            : '1.5px solid #cbd5e1',
+                        boxShadow:
+                          idx === selectedImageIndex
+                            ? '0 2px 10px rgba(37, 99, 235, 0.3)'
+                            : 'none',
+                        cursor: 'pointer',
+                        opacity: idx === selectedImageIndex ? 1 : 0.65,
+                        transform: idx === selectedImageIndex ? 'scale(1.03)' : 'scale(1)',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title={`Ver foto ${idx + 1}`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`Miniatura ${idx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Badges de Garantía y Showroom */}
               <div
