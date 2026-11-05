@@ -773,12 +773,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     color: 'var(--text-secondary)',
                   }}
                 >
-                  {product.weightSupport && (
-                    <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <CheckCircle size={16} color="var(--brand-sage)" />
-                      <span><strong>Soporte de peso:</strong> {product.weightSupport}</span>
-                    </li>
-                  )}
+
                   {product.firmness && (
                     <li style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <CheckCircle size={16} color="var(--brand-sage)" />

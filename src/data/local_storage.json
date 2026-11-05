@@ -15,11 +15,31 @@
       "basePrice": 380000,
       "transferDiscountPercent": 15,
       "variations": [
-        { "name": "1 Plaza (80x190)", "priceModifier": -90000, "measure": "1 Plaza (80x190)" },
-        { "name": "1½ Plaza (90x190)", "priceModifier": -60000, "measure": "1½ Plaza (90x190)" },
-        { "name": "2 Plazas (140x190)", "priceModifier": 0, "measure": "2 Plazas (140x190)" },
-        { "name": "Queen (160x200)", "priceModifier": 110000, "measure": "Queen (160x200)" },
-        { "name": "King (200x200)", "priceModifier": 195000, "measure": "King (200x200)" }
+        {
+          "name": "1 Plaza (80x190)",
+          "priceModifier": -90000,
+          "measure": "1 Plaza (80x190)"
+        },
+        {
+          "name": "1½ Plaza (90x190)",
+          "priceModifier": -60000,
+          "measure": "1½ Plaza (90x190)"
+        },
+        {
+          "name": "2 Plazas (140x190)",
+          "priceModifier": 0,
+          "measure": "2 Plazas (140x190)"
+        },
+        {
+          "name": "Queen (160x200)",
+          "priceModifier": 110000,
+          "measure": "Queen (160x200)"
+        },
+        {
+          "name": "King (200x200)",
+          "priceModifier": 195000,
+          "measure": "King (200x200)"
+        }
       ],
       "features": [
         "Espuma de Alta Densidad 35 kg/m³ virgen certificada",
@@ -30,7 +50,6 @@
       "image": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80",
       "badge": "Más Elegido en San Juan",
       "stock": 14,
-      "weightSupport": "Hasta 135 kg por lado",
       "warranty": "5 años de garantía escrita de fábrica",
       "rating": 4.9,
       "reviewsCount": 128
@@ -50,9 +69,21 @@
       "basePrice": 590000,
       "transferDiscountPercent": 15,
       "variations": [
-        { "name": "2 Plazas (140x190)", "priceModifier": -90000, "measure": "2 Plazas (140x190)" },
-        { "name": "Queen (160x200)", "priceModifier": 0, "measure": "Queen (160x200)" },
-        { "name": "King (200x200)", "priceModifier": 110000, "measure": "King (200x200)" }
+        {
+          "name": "2 Plazas (140x190)",
+          "priceModifier": -90000,
+          "measure": "2 Plazas (140x190)"
+        },
+        {
+          "name": "Queen (160x200)",
+          "priceModifier": 0,
+          "measure": "Queen (160x200)"
+        },
+        {
+          "name": "King (200x200)",
+          "priceModifier": 110000,
+          "measure": "King (200x200)"
+        }
       ],
       "features": [
         "Estructura de resortes pocket templados individualmente",
@@ -63,9 +94,8 @@
       "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80",
       "badge": "Lujo & Confort Parejas",
       "stock": 9,
-      "weightSupport": "Hasta 140 kg por lado",
       "warranty": "10 años de garantía escrita",
-      "rating": 5.0,
+      "rating": 5,
       "reviewsCount": 94
     },
     {
@@ -83,8 +113,16 @@
       "basePrice": 42000,
       "transferDiscountPercent": 15,
       "variations": [
-        { "name": "Estándar (60x40x12/10 cm)", "priceModifier": 0, "measure": "Cervical Ergonómica" },
-        { "name": "Pack x2 Almohadas Cervicales", "priceModifier": 38000, "measure": "Cervical Ergonómica" }
+        {
+          "name": "Estándar (60x40x12/10 cm)",
+          "priceModifier": 0,
+          "measure": "Cervical Ergonómica"
+        },
+        {
+          "name": "Pack x2 Almohadas Cervicales",
+          "priceModifier": 38000,
+          "measure": "Cervical Ergonómica"
+        }
       ],
       "features": [
         "Forma de doble onda para alineación óptima de la columna cervical",
@@ -114,9 +152,21 @@
       "basePrice": 620000,
       "transferDiscountPercent": 15,
       "variations": [
-        { "name": "2 Cuerpos (170 cm)", "priceModifier": -80000, "measure": "2 Cuerpos" },
-        { "name": "3 Cuerpos (210 cm)", "priceModifier": 0, "measure": "3 Cuerpos" },
-        { "name": "Esquinero L (260x170 cm)", "priceModifier": 190000, "measure": "Esquinero L" }
+        {
+          "name": "2 Cuerpos (170 cm)",
+          "priceModifier": -80000,
+          "measure": "2 Cuerpos"
+        },
+        {
+          "name": "3 Cuerpos (210 cm)",
+          "priceModifier": 0,
+          "measure": "3 Cuerpos"
+        },
+        {
+          "name": "Esquinero L (260x170 cm)",
+          "priceModifier": 190000,
+          "measure": "Esquinero L"
+        }
       ],
       "features": [
         "Estructura 100% madera maciza secada a horno",
@@ -223,7 +273,7 @@
             "transferDiscountPercent": 15,
             "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80",
             "stock": 9,
-            "rating": 5.0,
+            "rating": 5,
             "reviewsCount": 94,
             "slug": "colchon-nuage-resortes-pocket",
             "description": "",

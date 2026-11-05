@@ -623,9 +623,39 @@ export default function Footer() {
             onDoubleClick={() => {
               window.location.href = '/admin';
             }}
-            style={{ userSelect: 'none' }}
+            style={{ userSelect: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}
           >
-            © {new Date().getFullYear()} BenFlex - Confort y Descanso. Todos los derechos reservados.
+            <span>© {new Date().getFullYear()} BenFlex - Confort y Descanso. Todos los derechos reservados.</span>
+            <span style={{ opacity: 0.35 }}>•</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', color: '#94a3b8' }}>
+              <span>Desarrollado por</span>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                <img
+                  src="/vame-soft.png"
+                  alt="VAME Soft"
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    objectFit: 'contain',
+                    borderRadius: '3px',
+                  }}
+                />
+                <span style={{ letterSpacing: '0.02em' }}>VAME Soft</span>
+              </span>
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
