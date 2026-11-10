@@ -270,8 +270,8 @@ function OrderConfirmationContent() {
             }}
           >
             {isPaid
-              ? `¡Pago Acreditado, ${order.customerName.split(' ')[0]}!`
-              : `¡Gracias por elegir BenFlex, ${order.customerName.split(' ')[0]}!`}
+              ? `¡Pago Acreditado, ${(order.customerName.trim().split(/\s+/)[0] || 'Cliente')}!`
+              : `¡Gracias por elegir BenFlex, ${(order.customerName.trim().split(/\s+/)[0] || 'Cliente')}!`}
           </h1>
 
           <p style={{ fontSize: '0.98rem', color: 'var(--text-secondary)', maxWidth: '540px', margin: '0 auto 1.75rem auto' }}>
