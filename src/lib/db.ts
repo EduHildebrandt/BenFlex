@@ -218,66 +218,6 @@ export async function ensureSchema(): Promise<void> {
     }
   }
 
-  // 2. Seed inicial de productos desde almacenamiento local si la tabla está vacía
-  const countRes = await pool.query('SELECT COUNT(*)::int AS cnt FROM public.benflex_products');
-  if ((countRes.rows[0]?.cnt ?? 0) === 0) {
-    const prodsToSeed = getLocalProducts();
-    for (const p of prodsToSeed) {
-      await upsertDbProductInternal(pool, p);
-    }
-  }
-
-  // 3. Seed inicial de órdenes existentes desde almacenamiento local si la tabla está vacía
-  const ordersCountRes = await pool.query('SELECT COUNT(*)::int AS cnt FROM public.benflex_orders');
-  if ((ordersCountRes.rows[0]?.cnt ?? 0) === 0) {
-    const ordersToSeed = getLocalOrders();
-    for (const o of ordersToSeed) {
-      await pool.query(
-        `INSERT INTO public.benflex_orders (
-          id, date, customer_name, customer_email, customer_phone, customer_dni,
-          delivery_method, postal_code, address, city, province, notes,
-          payment_method, items, subtotal, shipping_original, shipping_discount,
-          shipping_final, transfer_discount, total, installments, status,
-          access_token, idempotency_key, stock_deducted, created_at
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6,
-          $7, $8, $9, $10, $11, $12,
-          $13, $14, $15, $16, $17,
-          $18, $19, $20, $21, $22,
-          $23, $24, $25, $26
-        ) ON CONFLICT (id) DO NOTHING`,
-        [
-          o.id,
-          o.date || new Date().toISOString(),
-          o.customerName,
-          o.customerEmail,
-          o.customerPhone,
-          o.customerDni || null,
-          o.deliveryMethod,
-          o.postalCode,
-          o.address || null,
-          o.city,
-          o.province,
-          o.notes || null,
-          o.paymentMethod,
-          JSON.stringify(o.items || []),
-          o.subtotal,
-          o.shippingOriginal || 0,
-          o.shippingDiscount || 0,
-          o.shippingFinal || 0,
-          o.transferDiscount || 0,
-          o.total,
-          o.installments || null,
-          o.status || 'PENDIENTE_COMPROBANTE',
-          o.accessToken || null,
-          o.idempotencyKey || null,
-          (o as any).stockDeducted !== false,
-          o.date || new Date().toISOString(),
-        ]
-      );
-    }
-  }
-
   globalForPg.schemaInitialized = true;
 }
 

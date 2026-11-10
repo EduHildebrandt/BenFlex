@@ -315,7 +315,60 @@ export default function HomePage() {
           </div>
 
           {/* Grilla de Productos */}
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '4.5rem 1.5rem',
+                backgroundColor: '#f8fafc',
+                borderRadius: '24px',
+                border: '1px dashed #cbd5e1',
+                margin: '1.5rem 0 3rem 0',
+              }}
+            >
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: '#e2e8f0',
+                  color: 'var(--brand-sage)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem auto',
+                }}
+              >
+                <SlidersHorizontal size={28} />
+              </div>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--brand-navy)', marginBottom: '0.65rem' }}>
+                Catálogo en Carga Inicial
+              </h3>
+              <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 1.5rem auto', lineHeight: 1.55 }}>
+                Estamos publicando los nuevos modelos y promociones directo de fábrica. Si buscás asesoramiento o consultar medidas disponibles, escribinos por WhatsApp.
+              </p>
+              <a
+                href="https://wa.me/5492644436961?text=%C2%A1Hola%20BenFlex!%20Quisiera%20consultar%20por%20modelos%20y%20medidas%20disponibles."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: '#25D366',
+                  color: '#ffffff',
+                  padding: '0.85rem 1.75rem',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
+                }}
+              >
+                Consultar por WhatsApp
+              </a>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#64748b' }}>
               <p style={{ fontSize: '1rem', fontWeight: 500 }}>
                 No se encontraron productos con estos filtros.
