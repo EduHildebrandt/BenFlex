@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isSandbox = (process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim().startsWith('TEST-');
+    const isSandbox =
+      process.env.MERCADOPAGO_SANDBOX === 'true' ||
+      (process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim().startsWith('TEST-');
     const initPoint = isSandbox && prefResult.sandboxInitPoint
       ? prefResult.sandboxInitPoint
       : (prefResult.initPoint || prefResult.sandboxInitPoint);
