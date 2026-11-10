@@ -128,7 +128,33 @@ export default function CheckoutPage() {
       }
     }
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+
+    if (Object.keys(errs).length > 0) {
+      const missingLabels: string[] = [];
+      if (errs.name) missingLabels.push('Nombre y Apellido');
+      if (errs.phone) missingLabels.push('WhatsApp/Teléfono');
+      if (errs.email) missingLabels.push('Email');
+      if (errs.address) missingLabels.push('Dirección (calle y número)');
+      if (errs.postalCode) missingLabels.push('Código Postal');
+
+      setSubmitError(
+        `Por favor completá los campos requeridos para continuar: ${missingLabels.join(', ')}.`
+      );
+
+      setTimeout(() => {
+        const firstKey = Object.keys(errs)[0];
+        const el = document.getElementById(`field-${firstKey}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      }, 50);
+
+      return false;
+    }
+
+    setSubmitError(null);
+    return true;
   };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -197,11 +223,25 @@ export default function CheckoutPage() {
           clearCart();
           window.location.href = prefData.initPoint;
           return;
+        } else {
+          console.error('[Checkout] Error generando preferencia Mercado Pago:', prefData);
+          setSubmitError(
+            prefData.error ||
+              'No se pudo conectar con Mercado Pago. Podés intentar nuevamente o coordinar por WhatsApp.'
+          );
+          setRedirectingToPayment(false);
+          setIsSubmitting(false);
+          return;
         }
-      } catch (err) {
-        console.warn('[Checkout] No se pudo inicializar Mercado Pago directamente:', err);
+      } catch (err: any) {
+        console.error('[Checkout] Excepción de conexión con Mercado Pago:', err);
+        setSubmitError(
+          'Ocurrió un error al contactar la pasarela de pagos de Mercado Pago. Por favor intentá nuevamente.'
+        );
+        setRedirectingToPayment(false);
+        setIsSubmitting(false);
+        return;
       }
-      setRedirectingToPayment(false);
     }
 
     setOrderCompleted(true);
@@ -363,6 +403,7 @@ export default function CheckoutPage() {
                       Nombre y Apellido *
                     </label>
                     <input
+                      id="field-name"
                       type="text"
                       placeholder="Ej: Marcelo Castro"
                       value={customerName}
@@ -371,12 +412,13 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.name ? '1px solid #dc2626' : '1px solid #d1d5db',
+                        border: errors.name ? '2px solid #dc2626' : '1px solid #d1d5db',
+                        backgroundColor: errors.name ? '#fff5f5' : '#ffffff',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.name && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.name}</span>}
+                    {errors.name && <span style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 600 }}>{errors.name}</span>}
                   </div>
 
                   <div>
@@ -384,6 +426,7 @@ export default function CheckoutPage() {
                       WhatsApp / Teléfono *
                     </label>
                     <input
+                      id="field-phone"
                       type="tel"
                       placeholder="Ej: 264 443-6961"
                       value={customerPhone}
@@ -392,12 +435,13 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.phone ? '1px solid #dc2626' : '1px solid #d1d5db',
+                        border: errors.phone ? '2px solid #dc2626' : '1px solid #d1d5db',
+                        backgroundColor: errors.phone ? '#fff5f5' : '#ffffff',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.phone && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.phone}</span>}
+                    {errors.phone && <span style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 600 }}>{errors.phone}</span>}
                   </div>
 
                   <div>
@@ -405,6 +449,7 @@ export default function CheckoutPage() {
                       Correo Electrónico *
                     </label>
                     <input
+                      id="field-email"
                       type="email"
                       placeholder="marcelo@ejemplo.com"
                       value={customerEmail}
@@ -413,12 +458,13 @@ export default function CheckoutPage() {
                         width: '100%',
                         padding: '0.75rem',
                         borderRadius: '8px',
-                        border: errors.email ? '1px solid #dc2626' : '1px solid #d1d5db',
+                        border: errors.email ? '2px solid #dc2626' : '1px solid #d1d5db',
+                        backgroundColor: errors.email ? '#fff5f5' : '#ffffff',
                         fontSize: '0.9rem',
                         outline: 'none',
                       }}
                     />
-                    {errors.email && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.email}</span>}
+                    {errors.email && <span style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 600 }}>{errors.email}</span>}
                   </div>
 
                   <div>
@@ -521,6 +567,7 @@ export default function CheckoutPage() {
                         Código Postal *
                       </label>
                       <input
+                        id="field-postalCode"
                         type="text"
                         placeholder="Ej: 5400"
                         value={postalCode}
@@ -529,12 +576,13 @@ export default function CheckoutPage() {
                           width: '100%',
                           padding: '0.75rem',
                           borderRadius: '8px',
-                          border: errors.postalCode ? '1px solid #dc2626' : '1px solid #d1d5db',
+                          border: errors.postalCode ? '2px solid #dc2626' : '1px solid #d1d5db',
+                          backgroundColor: errors.postalCode ? '#fff5f5' : '#ffffff',
                           fontSize: '0.9rem',
                           outline: 'none',
                         }}
                       />
-                      {errors.postalCode && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.postalCode}</span>}
+                      {errors.postalCode && <span style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 600 }}>{errors.postalCode}</span>}
                     </div>
 
                     <div style={{ gridColumn: 'span 2' }}>
@@ -542,6 +590,7 @@ export default function CheckoutPage() {
                         Dirección, Calle y Altura *
                       </label>
                       <input
+                        id="field-address"
                         type="text"
                         placeholder="Ej: Av. Libertador 1420, Depto 4B"
                         value={address}
@@ -550,12 +599,13 @@ export default function CheckoutPage() {
                           width: '100%',
                           padding: '0.75rem',
                           borderRadius: '8px',
-                          border: errors.address ? '1px solid #dc2626' : '1px solid #d1d5db',
+                          border: errors.address ? '2px solid #dc2626' : '1px solid #d1d5db',
+                          backgroundColor: errors.address ? '#fff5f5' : '#ffffff',
                           fontSize: '0.9rem',
                           outline: 'none',
                         }}
                       />
-                      {errors.address && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.address}</span>}
+                      {errors.address && <span style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 600 }}>{errors.address}</span>}
                     </div>
 
                     <div>
@@ -1119,22 +1169,24 @@ export default function CheckoutPage() {
               {/* Mensaje de error de validación / concurrencia de stock */}
               {submitError && (
                 <div
+                  className="animate-fade-in"
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '0.55rem',
-                    padding: '0.85rem 1rem',
+                    gap: '0.65rem',
+                    padding: '1rem 1.15rem',
                     marginBottom: '1rem',
                     backgroundColor: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '10px',
-                    color: '#b91c1c',
-                    fontSize: '0.83rem',
-                    fontWeight: 600,
-                    lineHeight: 1.4,
+                    border: '2px solid #ef4444',
+                    borderRadius: '12px',
+                    color: '#991b1b',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    lineHeight: 1.45,
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)',
                   }}
                 >
-                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <AlertCircle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: '1px' }} />
                   <span>{submitError}</span>
                 </div>
               )}
