@@ -73,24 +73,24 @@ export default function HomePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', backgroundColor: '#ffffff' }}>
-      {/* 1. CABECERA MINIMALISTA */}
+      {/* 1. CABECERA COMPACTA Y MINIMALISTA */}
       <section
         style={{
-          padding: '4.25rem 0 3.25rem 0',
+          padding: '2rem 0 1.5rem 0',
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #f1f5f9',
         }}
       >
-        <div className="container" style={{ maxWidth: '880px', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '820px', textAlign: 'center' }}>
           <span
             style={{
               display: 'inline-block',
-              fontSize: '0.74rem',
+              fontSize: '0.68rem',
               fontWeight: 700,
-              letterSpacing: '0.12em',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: '#64748b',
-              marginBottom: '1rem',
+              marginBottom: '0.45rem',
             }}
           >
             BenFlex • Fábrica &amp; Showroom en San Juan
@@ -98,12 +98,12 @@ export default function HomePage() {
 
           <h1
             style={{
-              fontSize: 'clamp(2.1rem, 4.5vw, 3.2rem)',
+              fontSize: 'clamp(1.6rem, 3.2vw, 2.35rem)',
               fontWeight: 800,
-              lineHeight: 1.12,
-              letterSpacing: '-0.03em',
+              lineHeight: 1.15,
+              letterSpacing: '-0.025em',
               color: '#0f172a',
-              marginBottom: '1.1rem',
+              marginBottom: '0.55rem',
             }}
           >
             Descanso pensado para tu postura.
@@ -111,11 +111,11 @@ export default function HomePage() {
 
           <p
             style={{
-              fontSize: '1.02rem',
+              fontSize: '0.92rem',
               color: '#64748b',
-              lineHeight: 1.65,
-              maxWidth: '580px',
-              margin: '0 auto 2rem auto',
+              lineHeight: 1.55,
+              maxWidth: '560px',
+              margin: '0 auto 1.25rem auto',
             }}
           >
             Colchones de alta densidad, resortes pocket y equipamiento de confort. Envío sin cargo en San Juan y 15% de descuento por transferencia.
@@ -126,7 +126,7 @@ export default function HomePage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '1rem',
+              gap: '0.75rem',
               flexWrap: 'wrap',
             }}
           >
@@ -135,18 +135,18 @@ export default function HomePage() {
               style={{
                 backgroundColor: '#0f172a',
                 color: '#ffffff',
-                padding: '0.85rem 1.65rem',
+                padding: '0.62rem 1.35rem',
                 borderRadius: '9999px',
                 fontWeight: 700,
-                fontSize: '0.9rem',
+                fontSize: '0.84rem',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.45rem',
+                gap: '0.4rem',
                 transition: 'opacity 0.2s',
               }}
             >
               <span>Ver productos</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={15} />
             </Link>
 
             <Link
@@ -154,26 +154,26 @@ export default function HomePage() {
               style={{
                 backgroundColor: 'transparent',
                 color: '#0f172a',
-                padding: '0.85rem 1.4rem',
+                padding: '0.62rem 1.25rem',
                 borderRadius: '9999px',
                 fontWeight: 600,
-                fontSize: '0.9rem',
+                fontSize: '0.84rem',
                 border: '1px solid #e2e8f0',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.45rem',
+                gap: '0.4rem',
                 transition: 'border-color 0.2s',
               }}
             >
               <span>Descubrir el colchón ideal en 3 pasos</span>
-              <ArrowRight size={15} />
+              <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </section>
 
       {/* 2. CATÁLOGO DE PRODUCTOS (SOLO CATEGORÍAS CON PRODUCTOS CARGADOS) */}
-      <section id="catalogo" style={{ padding: '3.25rem 0 4.5rem 0', backgroundColor: '#ffffff' }}>
+      <section id="catalogo" style={{ padding: '1.75rem 0 3.5rem 0', backgroundColor: '#ffffff' }}>
         <div className="container">
           {/* Barra Minimalista de Categorías + Filtros */}
           <div
