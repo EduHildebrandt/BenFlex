@@ -1,484 +1,701 @@
-import type { Product } from '@/types';
+import { Product } from '@/types';
 
-export const BENFLEX_PRODUCTS: Product[] = [
-  // 1. COLCHONES & SOMMIERS
+export const INITIAL_PRODUCTS: Product[] = [
   {
-    id: 'colchon-imperial-alta-densidad',
-    name: 'Colchón BenFlex Imperial Alta Densidad (35 kg/m³)',
-    slug: 'colchon-imperial-alta-densidad',
-    description:
-      'Diseñado para quienes priorizan la salud postural y un soporte firme ortopédico. Fabricado con espuma de poliuretano de altísima resiliencia (35 kg/m³) que no se deforma con el paso de los años. Incorpora un Euro-Pillow viscoelástico de última generación con tejido de punto Jacquard matelaseado con hilado de bambú antibacterial y atérmico.',
-    shortDescription:
-      'Espuma 35kg/m³ ortopédica + Euro-Pillow viscoelástico con tela Jacquard Bambú.',
-    category: 'colchones-sommiers',
-    categoryLabel: 'Colchones & Sommiers',
-    technology: 'alta_densidad',
-    technologyLabel: 'Espuma Alta Densidad (35 kg/m³)',
-    measure: '2 Plazas (140x190)',
-    firmness: 'Firme',
-    basePrice: 380000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '1 Plaza (80x190)', priceModifier: -90000, measure: '1 Plaza (80x190)' },
-      { name: '1½ Plaza (90x190)', priceModifier: -60000, measure: '1½ Plaza (90x190)' },
-      { name: '2 Plazas (140x190)', priceModifier: 0, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200)', priceModifier: 110000, measure: 'Queen (160x200)' },
-      { name: 'King (200x200)', priceModifier: 195000, measure: 'King (200x200)' },
+    "id": "colchon-safiro-alta-densidad-100",
+    "slug": "colchon-safiro-alta-densidad-100",
+    "name": "Colchón Safiro Alta Densidad 100",
+    "shortDescription": "Colchón ortopédico de espuma alta densidad 100x190x23cm con matelaseado Jackard.",
+    "description": "Colchón de espuma de alta densidad en medida 100x190x23cm de altura. Diseñado para brindar firmeza anatómica y un confort duradero en un solo producto, asegurando una postura correcta durante todo el descanso.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Alta Densidad",
+    "measure": "1½ Plaza (90x190)",
+    "firmness": "Firme",
+    "basePrice": 390000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "100x190x23 cm",
+        "priceModifier": 0,
+        "measure": "100x190x23 cm"
+      }
     ],
-    features: [
-      'Espuma de Alta Densidad 35 kg/m³ virgen certificada',
-      'Euro-Pillow de confort viscoelástico adaptable',
-      'Tejido Jacquard importado con fibras de bambú hipoalergénicas',
-      'Sistema AirFlow de ventilación continua contra ácaros y humedad',
+    "features": [
+      "Espuma de alta densidad indeformable",
+      "Revestimiento en tela Jackard matelaseada",
+      "Tratamiento antiácaros y antibacteriano",
+      "Terminación con doble vivo reforzado"
     ],
-    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Más Elegido en San Juan',
-    stock: 14,
-    weightSupport: 'Hasta 135 kg por lado',
-    warranty: '5 años de garantía escrita de fábrica',
-    rating: 4.9,
-    reviewsCount: 128,
+    "image": "/images/products/safiro-100-perspective.jpg",
+    "images": [
+      "/images/products/safiro-100-perspective.jpg",
+      "/images/products/safiro-100-top.jpg",
+      "/images/products/safiro-100-isolated.jpg",
+      "/images/products/safiro-showroom.jpg"
+    ],
+    "badge": "MÁS ELEGIDO",
+    "stock": 3,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 4.9,
+    "reviewsCount": 38
   },
   {
-    id: 'colchon-nuage-resortes-pocket',
-    name: 'Colchón BenFlex Nuage Resortes Pocket Ensacados',
-    slug: 'colchon-nuage-resortes-pocket',
-    description:
-      'La máxima expresión de independencia de movimiento para parejas. Cada resorte de acero templado trabaja encapsulado de forma individual, absorbiendo cada movimiento sin transmitir vibraciones al lado opuesto de la cama. Posee doble marco perimetral de acero con estabilizadores y pillow top ultra soft con memory foam.',
-    shortDescription:
-      'Cero transferencia de movimiento para dormir en pareja. Resortes independientes.',
-    category: 'colchones-sommiers',
-    categoryLabel: 'Colchones & Sommiers',
-    technology: 'resortes_pocket',
-    technologyLabel: 'Resortes Pocket Ensacados',
-    measure: 'Queen (160x200)',
-    firmness: 'Media',
-    basePrice: 475000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '2 Plazas (140x190)', priceModifier: -70000, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200)', priceModifier: 0, measure: 'Queen (160x200)' },
-      { name: 'King (200x200)', priceModifier: 115000, measure: 'King (200x200)' },
+    "id": "colchon-bardo-80",
+    "slug": "colchon-bardo-80",
+    "name": "Colchón Bardo 80 Euro-Pillow",
+    "shortDescription": "Colchón Bardo 80x190x30cm con Euro-Pillow superior y tela de punto matelaseada.",
+    "description": "Colchón Bardo de 80x190 y 30cm de altura total matelaseado con exclusiva manta Euro-Pillow superior. Combina un soporte estructural robusto con una sensación mullida al primer contacto.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Euro-Pillow & Espuma",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Media",
+    "basePrice": 239000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "80x190x30 cm",
+        "priceModifier": 0,
+        "measure": "80x190x30 cm"
+      }
     ],
-    features: [
-      'Resortes Pocket ensacados individualmente de acero templado',
-      'Cero transferencia de vibración al girar o levantarse',
-      'Doble marco perimetral con estabilizadores laterales',
-      'Funda desenfundable con tratamiento antiácaros y antibacterial',
+    "features": [
+      "Euro-Pillow integrado de alto confort",
+      "Altura premium de 30 cm",
+      "Tela de tejido de punto suave al tacto",
+      "Estructura de espuma anatómica"
     ],
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Máximo Confort Parejas',
-    stock: 9,
-    weightSupport: 'Hasta 130 kg por lado',
-    warranty: '5 años de garantía escrita de fábrica',
-    rating: 5.0,
-    reviewsCount: 84,
+    "image": "/images/products/colchon-bardo-angle.jpg",
+    "images": [
+      "/images/products/colchon-bardo-angle.jpg",
+      "/images/products/colchon-bardo-front.jpg",
+      "/images/products/colchon-bardo-showroom.jpg"
+    ],
+    "badge": "CONFORT HOTELERO",
+    "stock": 3,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 4.8,
+    "reviewsCount": 29
   },
   {
-    id: 'sommier-base-reforzada-madera-nativa',
-    name: 'Sommier Base Reforzada Madera Nativa Estacionada',
-    slug: 'sommier-base-reforzada-madera-nativa',
-    description:
-      'Estructura de soporte de alta resistencia construida en madera maciza seleccionada, curada y estacionada. Cuenta con 7 travesaños de refuerzo interior, esquineros antichoque y patas de madera torneada con regatón de goma antideslizante. Tapizado artesanal a elección en Pana antimanchas o Chenille rústico.',
-    shortDescription:
-      'Estructura maciza indeformable con 7 refuerzos y patas de madera torneadas.',
-    category: 'colchones-sommiers',
-    categoryLabel: 'Colchones & Sommiers',
-    technology: 'alta_densidad',
-    technologyLabel: 'Estructura Reforzada',
-    measure: '2 Plazas (140x190)',
-    firmness: 'Firme',
-    basePrice: 220000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '1 Plaza (80x190)', priceModifier: -60000, measure: '1 Plaza (80x190)' },
-      { name: '1½ Plaza (90x190)', priceModifier: -40000, measure: '1½ Plaza (90x190)' },
-      { name: '2 Plazas (140x190)', priceModifier: 0, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200 - 2 bases)', priceModifier: 95000, measure: 'Queen (160x200)' },
-      { name: 'King (200x200 - 2 bases)', priceModifier: 145000, measure: 'King (200x200)' },
+    "id": "colchon-bardo-perla-premium",
+    "slug": "colchon-bardo-perla-premium",
+    "name": "Colchón Bardo Perla Premium 1.40",
+    "shortDescription": "Colchón Bardo 2 Plazas 140x190x30cm Euro-Pillow con tela de punto matelaseada.",
+    "description": "Colchón Bardo Perla Premium de alta densidad con Euro-Pillow de gran espesor en medida 1.40x1.90x0.30m. Especialmente recomendado para alivio de tensiones lumbares y cervicales con terminación artesanal de máxima durabilidad.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Alta Densidad & Euro-Pillow",
+    "measure": "2 Plazas (140x190)",
+    "firmness": "Firme",
+    "basePrice": 580000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "140x190x30 cm (2 Plazas)",
+        "priceModifier": 0,
+        "measure": "140x190x30 cm"
+      }
     ],
-    features: [
-      'Madera nativa seleccionada y secada a horno',
-      'Patas cónicas de madera maciza con apoyo antideslizante',
-      'Tela antideslizante en tapa superior para fijación del colchón',
-      'Disponible en tonos Gris Cálido, Arena, Lino Natural y Grafito',
+    "features": [
+      "Espuma de alta densidad y recuperación continua",
+      "Manta Euro-Pillow extra confort",
+      "Tela de punto importada antialérgica",
+      "Lateral reforzado con tejido respirable"
     ],
-    image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Base Robusta',
-    stock: 20,
-    weightSupport: 'Hasta 180 kg por plaza',
-    warranty: '5 años de garantía',
-    rating: 4.8,
-    reviewsCount: 62,
-  },
-
-  // 2. SILLONES & SOFÁS CAMA
-  {
-    id: 'sofa-cama-verona-antidesgarro',
-    name: 'Sofá Cama BenFlex Verona (Pana Anti-Desgarro Pet Friendly)',
-    slug: 'sofa-cama-verona-antidesgarro',
-    description:
-      'El equilibrio perfecto entre elegancia para tu living y un descanso de primera categoría para visitas. Sistema de apertura telescópica suave en un solo movimiento que se convierte en una cómoda cama de 2 plazas reales. Tapizado en exclusiva Pana EasyClean anti-desgarro y repelente a líquidos, ideal para hogares con mascotas y niños.',
-    shortDescription:
-      'Apertura telescópica en 1 toque. Cama de 2 plazas con tela Pet-Friendly repelente a manchas.',
-    category: 'sillones-sofas',
-    categoryLabel: 'Sillones & Sofás Cama',
-    technology: 'anti_desgarro',
-    technologyLabel: 'Pana Anti-Desgarro EasyClean',
-    measure: '3 Cuerpos',
-    firmness: 'Media',
-    basePrice: 560000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '2 Cuerpos (160 cm abierto a 1½ Plz)', priceModifier: -80000, measure: '2 Cuerpos' },
-      { name: '3 Cuerpos (200 cm abierto a 2 Plazas)', priceModifier: 0, measure: '3 Cuerpos' },
+    "image": "/images/products/colchon-bardo-showroom.jpg",
+    "images": [
+      "/images/products/colchon-bardo-showroom.jpg",
+      "/images/products/colchon-bardo-front.jpg",
+      "/images/products/colchon-bardo-angle.jpg"
     ],
-    fabrics: [
-      'Pana Gris Cálido Pet-Friendly',
-      'Pana Arena Lino Anti-Manchas',
-      'Pana Azul Noche Deep Blue',
-      'Pana Verde Salvia Nórdico',
-    ],
-    features: [
-      'Mecanismo metálico telescópico de acero inoxidable reforzado',
-      'Colchón interno de espuma 28 kg/m³ para no sentir los flejes',
-      'Tejido repelente a líquidos, pelos de mascotas y garras',
-      'Almohadones rellenos con vellón siliconado 100% virgen',
-    ],
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Pet Friendly & Lavable',
-    stock: 7,
-    warranty: '3 años de garantía estructural',
-    rating: 4.9,
-    reviewsCount: 76,
+    "badge": "LÍNEA PREMIUM",
+    "stock": 2,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 5,
+    "reviewsCount": 44
   },
   {
-    id: 'sillon-esquinero-toulouse-chenille',
-    name: 'Sillón Modular Esquinero Toulouse en L (Chenille Anti-Manchas)',
-    slug: 'sillon-esquinero-toulouse-chenille',
-    description:
-      'Sillón esquinero de dimensiones generosas con chaise longue reversible para adaptarse a cualquier distribución de tu sala. Confeccionado con estructura de saligna cepillada, cinchas elásticas italianas de alta tensión y almohadones de asiento con placa soft de alta densidad que recuperan su forma original inmediatamente.',
-    shortDescription:
-      'Modular con Chaise Longue reversible. Máximo relax con cinchas italianas y Chenille suave.',
-    category: 'sillones-sofas',
-    categoryLabel: 'Sillones & Sofás Cama',
-    technology: 'anti_desgarro',
-    technologyLabel: 'Chenille Premium Repelente',
-    measure: 'Esquinero L',
-    firmness: 'Suave',
-    basePrice: 690000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: 'Esquinero Standard 2.20 x 1.60m', priceModifier: 0, measure: 'Esquinero L' },
-      { name: 'Esquinero XL 2.60 x 1.80m', priceModifier: 130000, measure: 'Esquinero L' },
+    "id": "colchon-perla-de-bardo",
+    "slug": "colchon-perla-de-bardo",
+    "name": "Colchón Perla de Bardo King 200x200",
+    "shortDescription": "Colchón King Size 200x200cm de alta densidad con Euro-Pillow y máxima amplitud.",
+    "description": "Colchón King Size Perla marca Bardo de alta densidad con manta Euro-Pillow para un descanso sin límites. Firmeza garantizada para la espalda con máxima independencia de movimientos en pareja.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Alta Densidad King",
+    "measure": "King (200x200)",
+    "firmness": "Firme",
+    "basePrice": 890000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "200x200 cm (King Size)",
+        "priceModifier": 0,
+        "measure": "200x200 cm"
+      }
     ],
-    fabrics: [
-      'Chenille Gris Perla',
-      'Chenille Arena Tostado',
-      'Lino Verde Salvia Natural',
-      'Cuero Vegano Chocolate',
+    "features": [
+      "Dimensiones King Size 2x2 metros",
+      "Doble pillow top para máxima adaptabilidad",
+      "Independencia absoluta de lechos",
+      "Tejido Jackard con tratamiento térmico"
     ],
-    features: [
-      'Chaise longue reversible (se puede colocar a la izquierda o derecha)',
-      'Fundas con cierre desmontables y lavables en lavarropas',
-      'Cinchas de alta densidad italianas y placa Soft Piero',
-      'Patas ocultas antideslizantes que no rayan pisos de madera o porcelanato',
+    "image": "/images/products/colchon-bardo-angle.jpg",
+    "images": [
+      "/images/products/colchon-bardo-angle.jpg",
+      "/images/products/colchon-bardo-front.jpg",
+      "/images/products/colchon-bardo-showroom.jpg"
     ],
-    image: 'https://images.unsplash.com/photo-1493663284041-c4e382638027?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Espacio y Elegancia',
-    stock: 5,
-    warranty: '3 años de garantía estructural',
-    rating: 5.0,
-    reviewsCount: 41,
-  },
-
-  // 3. ALMOHADAS & CONFORT
-  {
-    id: 'almohada-viscoelastica-memory-gel',
-    name: 'Almohada Viscoelástica BenFlex Memory Gel Ergonómica',
-    slug: 'almohada-viscoelastica-memory-gel',
-    description:
-      'Espuma viscoelástica termo-sensible con tecnología Memory Foam infundida con micropartículas de gel refrigerante. Se moldea anatómicamente a las curvas de tu cuello y hombros, manteniendo la columna vertebral perfectamente alineada durante toda la noche y disipando el calor corporal excesivo.',
-    shortDescription:
-      'Memory Foam termorregulable con micropartículas de gel refrigerante. Alivio cervical.',
-    category: 'almohadas-confort',
-    categoryLabel: 'Almohadas & Confort',
-    technology: 'viscoelastica',
-    technologyLabel: 'Memory Foam + Gel Termosensible',
-    measure: 'Estándar (70x40)',
-    firmness: 'Media',
-    basePrice: 42000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: 'Individual (1 unidad 70x40)', priceModifier: 0, measure: 'Estándar (70x40)' },
-      { name: 'Pack Dúo x2 Almohadas (Ahorro 20%)', priceModifier: 32000, measure: 'Estándar (70x40)' },
-    ],
-    features: [
-      'Espuma viscoelástica de memoria 100% que no se aplasta',
-      'Capa de perlas de gel para frescura térmica constante',
-      'Funda exterior lavable con hilado de bambú transpirable',
-      'Recomendada por traumatólogos para dolores de cuello y cervicales',
-    ],
-    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Alivio Cervical Total',
-    stock: 45,
-    warranty: '2 años de garantía',
-    rating: 4.9,
-    reviewsCount: 195,
+    "badge": "KING SIZE",
+    "stock": 2,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 5,
+    "reviewsCount": 31
   },
   {
-    id: 'almohada-cervical-inteligente-ortopedica',
-    name: 'Almohada Cervical Inteligente de Doble Contorno Postural',
-    slug: 'almohada-cervical-inteligente-ortopedica',
-    description:
-      'Diseño bi-funcional con dos alturas diferenciales (10 cm y 12 cm) para personas que duermen de lado o boca arriba. Corrige la curvatura cervical eliminando tensiones musculares y rigidez al despertar. Espuma viscoelástica de retorno lento certificada OEKO-TEX sin químicos tóxicos.',
-    shortDescription:
-      'Doble altura ergonómica. Alineación cervical garantizada recomendada por kinesiólogos.',
-    category: 'almohadas-confort',
-    categoryLabel: 'Almohadas & Confort',
-    technology: 'espuma_inteligente',
-    technologyLabel: 'Espuma Inteligente Doble Contorno',
-    measure: 'Cervical Ergonómica',
-    firmness: 'Firme',
-    basePrice: 48000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: 'Individual Cervical (60x35x12/10 cm)', priceModifier: 0, measure: 'Cervical Ergonómica' },
-      { name: 'Pack Dúo x2 Cervicales (Ahorro 25%)', priceModifier: 36000, measure: 'Cervical Ergonómica' },
+    "id": "colchon-suavestar-rockstar",
+    "slug": "colchon-suavestar-rockstar",
+    "name": "Colchón Suavestar Rockstar Alta Densidad",
+    "shortDescription": "Colchón Suavestar oficial en tela Jackard matelaseada con soporte ortopédico.",
+    "description": "Colchón Suavestar Rockstar original de alta densidad en tela Jackard con matelaseado geométrico. Toda la firmeza y respaldo oficial que tu espalda necesita para despertar sin molestias.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Suavestar Jackard",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Firme",
+    "basePrice": 340000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "80x190x25 cm",
+        "priceModifier": 0,
+        "measure": "80x190x25 cm"
+      },
+      {
+        "name": "100x190x25 cm",
+        "priceModifier": 85000,
+        "measure": "100x190x25 cm"
+      }
     ],
-    features: [
-      'Doble curvatura cervical con zona de descanso de hombros',
-      'Canales de microventilación para máxima circulación de aire',
-      'Funda hipoalergénica con iones de plata antimicrobianos',
-      'Retorno lento y absorción de presión continua',
+    "features": [
+      "Marca oficial Suavestar con sello de calidad",
+      "Espuma de poliuretano de alta densidad",
+      "Tela Jackard de gran durabilidad",
+      "Costuras y vivos reforzados perimetrales"
     ],
-    image: 'https://images.unsplash.com/photo-1584100936706-e7d69b925b41?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Salud Postural',
-    stock: 30,
-    warranty: '2 años de garantía',
-    rating: 4.8,
-    reviewsCount: 88,
+    "image": "/images/products/suavestar-rockstar-front.jpg",
+    "images": [
+      "/images/products/suavestar-rockstar-front.jpg",
+      "/images/products/suavestar-rockstar-angle.jpg"
+    ],
+    "badge": "ORIGINAL SUAVESTAR",
+    "stock": 4,
+    "warranty": "5 años de garantía oficial Suavestar",
+    "rating": 4.9,
+    "reviewsCount": 52
   },
   {
-    id: 'cubrecolchon-impermeable-bambu',
-    name: 'Protector Cubrecolchón BenFlex Impermeable & Respirable Bambú',
-    slug: 'cubrecolchon-impermeable-bambu',
-    description:
-      'Protegé tu inversión contra manchas, humedad, transpiración y ácaros sin hacer ruido plástico. Membrana técnica de poliuretano microporoso ultra delgada recubierta de tejido de punto de bambú 100% natural, hipoalergénico y fresco.',
-    shortDescription:
-      'Impermeable silencioso. Tejido de toalla de bambú 100% transpirable y lavable.',
-    category: 'almohadas-confort',
-    categoryLabel: 'Almohadas & Confort',
-    technology: 'viscoelastica',
-    technologyLabel: 'Membrana Microporosa Respirable',
-    measure: '2 Plazas (140x190)',
-    firmness: 'Suave',
-    basePrice: 35000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '1 Plaza / 1½ Plaza', priceModifier: -10000, measure: '1 Plaza (80x190)' },
-      { name: '2 Plazas (140x190)', priceModifier: 0, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200)', priceModifier: 12000, measure: 'Queen (160x200)' },
-      { name: 'King (200x200)', priceModifier: 22000, measure: 'King (200x200)' },
+    "id": "colchon-suavestar-lujo-80",
+    "slug": "colchon-suavestar-lujo-80",
+    "name": "Colchón Suavestar Lujo 80",
+    "shortDescription": "Colchón Suavestar 80x190x23cm matelaseado con terminaciones premium.",
+    "description": "Colchón Suavestar Lujo en medida 80x190x23cm de altura. Equilibrio perfecto entre confort, frescura y suavidad con terminaciones oficiales Suavestar.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Matelaseada Suavestar",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Media",
+    "basePrice": 285000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "80x190x23 cm",
+        "priceModifier": 0,
+        "measure": "80x190x23 cm"
+      }
     ],
-    features: [
-      '100% impermeable con barrera total a líquidos y derrames',
-      'Silencioso: sin sensación plástica ni ruidos molestos al moverse',
-      'Ajustable como sábana bajera con elástico en todo el contorno',
-      'Lavable en lavarropas con secado rápido',
+    "features": [
+      "Garantía oficial Suavestar",
+      "Matelaseado en rombos de alta absorción",
+      "Faja lateral azul noche con ribetes dobles",
+      "Materiales hipoalergénicos certificados"
     ],
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Protección Total',
-    stock: 50,
-    warranty: '1 año de garantía',
-    rating: 4.9,
-    reviewsCount: 142,
-  },
-
-  // 4. COMBOS BENFLEX
-  {
-    id: 'combo-imperial-completo-regalo',
-    name: 'Combo BenFlex Imperial: Colchón 35kg + Sommier Reforzado + 2 Almohadas Visco de REGALO',
-    slug: 'combo-imperial-completo-regalo',
-    description:
-      'El set definitivo para renovar tu dormitorio por completo con el máximo ahorro. Incluye el consagrado Colchón BenFlex Imperial de alta densidad (35 kg/m³) con Euro-Pillow, la Base de Sommier en madera nativa estacionada con patas torneadas, y de REGALO exclusivo 2 Almohadas Viscoelásticas Memory Gel valuadas en $84.000.',
-    shortDescription:
-      'Set Colchón + Sommier + 2 Almohadas Viscoelásticas de REGALO. El combo más premiado.',
-    category: 'combos-benflex',
-    categoryLabel: 'Combos BenFlex',
-    technology: 'alta_densidad',
-    technologyLabel: 'Set Completo + Almohadas Gratis',
-    measure: '2 Plazas (140x190)',
-    firmness: 'Firme',
-    basePrice: 580000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '1½ Plaza (90x190) + 1 Almohada Regalo', priceModifier: -110000, measure: '1½ Plaza (90x190)' },
-      { name: '2 Plazas (140x190) + 2 Almohadas Regalo', priceModifier: 0, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200) + 2 Almohadas Regalo', priceModifier: 190000, measure: 'Queen (160x200)' },
-      { name: 'King (200x200) + 2 Almohadas Regalo', priceModifier: 320000, measure: 'King (200x200)' },
+    "image": "/images/products/suavestar-rockstar-angle.jpg",
+    "images": [
+      "/images/products/suavestar-rockstar-angle.jpg",
+      "/images/products/suavestar-rockstar-front.jpg"
     ],
-    features: [
-      'Colchón Alta Densidad 35kg con Euro-Pillow viscoelástico',
-      'Sommier de madera maciza con esquineros reforzados',
-      '2 Almohadas Viscoelásticas Memory Foam de REGALO',
-      'Flete 100% bonificado en todo San Juan (envíos al resto del país a cotizar)',
-    ],
-    image: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Ahorro Combo + Regalo',
-    stock: 12,
-    weightSupport: 'Hasta 135 kg por lado',
-    warranty: '5 años de garantía de fábrica',
-    rating: 5.0,
-    reviewsCount: 210,
+    "badge": "SUAVESTAR OFICIAL",
+    "stock": 2,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 4.8,
+    "reviewsCount": 22
   },
   {
-    id: 'combo-nuage-pocket-hotel-experience',
-    name: 'Combo BenFlex Nuage Pocket Hotel Experience: Colchón Pocket + 2 Sommiers + Almohadas',
-    slug: 'combo-nuage-pocket-hotel-experience',
-    description:
-      'Llevá la experiencia de descanso de un hotel 5 estrellas a tu hogar. Colchón Nuage con resortes Pocket independientes ensacados para cero transferencia de movimiento, doble base sommier tapizada en Chenille gris cálido y juego de almohadas inteligentes de regalo. Máxima relajación cervical y confort atérmico.',
-    shortDescription:
-      'Experiencia Hotel 5 Estrellas. Colchón Resortes Pocket + Sommier + Almohadas Visco.',
-    category: 'combos-benflex',
-    categoryLabel: 'Combos BenFlex',
-    technology: 'resortes_pocket',
-    technologyLabel: 'Set Resortes Pocket Hotel',
-    measure: 'Queen (160x200)',
-    firmness: 'Media',
-    basePrice: 690000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '2 Plazas (140x190) + 2 Almohadas Regalo', priceModifier: -80000, measure: '2 Plazas (140x190)' },
-      { name: 'Queen (160x200) + 2 Almohadas Regalo', priceModifier: 0, measure: 'Queen (160x200)' },
-      { name: 'King (200x200) + 2 Almohadas Regalo', priceModifier: 240000, measure: 'King (200x200)' },
+    "id": "colchon-safiro-premium",
+    "slug": "colchon-safiro-premium",
+    "name": "Colchón Safiro Premium 80",
+    "shortDescription": "Colchón Safiro 80x190x24cm de alta densidad en tela Jackard matelaseada.",
+    "description": "Colchón de alta densidad medida 80x190x24cm de altura en tela Jackard con matelaseado continuo. Proporciona firmeza anatómica y confort para un sueño profundo y reparador.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Jackard Matelaseada",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Firme",
+    "basePrice": 275000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "80x190x24 cm",
+        "priceModifier": 0,
+        "measure": "80x190x24 cm"
+      }
     ],
-    features: [
-      'Resortes Pocket independientes sin vibración',
-      'Doble base sommier con patas de madera estacionada',
-      '2 Almohadas inteligentes de REGALO',
-      'Garantía de fábrica 5 años y flete bonificado',
+    "features": [
+      "Núcleo compacto indeformable",
+      "Tela Jackard de alto gramaje",
+      "Tratamiento térmico respirable",
+      "Excelente relación precio-durabilidad"
     ],
-    image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Edición Hotel 5 Estrellas',
-    stock: 8,
-    weightSupport: 'Hasta 130 kg por lado',
-    warranty: '5 años de garantía de fábrica',
-    rating: 5.0,
-    reviewsCount: 167,
+    "image": "/images/products/safiro-premium-front.jpg",
+    "images": [
+      "/images/products/safiro-premium-front.jpg",
+      "/images/products/safiro-100-perspective.jpg"
+    ],
+    "stock": 2,
+    "warranty": "3 años de garantía de fábrica",
+    "rating": 4.7,
+    "reviewsCount": 18
   },
   {
-    id: 'almohada-fibra-siliconada-hotel',
-    name: 'Almohada BenFlex Cloud Fibra Siliconada Virgen (Sensación Pluma)',
-    slug: 'almohada-fibra-siliconada-hotel',
-    description:
-      'Rellena con microfibra siliconada hueca conjugada 100% virgen que imita la suavidad del plumón natural pero con propiedades hipoalergénicas y lavables. Recupera su volumen al instante y brinda un soporte mullido y fresco durante toda la noche.',
-    shortDescription:
-      'Fibra siliconada virgen efecto pluma. Hipoalergénica, ultra suave y lavable en lavarropas.',
-    category: 'almohadas-confort',
-    categoryLabel: 'Almohadas & Confort',
-    technology: 'fibra_siliconada',
-    technologyLabel: 'Fibra Siliconada Virgen Soft',
-    measure: 'Estándar (70x40)',
-    firmness: 'Suave',
-    basePrice: 28000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: 'Individual (70x40 cm)', priceModifier: 0, measure: 'Estándar (70x40)' },
-      { name: 'Pack Familiar x2 Unidades', priceModifier: 21000, measure: 'Estándar (70x40)' },
-      { name: 'Medida King (90x50 cm)', priceModifier: 9000, measure: 'King (200x200)' },
+    "id": "colchon-alta-densidad-premium",
+    "slug": "colchon-alta-densidad-premium",
+    "name": "Colchón Alta Densidad Premium 1.40",
+    "shortDescription": "Colchón 2 Plazas 140x190x23cm Jackard para corrección postural y descanso lumbar.",
+    "description": "Colchón de 2 plazas en medidas 1.40x1.90x23cm de altura, confeccionado en espuma de alta densidad revestido en matelaseado de Jackard. Diseñado especialmente para favorecer la alineación de la columna y aliviar tensiones corporales.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Alta Densidad 2 Plazas",
+    "measure": "2 Plazas (140x190)",
+    "firmness": "Firme",
+    "basePrice": 489999,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "140x190x23 cm (2 Plazas)",
+        "priceModifier": 0,
+        "measure": "140x190x23 cm"
+      }
     ],
-    features: [
-      'Fibra siliconada 100% virgen de alta resiliencia',
-      'Funda de percal 240 hilos 100% algodón respirable',
-      'Apta para lavarropas sin apelmazarse',
-      'Tratamiento antiácaros y antibacteriano certificado',
+    "features": [
+      "Soporte ortopédico para pareja",
+      "Matelaseado Jackard con relleno térmico",
+      "Barrera antihongos y antibacterias",
+      "Cierre perimetral con doble costura de seguridad"
     ],
-    image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Suavidad Hotelera',
-    stock: 60,
-    warranty: '1 año de garantía',
-    rating: 4.8,
-    reviewsCount: 112,
+    "image": "/images/products/safiro-premium-front.jpg",
+    "images": [
+      "/images/products/safiro-premium-front.jpg",
+      "/images/products/safiro-100-isolated.jpg",
+      "/images/products/safiro-showroom.jpg"
+    ],
+    "badge": "POSTURA PERFECTA",
+    "stock": 3,
+    "warranty": "5 años de garantía de fábrica",
+    "rating": 4.9,
+    "reviewsCount": 35
   },
   {
-    id: 'sabanas-algodon-egipcio-400-hilos',
-    name: 'Juego de Sábanas BenFlex Luxury 400 Hilos Satén Algodón Peinado',
-    slug: 'sabanas-algodon-egipcio-400-hilos',
-    description:
-      'Ropa de cama de lujo confeccionada en satén de algodón peinado de 400 hilos reales. Su tejido sedoso regula naturalmente la temperatura corporal, ofreciendo frescura en las noches cálidas de San Juan y abrigo suave en invierno. Sábana ajustable con elástico perimetral completo para colchones de hasta 38 cm de altura.',
-    shortDescription:
-      '400 hilos reales de satén de algodón. Para colchones altos de hasta 38 cm.',
-    category: 'almohadas-confort',
-    categoryLabel: 'Almohadas & Confort',
-    technology: 'fibra_siliconada',
-    technologyLabel: 'Ropa de Cama 400 Hilos Algodón',
-    measure: 'Queen (160x200)',
-    firmness: 'Suave',
-    basePrice: 89000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '1½ Plaza (Para colchón hasta 90x190x35)', priceModifier: -18000, measure: '1½ Plaza (90x190)' },
-      { name: '2 Plazas (Para colchón hasta 140x190x35)', priceModifier: -8000, measure: '2 Plazas (140x190)' },
-      { name: 'Queen Size (Para colchón hasta 160x200x38)', priceModifier: 0, measure: 'Queen (160x200)' },
-      { name: 'King Size (Para colchón hasta 200x200x38)', priceModifier: 19000, measure: 'King (200x200)' },
+    "id": "colchon-economico",
+    "slug": "colchon-economico",
+    "name": "Colchón Económico Tela Vegetal 80",
+    "shortDescription": "Colchón individual 80x190x17cm liviano y fresco en tela vegetal estampada.",
+    "description": "Colchón económico individual en tela vegetal estampada a cuadros celestes y blancos. Liviano, práctico y muy cómodo, ideal para el primer colchón de tus hijos o camas auxiliares.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "alta_densidad",
+    "technologyLabel": "Espuma Liviana & Tela Vegetal",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Suave",
+    "basePrice": 92000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "80x190x17 cm",
+        "priceModifier": 0,
+        "measure": "80x190x17 cm"
+      }
     ],
-    fabrics: [
-      'Blanco Hotelero Puro',
-      'Arena Marfil Cálido',
-      'Gris Perla Satinado',
-      'Verde Salvia Sereno',
+    "features": [
+      "Económico y accesible",
+      "Revestimiento en tela vegetal fresca",
+      "Fácil traslado y manipulación",
+      "Ideal para camas nido o marineras"
     ],
-    features: [
-      '100% Algodón peinado de fibra larga (400 hilos)',
-      'Bolsillo profundo para colchones con Euro-Pillow de hasta 38 cm',
-      'No hace pelotitas (Anti-Pilling garantizado)',
-      'Incluye sábana plana, ajustable y 2 fundas de almohada con solapa',
+    "image": "/images/products/colchon-economico-top.jpg",
+    "images": [
+      "/images/products/colchon-economico-top.jpg",
+      "/images/products/colchon-economico-showroom.jpg"
     ],
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Ropa de Cama Premium',
-    stock: 35,
-    warranty: '1 año de garantía oficial',
-    rating: 4.9,
-    reviewsCount: 94,
+    "badge": "SUPER PRECIO",
+    "stock": 6,
+    "warranty": "1 año de garantía de fábrica",
+    "rating": 4.6,
+    "reviewsCount": 15
   },
   {
-    id: 'sillon-nordico-oslo-antimanchas',
-    name: 'Sillón BenFlex Oslo Nórdico (Lino Anti-Manchas & Madera Paraíso)',
-    slug: 'sillon-nordico-oslo-antimanchas',
-    description:
-      'Diseño escandinavo cálido y minimalista con base y patas a la vista en madera maciza de Paraíso lustrada al natural. Asientos con placa Soft de alta densidad (28 kg/m³) y respaldos rellenos de vellón siliconado. Tapizado en Lino Rústico con proceso nanotecnológico repelente a líquidos y manchas.',
-    shortDescription:
-      'Diseño escandinavo con base en madera Paraíso maciza y Lino repelente a líquidos.',
-    category: 'sillones-sofas',
-    categoryLabel: 'Sillones & Sofás Cama',
-    technology: 'anti_desgarro',
-    technologyLabel: 'Lino Anti-Manchas + Madera Paraíso',
-    measure: '2 Cuerpos',
-    firmness: 'Media',
-    basePrice: 460000,
-    transferDiscountPercent: 15,
-    variations: [
-      { name: '2 Cuerpos Amplio (165x88 cm)', priceModifier: 0, measure: '2 Cuerpos' },
-      { name: '3 Cuerpos Familiar (210x88 cm)', priceModifier: 85000, measure: '3 Cuerpos' },
+    "id": "almohada-triangular-gani",
+    "slug": "almohada-triangular-gani",
+    "name": "Almohada Triangular Gani Ergonómica",
+    "shortDescription": "Almohada triangular multifunción para relajación muscular, lectura y descanso.",
+    "description": "Almohada triangular Gani de apoyo anatómico con funda de suave algodón desmontable y lavable. Facilita la relajación muscular en espalda, piernas o cuello; recomendada para lectura, descanso en cama y embarazo.",
+    "category": "almohadas-confort",
+    "categoryLabel": "Almohadas & Confort",
+    "technology": "espuma_inteligente",
+    "technologyLabel": "Espuma de Soporte Ergonómico",
+    "measure": "Cervical Ergonómica",
+    "firmness": "Media",
+    "basePrice": 55000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "58x40x36 cm",
+        "priceModifier": 0,
+        "measure": "58x40x36 cm"
+      }
     ],
-    fabrics: [
-      'Lino Arena Natural Anti-Manchas',
-      'Lino Gris Cálido Nórdico',
-      'Pana Verde Salvia Antimanchas',
-      'Pana Azul Noche Profundo',
+    "features": [
+      "Marca oficial Gani",
+      "Ángulo ergonómico para postura lumbar y cervical",
+      "Funda suave desmontable con cierre",
+      "Multifunción: descanso, lectura o elevación de piernas"
     ],
-    features: [
-      'Base inferior y patas en madera Paraíso maciza estacionada',
-      'Placa de asiento de alta densidad indeformable',
-      'Cierres reforzados en todos los almohadones para lavado fácil',
-      'Costuras dobles de tapicería artesanal de exportación',
+    "image": "/images/products/almohada-gani-angle.jpg",
+    "images": [
+      "/images/products/almohada-gani-angle.jpg",
+      "/images/products/almohada-gani-showroom.jpg"
     ],
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=80',
-    badge: 'Diseño Nórdico',
-    stock: 9,
-    warranty: '3 años de garantía estructural',
-    rating: 4.9,
-    reviewsCount: 53,
+    "badge": "GANI OFICIAL",
+    "stock": 4,
+    "warranty": "1 año de garantía",
+    "rating": 4.9,
+    "reviewsCount": 27
   },
+  {
+    "id": "almohada-de-placa-maxiking",
+    "slug": "almohada-de-placa-maxiking",
+    "name": "Almohada de Placa Maxiking 65x40",
+    "shortDescription": "Almohada ortopédica de placa continua de goma espuma de 12cm de altura.",
+    "description": "Almohada Maxiking con núcleo de placa compacta de 12cm de altura, ideal para quienes prefieren un soporte firme y continuo sin hundimiento excesivo durante la noche.",
+    "category": "almohadas-confort",
+    "categoryLabel": "Almohadas & Confort",
+    "technology": "alta_densidad",
+    "technologyLabel": "Placa de Espuma Firme",
+    "measure": "Estándar (70x40)",
+    "firmness": "Firme",
+    "basePrice": 35000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "65x40x12 cm",
+        "priceModifier": 0,
+        "measure": "65x40x12 cm"
+      }
+    ],
+    "features": [
+      "Núcleo indeformable de una sola pieza",
+      "Revestimiento con estampado colorido Maxiking",
+      "Mantiene la columna recta al dormir de lado o boca arriba",
+      "Excelente durabilidad a largo plazo"
+    ],
+    "image": "/images/products/almohada-maxiking-angle.jpg",
+    "images": [
+      "/images/products/almohada-maxiking-angle.jpg",
+      "/images/products/almohada-maxiking-pack.jpg"
+    ],
+    "stock": 10,
+    "warranty": "1 año de garantía",
+    "rating": 4.8,
+    "reviewsCount": 19
+  },
+  {
+    "id": "almohada-de-vellon-siliconado",
+    "slug": "almohada-de-vellon-siliconado",
+    "name": "Almohada Súper Descanso Vellón Siliconado",
+    "shortDescription": "Almohada 70x40cm de vellón virgen siliconado con funda matelaseada lavable.",
+    "description": "Almohada Súper Descanso rellena de vellón siliconado virgen con funda matelaseada ultra suave. Brinda una acogida mullida y envolvente para quienes disfrutan de almohadas adaptables y esponjosas.",
+    "category": "almohadas-confort",
+    "categoryLabel": "Almohadas & Confort",
+    "technology": "fibra_siliconada",
+    "technologyLabel": "Vellón Siliconado Virgen",
+    "measure": "Estándar (70x40)",
+    "firmness": "Suave",
+    "basePrice": 35000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "70x40 cm",
+        "priceModifier": 0,
+        "measure": "70x40 cm"
+      }
+    ],
+    "features": [
+      "Vellón 100% siliconado de alta resiliencia",
+      "Funda matelaseada fresca y transpirable",
+      "Hipoalergénica y libre de ácaros",
+      "Lavable en lavarropas con secado rápido"
+    ],
+    "image": "/images/products/almohada-superdescanso-pack.jpg",
+    "images": [
+      "/images/products/almohada-superdescanso-pack.jpg",
+      "/images/products/almohada-superdescanso-showroom.jpg"
+    ],
+    "badge": "MÁS VENDIDA",
+    "stock": 8,
+    "warranty": "1 año de garantía",
+    "rating": 4.8,
+    "reviewsCount": 33
+  },
+  {
+    "id": "almohada-viscoelastica-inteligente",
+    "slug": "almohada-viscoelastica-inteligente",
+    "name": "Almohada Viscoelástica Inteligente 70x45",
+    "shortDescription": "Almohada con memoria viscoelástica termocensible y alivio cervical.",
+    "description": "Almohada viscoelástica con tecnología memory foam que se adapta milimétricamente al contorno de la cabeza y cuello, distribuyendo el peso de manera uniforme y aliviando los puntos de presión.",
+    "category": "almohadas-confort",
+    "categoryLabel": "Almohadas & Confort",
+    "technology": "viscoelastica",
+    "technologyLabel": "Espuma Viscoelástica Memory Foam",
+    "measure": "Estándar (70x40)",
+    "firmness": "Media",
+    "basePrice": 85000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "70x45x13 cm",
+        "priceModifier": 0,
+        "measure": "70x45x13 cm"
+      }
+    ],
+    "features": [
+      "Espuma viscoelástica con retorno lento termoactiva",
+      "Funda lavable con cierre suave al tacto",
+      "Antialérgica, antibacteriana y atérmica",
+      "Máximo descanso cervical comprobado"
+    ],
+    "image": "/images/products/almohada-viscoelastica-showroom.jpg",
+    "images": [
+      "/images/products/almohada-viscoelastica-showroom.jpg"
+    ],
+    "badge": "MEMORIA ANATÓMICA",
+    "stock": 4,
+    "warranty": "2 años de garantía",
+    "rating": 5,
+    "reviewsCount": 41
+  },
+  {
+    "id": "respaldo-140-en-pana-con-capitone",
+    "slug": "respaldo-140-en-pana-con-capitone",
+    "name": "Respaldo Sommier 140 en Pana con Capitoné",
+    "shortDescription": "Respaldo artesanal de 140cm en pana suave con capitoné romboidal profundo.",
+    "description": "Respaldo para sommier de 140cm tapizado en pana premium con diseño clásico de capitoné acolchado y botones forrados al tono. Estructura de madera maciza estacionada para una vida útil prolongada.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "anti_desgarro",
+    "technologyLabel": "Pana Premium Capitoné",
+    "measure": "2 Plazas (140x190)",
+    "firmness": "Firme",
+    "basePrice": 130000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "140x120 cm (Blanco Crema)",
+        "priceModifier": 0,
+        "measure": "140x120 cm"
+      },
+      {
+        "name": "160x120 cm (Queen)",
+        "priceModifier": 20000,
+        "measure": "160x120 cm"
+      }
+    ],
+    "features": [
+      "Tapizado en pana de alto gramaje con tratamiento antimanchas",
+      "Capitoné romboidal con botones reforzados",
+      "Estructura de madera maciza seleccionada",
+      "Patas con apoyo de protección para el piso"
+    ],
+    "image": "/images/products/respaldo-capitone-blanco.jpg",
+    "images": [
+      "/images/products/respaldo-capitone-blanco.jpg",
+      "/images/products/safiro-showroom.jpg"
+    ],
+    "badge": "DISEÑO EXCLUSIVO",
+    "stock": 3,
+    "warranty": "3 años de garantía estructural",
+    "rating": 4.9,
+    "reviewsCount": 24
+  },
+  {
+    "id": "respaldo-de-somniers-140-en-cuerina",
+    "slug": "respaldo-de-somniers-140-en-cuerina",
+    "name": "Respaldo Sommier 140 en Cuerina Capitoné",
+    "shortDescription": "Respaldo marco perimetral tapizado en eco-cuero negro con capitoné.",
+    "description": "Respaldo de sommier de 140cm tapizado en cuerina / eco-cuero negro de máxima resistencia con capitoné geométrico enmarcado. Fácil de limpiar con un paño húmedo y de aspecto moderno y distinguido.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "anti_desgarro",
+    "technologyLabel": "Eco-Cuero / Cuerina Reforzada",
+    "measure": "2 Plazas (140x190)",
+    "firmness": "Firme",
+    "basePrice": 130000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "140x120 cm (Negro)",
+        "priceModifier": 0,
+        "measure": "140x120 cm"
+      }
+    ],
+    "features": [
+      "Eco-cuero impermeable de alta duración",
+      "Limpieza rápida e higiénica",
+      "Marco perimetral ancho con relleno de alta densidad",
+      "Sistema de anclaje sencillo y firme"
+    ],
+    "image": "/images/products/respaldo-cuerina-negro.jpg",
+    "images": [
+      "/images/products/respaldo-cuerina-negro.jpg"
+    ],
+    "badge": "FÁCIL LIMPIEZA",
+    "stock": 3,
+    "warranty": "3 años de garantía",
+    "rating": 4.8,
+    "reviewsCount": 16
+  },
+  {
+    "id": "respaldo-de-somniers-140-en-pana",
+    "slug": "respaldo-de-somniers-140-en-pana",
+    "name": "Respaldo Sommier 140 Pana con Tachas",
+    "shortDescription": "Respaldo con corona ondulada, capitoné y tachas metálicas perimetrales.",
+    "description": "Respaldo para sommier de 140cm confeccionado en pana suave tono arena/beige con tachas metálicas colocadas a mano en el contorno superior curvado. Elegancia y distinción hotelera en tu hogar.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "anti_desgarro",
+    "technologyLabel": "Pana & Tachas Artesanales",
+    "measure": "2 Plazas (140x190)",
+    "firmness": "Firme",
+    "basePrice": 130000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "140x120 cm (Beige con Tachas)",
+        "priceModifier": 0,
+        "measure": "140x120 cm"
+      }
+    ],
+    "features": [
+      "Tachas metálicas individuales colocadas a mano",
+      "Silueta con curva superior estilo francés",
+      "Pana aterciopelada de tacto suave",
+      "Acolchado volumétrico de alto confort"
+    ],
+    "image": "/images/products/respaldo-pana-tachas-beige.jpg",
+    "images": [
+      "/images/products/respaldo-pana-tachas-beige.jpg"
+    ],
+    "badge": "ARTESANAL",
+    "stock": 2,
+    "warranty": "3 años de garantía",
+    "rating": 5,
+    "reviewsCount": 20
+  },
+  {
+    "id": "respaldo-100-en-pana-tipo-renglon",
+    "slug": "respaldo-100-en-pana-tipo-renglon",
+    "name": "Respaldo Sommier 100 Pana Tipo Renglón",
+    "shortDescription": "Respaldo 1 Plaza / 1½ en pana tono malva con diseño moderno de paneles verticales.",
+    "description": "Respaldo para sommier de 100cm en pana color malva con canales verticales tipo renglón acolchados. Diseño contemporáneo, minimalista y cálido para transformar cualquier dormitorio individual.",
+    "category": "colchones-sommiers",
+    "categoryLabel": "Colchones & Sommiers",
+    "technology": "anti_desgarro",
+    "technologyLabel": "Pana Canales Verticales",
+    "measure": "1 Plaza (80x190)",
+    "firmness": "Firme",
+    "basePrice": 110000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "100x120 cm (Pana Malva)",
+        "priceModifier": 0,
+        "measure": "100x120 cm"
+      }
+    ],
+    "features": [
+      "Canales verticales con acolchado mullido",
+      "Pana de tacto aterciopelado antidesgarro",
+      "Compatible con sommiers de 80, 90 y 100 cm",
+      "Estructura sólida y estable"
+    ],
+    "image": "/images/products/respaldo-renglon-malva.jpg",
+    "images": [
+      "/images/products/respaldo-renglon-malva.jpg"
+    ],
+    "badge": "TENDENCIA",
+    "stock": 2,
+    "warranty": "3 años de garantía",
+    "rating": 4.8,
+    "reviewsCount": 14
+  },
+  {
+    "id": "sillon-3-cuerpos-chester",
+    "slug": "sillon-3-cuerpos-chester",
+    "name": "Sillón 3 Cuerpos Chester Cuero Sintético",
+    "shortDescription": "Sillón Chesterfield clásico de 3 cuerpos de 210cm con capitoné artesanal completo.",
+    "description": "Sillón 3 cuerpos modelo Chesterfield de 210x90cm tapizado en cuero sintético de alta resistencia con capitoné profundo artesanal en respaldo y apoyabrazos. Una pieza de diseño icónica que aporta jerarquía inigualable al living.",
+    "category": "sillones-sofas",
+    "categoryLabel": "Sillones & Sofás Cama",
+    "technology": "anti_desgarro",
+    "technologyLabel": "Cuero Sintético Capitoné",
+    "measure": "3 Cuerpos",
+    "firmness": "Firme",
+    "basePrice": 850000,
+    "transferDiscountPercent": 15,
+    "variations": [
+      {
+        "name": "210x90 cm (3 Cuerpos)",
+        "priceModifier": 0,
+        "measure": "210x90 cm"
+      }
+    ],
+    "features": [
+      "Estructura de madera maciza secada en horno",
+      "Capitoné profundo artesanal con botones forrados",
+      "Tapizado en cuero sintético de alta gama fácil de limpiar",
+      "Almohadones de asiento de placa hiper-soft de alta resiliencia"
+    ],
+    "image": "/images/products/sillon-chester-1.webp",
+    "images": [
+      "/images/products/sillon-chester-1.webp",
+      "/images/products/sillon-chester-2.webp",
+      "/images/products/sillon-chester-3.webp"
+    ],
+    "badge": "PIEZA DE AUTOR",
+    "stock": 2,
+    "warranty": "5 años de garantía estructural",
+    "rating": 5,
+    "reviewsCount": 37
+  }
 ];
+
+export const BENFLEX_PRODUCTS: Product[] = INITIAL_PRODUCTS;

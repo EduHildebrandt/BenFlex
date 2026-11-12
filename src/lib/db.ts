@@ -218,6 +218,17 @@ export async function ensureSchema(): Promise<void> {
     }
   }
 
+  // 2. Seed inicial de productos desde almacenamiento local si la tabla está vacía
+  const prodCountRes = await pool.query(
+    'SELECT COUNT(*)::int AS cnt FROM public.benflex_products WHERE is_active = true'
+  );
+  if ((prodCountRes.rows[0]?.cnt ?? 0) === 0) {
+    const prodsToSeed = getLocalProducts();
+    for (const p of prodsToSeed) {
+      await upsertDbProductInternal(pool, p);
+    }
+  }
+
   globalForPg.schemaInitialized = true;
 }
 

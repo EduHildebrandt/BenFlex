@@ -17,7 +17,21 @@ git fetch origin main
 git reset --hard origin/main
 
 if [ -f /tmp/benflex_local_storage.backup.json ]; then
-  cp /tmp/benflex_local_storage.backup.json "src/data/local_storage.json"
+  node -e '
+    const fs = require("fs");
+    try {
+      const backup = JSON.parse(fs.readFileSync("/tmp/benflex_local_storage.backup.json", "utf8"));
+      const current = JSON.parse(fs.readFileSync("src/data/local_storage.json", "utf8"));
+      if (backup.orders && backup.orders.length > 0) current.orders = backup.orders;
+      if (backup.inquiries && backup.inquiries.length > 0) current.inquiries = backup.inquiries;
+      if ((!current.products || current.products.length === 0) && backup.products && backup.products.length > 0) {
+        current.products = backup.products;
+      }
+      fs.writeFileSync("src/data/local_storage.json", JSON.stringify(current, null, 2), "utf8");
+    } catch (e) {
+      console.warn("No se pudo fusionar respaldo local_storage:", e);
+    }
+  ' || true
   rm -f /tmp/benflex_local_storage.backup.json
 fi
 
