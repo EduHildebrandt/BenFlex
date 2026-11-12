@@ -39,4 +39,9 @@ npm install
 npm run build
 systemctl restart benflex.service
 
+# Asegurar configuración del cron job de respaldo diario a las 02:00 AM
+if [ -f "${APP_DIR}/deploy/setup-cron-backup.sh" ]; then
+  bash "${APP_DIR}/deploy/setup-cron-backup.sh" || true
+fi
+
 echo "✅ BenFlex actualizado y reiniciado con systemd (benflex.service)."
