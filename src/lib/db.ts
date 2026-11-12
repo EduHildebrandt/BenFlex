@@ -183,7 +183,7 @@ export async function ensureSchema(): Promise<void> {
     ALTER TABLE public.benflex_orders ENABLE ROW LEVEL SECURITY;
     ALTER TABLE public.benflex_inquiries ENABLE ROW LEVEL SECURITY;
 
-    DO $
+    DO $$
     BEGIN
       -- Si existe el rol anon (Supabase/PostgREST), creamos la política de lectura pública
       IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
@@ -201,7 +201,7 @@ export async function ensureSchema(): Promise<void> {
         END IF;
       END IF;
     END
-    $;
+    $$;
   `);
 
   // 1. Seed inicial de categorías desde almacenamiento local si la tabla está vacía
