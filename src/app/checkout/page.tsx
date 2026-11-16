@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useLocation, isSanJuanPostalCode } from '@/context/LocationContext';
 import { useProducts } from '@/context/ProductContext';
+import { calculateCreditTotal, calculateFinancing, getCreditSurchargePercent } from '@/lib/pricing';
 import {
   ShieldCheck,
   Truck,
@@ -60,7 +61,7 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState('');
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transferencia');
-  const [installments, setInstallments] = useState<number>(3);
+  const [installments, setInstallments] = useState<number>(1);
 
   // Clave de idempotencia estable para evitar pedidos/descuentos de stock duplicados ante doble clic
   const [idempotencyKey, setIdempotencyKey] = useState<string>(() => generateIdempotencyKey());
@@ -87,10 +88,14 @@ export default function CheckoutPage() {
   const estimatedSanJuanShipping = Math.round(subtotal * 0.1);
   const isTransfer = paymentMethod === 'transferencia';
   const transferDiscount = isTransfer ? cartTransferDiscount : 0;
-  const finalTotal = Math.max(0, subtotal - transferDiscount);
+  const creditSurchargePct = paymentMethod === 'credito' ? getCreditSurchargePercent(installments) : 0;
+  const creditTotal = paymentMethod === 'credito' ? calculateCreditTotal(subtotal, installments) : subtotal;
+  const creditSurchargeAmount = paymentMethod === 'credito' ? Math.max(0, creditTotal - subtotal) : 0;
+  const finalTotal = Math.max(0, isTransfer ? subtotal - transferDiscount : creditTotal);
 
   // Cuotas para tarjeta de crédito
-  const installmentAmount = Math.round(subtotal / installments);
+  const checkoutFinancing = calculateFinancing(subtotal);
+  const installmentAmount = Math.round(creditTotal / installments);
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -977,10 +982,9 @@ export default function CheckoutPage() {
                             backgroundColor: '#ffffff',
                           }}
                         >
-                          <option value={1}>1 pago de ${subtotal.toLocaleString('es-AR')}</option>
-                          <option value={3}>3 cuotas fijas de ${Math.round(subtotal / 3).toLocaleString('es-AR')}</option>
-                          <option value={6}>6 cuotas fijas de ${Math.round(subtotal / 6).toLocaleString('es-AR')}</option>
-                          <option value={12}>12 cuotas fijas de ${Math.round(subtotal / 12).toLocaleString('es-AR')}</option>
+                          <option value={1}>En 1 pago de ${checkoutFinancing.onePayment.toLocaleString('es-AR')} (Precio de lista)</option>
+                          <option value={6}>En 6 cuotas fijas de ${checkoutFinancing.sixInstallmentAmount.toLocaleString('es-AR')} (25% recargo)</option>
+                          <option value={12}>En 12 cuotas fijas de ${checkoutFinancing.twelveInstallmentAmount.toLocaleString('es-AR')} (45% recargo)</option>
                         </select>
                       </div>
                     )}
@@ -1130,6 +1134,14 @@ export default function CheckoutPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.92rem', color: 'var(--cta-green)', fontWeight: 700 }}>
                     <span>Descuento Transferencia</span>
                     <span>-${transferDiscount.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
+
+                {/* Recargo por Financiación en Cuotas */}
+                {paymentMethod === 'credito' && creditSurchargeAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
+                    <span>Financiación {installments} cuotas ({creditSurchargePct}% recargo)</span>
+                    <span>+${creditSurchargeAmount.toLocaleString('es-AR')}</span>
                   </div>
                 )}
 

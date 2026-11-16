@@ -12,6 +12,7 @@ import type {
 } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { isSanJuanPostalCodeServer, OrderBusinessError } from '@/lib/db';
+import { calculateCreditTotal } from '@/lib/pricing';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
@@ -351,7 +352,10 @@ export function createValidatedLocalOrder(
 
   const isTransfer = payload.paymentMethod === 'transferencia';
   const finalTransferDiscount = isTransfer ? transferDiscount : 0;
-  const total = subtotal + shippingFinal - finalTransferDiscount;
+  const total =
+    payload.paymentMethod === 'credito'
+      ? calculateCreditTotal(subtotal, payload.installments || 1) + shippingFinal
+      : subtotal + shippingFinal - finalTransferDiscount;
 
   // 4. Descontar stock
   for (const [pid, requestedQty] of qtyByProduct.entries()) {

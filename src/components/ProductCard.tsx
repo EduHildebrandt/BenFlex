@@ -6,6 +6,7 @@ import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useLocation } from '@/context/LocationContext';
 import { Star, Truck, ArrowRight } from 'lucide-react';
+import { calculateFinancing } from '@/lib/pricing';
 
 interface ProductCardProps {
   product: Product;
@@ -15,8 +16,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { location } = useLocation();
   const discountPct = product.transferDiscountPercent ?? 15;
-  const transferPrice = Math.round(product.basePrice * (1 - discountPct / 100));
-  const installment12 = Math.round(product.basePrice / 12);
+  const financing = calculateFinancing(product.basePrice, discountPct);
+  const transferPrice = financing.transferPrice;
+  const installment6 = financing.sixInstallmentAmount;
+  const installment12 = financing.twelveInstallmentAmount;
   const isOutOfStock = product.stock <= 0;
 
   return (
@@ -218,8 +221,9 @@ export default function ProductCard({ product }: ProductCardProps) {
               </span>
             )}
           </div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-            o 12 cuotas de <strong>${installment12.toLocaleString('es-AR')}</strong>
+          <div style={{ fontSize: '0.73rem', color: 'var(--text-secondary)', marginTop: '3px', lineHeight: 1.35 }}>
+            6 cuotas de <strong>${installment6.toLocaleString('es-AR')}</strong> • 12 de{' '}
+            <strong>${installment12.toLocaleString('es-AR')}</strong>
           </div>
         </div>
 

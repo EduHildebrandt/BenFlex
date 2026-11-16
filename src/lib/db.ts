@@ -12,6 +12,7 @@ import {
 } from '@/types';
 import { BENFLEX_PRODUCTS } from '@/data/products';
 import { safeCompareStrings } from '@/lib/auth';
+import { calculateCreditTotal } from '@/lib/pricing';
 import {
   DEFAULT_CATEGORIES,
   getLocalCategories,
@@ -650,7 +651,11 @@ export async function createValidatedDbOrder(
 
     const transferDiscount =
       payload.paymentMethod === 'transferencia' ? totalTransferDiscount : 0;
-    const total = Math.max(0, subtotal - transferDiscount);
+    const baseAfterDiscount = Math.max(0, subtotal - transferDiscount);
+    const total =
+      payload.paymentMethod === 'credito'
+        ? calculateCreditTotal(subtotal, payload.installments || 1)
+        : baseAfterDiscount;
 
     // 6. Identificador no secuencial + Token de acceso criptográfico anti-IDOR
     const orderId = `BF-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
