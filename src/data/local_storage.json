@@ -3,22 +3,32 @@
     {
       "id": "colchones-sommiers",
       "label": "Colchones & Sommiers",
-      "description": "Colchones ortopédicos de alta densidad y resortes pocket"
+      "description": "Colchones ortopédicos de alta densidad y resortes"
     },
     {
       "id": "sillones-sofas",
       "label": "Sillones & Sofás Cama",
-      "description": "Sillones y esquineros con telas anti-desgarro"
+      "description": "Sillones esquineros, 2 y 3 cuerpos con telas antimanchas"
+    },
+    {
+      "id": "juegos-comedor",
+      "label": "Juegos de Comedor & Sillas",
+      "description": "Mesas de comedor, juegos completos y sillas reforzadas"
+    },
+    {
+      "id": "muebles-hogar",
+      "label": "Muebles & Hogar",
+      "description": "Roperos, cómodas, cunas funcionales, tocadores y equipamiento"
     },
     {
       "id": "almohadas-confort",
       "label": "Almohadas & Confort",
-      "description": "Almohadas viscoelásticas y cervicales"
+      "description": "Almohadas viscoelásticas, ergonómicas y de vellón siliconado"
     },
     {
       "id": "combos-benflex",
       "label": "Combos BenFlex",
-      "description": "Conjuntos completos de descanso con regalo"
+      "description": "Conjuntos completos de descanso con beneficios exclusivos"
     }
   ],
   "products": [
@@ -559,7 +569,9 @@
       "image": "/images/products/respaldo-capitone-blanco.jpg",
       "images": [
         "/images/products/respaldo-capitone-blanco.jpg",
-        "/images/products/safiro-showroom.jpg"
+        "/images/products/safiro-showroom.jpg",
+        "/images/products/sommier-completo-respaldo-blanco.jpg",
+        "/images/products/respaldo-capitone-blanco-angle.jpg"
       ],
       "badge": "DISEÑO EXCLUSIVO",
       "stock": 3,
@@ -633,7 +645,8 @@
       ],
       "image": "/images/products/respaldo-pana-tachas-beige.jpg",
       "images": [
-        "/images/products/respaldo-pana-tachas-beige.jpg"
+        "/images/products/respaldo-pana-tachas-beige.jpg",
+        "/images/products/respaldo-pana-tachas-beige-angle.jpg"
       ],
       "badge": "ARTESANAL",
       "stock": 2,
@@ -670,7 +683,8 @@
       ],
       "image": "/images/products/respaldo-renglon-malva.jpg",
       "images": [
-        "/images/products/respaldo-renglon-malva.jpg"
+        "/images/products/respaldo-renglon-malva.jpg",
+        "/images/products/sommier-respaldo-renglon-malva.jpg"
       ],
       "badge": "TENDENCIA",
       "stock": 2,
@@ -709,16 +723,621 @@
       "images": [
         "/images/products/sillon-chester-1.webp",
         "/images/products/sillon-chester-2.webp",
-        "/images/products/sillon-chester-3.webp"
+        "/images/products/sillon-chester-3.webp",
+        "/images/products/sillon-chester-cuero-marron-1.jpg",
+        "/images/products/sillon-chester-cuero-marron-2.jpg"
       ],
       "badge": "PIEZA DE AUTOR",
       "stock": 2,
       "warranty": "5 años de garantía estructural",
       "rating": 5,
       "reviewsCount": 37
+    },
+    {
+      "id": "sillon-esquinero-l-lino-gris",
+      "slug": "sillon-esquinero-l-lino-gris",
+      "name": "Sillón Rinconero Esquinero L con Puff Gris",
+      "shortDescription": "Sillón esquinero modular en tela lino gris antimanchas con puff otomano móvil.",
+      "description": "Sillón rinconero en L tapizado en tela lino gris de alta resistencia con puff móvil versátil para armar chaise longue izquierda o derecha. Almohadones con cierre lavables y patas cromadas reforzadas.",
+      "category": "sillones-sofas",
+      "categoryLabel": "Sillones & Sofás Cama",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Lino Antimanchas",
+      "measure": "Esquinero L",
+      "firmness": "Media",
+      "basePrice": 690000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Esquinero L 220x150cm + Puff",
+          "priceModifier": 0,
+          "measure": "220x150 cm"
+        }
+      ],
+      "features": [
+        "Puff otomano reversible (derecha o izquierda)",
+        "Tapizado en lino antidesgarro de tacto fresco",
+        "Almohadones de respaldo desmontables con cierre",
+        "Estructura de madera maciza y patas cromadas"
+      ],
+      "image": "/images/products/sillon-esquinero-l-gris-1.jpg",
+      "images": [
+        "/images/products/sillon-esquinero-l-gris-1.jpg"
+      ],
+      "badge": "NUEVO INGRESO",
+      "stock": 2,
+      "warranty": "3 años de garantía estructural",
+      "rating": 4.9,
+      "reviewsCount": 15
+    },
+    {
+      "id": "sillon-2-cuerpos-con-puff-gris",
+      "slug": "sillon-2-cuerpos-con-puff-gris",
+      "name": "Sillón 2 Cuerpos con Puff Lino Gris",
+      "shortDescription": "Sillón compacto de 2 cuerpos con puff individual en lino gris para espacios modernos.",
+      "description": "Sillón de 2 cuerpos tapizado en tela lino gris con puff individual a juego, ideal para livings modernos y departamentos que buscan estilo y versatilidad en el uso diario.",
+      "category": "sillones-sofas",
+      "categoryLabel": "Sillones & Sofás Cama",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Lino Antimanchas",
+      "measure": "2 Cuerpos",
+      "firmness": "Media",
+      "basePrice": 490000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "2 Cuerpos 150x85cm + Puff 60x60cm",
+          "priceModifier": 0,
+          "measure": "150x85 cm"
+        }
+      ],
+      "features": [
+        "Incluye puff modular a tono con patas cromadas",
+        "Asiento de espuma hiper-soft de alta resiliencia",
+        "Almohadones lumbares incluidos",
+        "Dimensiones compactas de máximo confort"
+      ],
+      "image": "/images/products/sillon-2-cuerpos-puff-gris-1.jpg",
+      "images": [
+        "/images/products/sillon-2-cuerpos-puff-gris-1.jpg"
+      ],
+      "badge": "ESPACIOS MODERNOS",
+      "stock": 2,
+      "warranty": "3 años de garantía estructural",
+      "rating": 4.8,
+      "reviewsCount": 12
+    },
+    {
+      "id": "juego-comedor-capitone-gris",
+      "slug": "juego-comedor-capitone-gris",
+      "name": "Juego de Comedor Mesa Gris + 6 Sillas Pana Capitoné",
+      "shortDescription": "Mesa laqueada de 180cm y 6 sillas tapizadas en pana gris con capitoné.",
+      "description": "Excelente juego de comedor con mesa en MDF laqueada de 180x90cm y 6 sillas tapizadas en pana con capitoné profundo, súper firmes y elegantes para vestir el comedor principal.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Pana Capitoné & Madera",
+      "measure": "180x90 cm",
+      "firmness": "Firme",
+      "basePrice": 830000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Mesa 180x90cm + 6 Sillas Capitoné",
+          "priceModifier": 0,
+          "measure": "180x90 cm"
+        }
+      ],
+      "features": [
+        "Mesa de MDF de gran espesor con acabado satinado",
+        "6 sillas con capitoné artesanal y botones reforzados",
+        "Estructura de madera maciza seleccionada",
+        "Pana aterciopelada de tacto suave antimanchas"
+      ],
+      "image": "/images/products/juego-comedor-capitone-gris.jpg",
+      "images": [
+        "/images/products/juego-comedor-capitone-gris.jpg",
+        "/images/products/silla-capitone-pana-gris.jpg"
+      ],
+      "badge": "ALTA GAMA",
+      "stock": 2,
+      "warranty": "3 años de garantía",
+      "rating": 5,
+      "reviewsCount": 19
+    },
+    {
+      "id": "juego-comedor-mdf-negro-4sillas",
+      "slug": "juego-comedor-mdf-negro-4sillas",
+      "name": "Juego de Comedor Mesa Negra + 4 Sillas Arabesco",
+      "shortDescription": "Mesa de 180cm MDF cantos encolados y 4 sillas de caño con tapizado rojo arabesco.",
+      "description": "Juego de comedor con mesa de MDF en color negro con cantos encolados de alta resistencia, acompañada con sillas de caño reforzadas tapizadas en tela diseño arabesco para embellecer los ambientes de tu hogar.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Caño Reforzado & MDF",
+      "measure": "180x90 cm",
+      "firmness": "Firme",
+      "basePrice": 599999,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Mesa 180x90x75cm + 4 Sillas",
+          "priceModifier": 0,
+          "measure": "180x90x75 cm"
+        }
+      ],
+      "features": [
+        "Mesa con estructura reforzada de fácil armado",
+        "Sillas de caño de alta resistencia con regatones antideslizantes",
+        "Tapizado acolchado en tela estampada elegante",
+        "Fácil mantenimiento y limpieza"
+      ],
+      "image": "/images/products/juego-comedor-mdf-negro-4sillas.jpg",
+      "images": [
+        "/images/products/juego-comedor-mdf-negro-4sillas.jpg",
+        "/images/products/silla-comedor-arabesco-roja.jpg"
+      ],
+      "stock": 2,
+      "warranty": "2 años de garantía",
+      "rating": 4.8,
+      "reviewsCount": 16
+    },
+    {
+      "id": "juego-comedor-mesa-clara-6sillas",
+      "slug": "juego-comedor-mesa-clara-6sillas",
+      "name": "Juego de Comedor Mesa Clara + 6 Sillas con Apoyabrazos",
+      "shortDescription": "Mesa rectangular melamina clara y 6 sillas de caño reforzado con apoyabrazos.",
+      "description": "Juego de comedor con mesa en MDF claro con terminación en madera y 6 sillas reforzadas en caño grueso con apoyabrazos acolchados, garantizando comodidad prolongada para reuniones familiares.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Caño Grueso & Melamina",
+      "measure": "180x90 cm",
+      "firmness": "Firme",
+      "basePrice": 520000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Mesa 180x90cm + 6 Sillas con Apoyabrazos",
+          "priceModifier": 0,
+          "measure": "180x90 cm"
+        }
+      ],
+      "features": [
+        "6 sillas con apoyabrazos tapizados ergonómicos",
+        "Mesa robusta de fácil limpieza y patas dobles",
+        "Estructura de caño con pintura epoxi horneada",
+        "Tapizado resistente de alto tránsito"
+      ],
+      "image": "/images/products/juego-comedor-mesa-clara-6sillas.jpg",
+      "images": [
+        "/images/products/juego-comedor-mesa-clara-6sillas.jpg",
+        "/images/products/silla-tapicrom-apoyabrazos.jpg"
+      ],
+      "badge": "MÁXIMO CONFORT",
+      "stock": 2,
+      "warranty": "2 años de garantía",
+      "rating": 4.9,
+      "reviewsCount": 14
+    },
+    {
+      "id": "juego-comedor-redondo-madera",
+      "slug": "juego-comedor-redondo-madera",
+      "name": "Juego de Comedor Redondo de Madera Maciza + 4 Sillas",
+      "shortDescription": "Mesa redonda de 1.20m de madera lustrada y 4 sillas macizas de respaldo alto.",
+      "description": "Juego de comedor clásico con mesa redonda de madera maciza seleccionada de 1.20m de diámetro y base central de gran estabilidad, acompañada por 4 sillas de madera maciza con respaldo en listones verticales.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Madera Maciza Lustrada",
+      "measure": "120 cm Diámetro",
+      "firmness": "Firme",
+      "basePrice": 680000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Mesa Redonda 120cm + 4 Sillas",
+          "priceModifier": 0,
+          "measure": "120 cm Diámetro"
+        }
+      ],
+      "features": [
+        "100% madera maciza estacionada y secada en horno",
+        "Lustre poliuretánico de alta protección",
+        "Mesa redonda que optimiza la circulación y el diálogo",
+        "Sillas ergonómicas de asiento encastrado"
+      ],
+      "image": "/images/products/juego-comedor-redondo-madera.jpg",
+      "images": [
+        "/images/products/juego-comedor-redondo-madera.jpg",
+        "/images/products/silla-comedor-madera-maciza.jpg"
+      ],
+      "badge": "MADERA MACIZA",
+      "stock": 2,
+      "warranty": "5 años de garantía estructural",
+      "rating": 5,
+      "reviewsCount": 21
+    },
+    {
+      "id": "silla-tapicrom-reforzada",
+      "slug": "silla-tapicrom-reforzada",
+      "name": "Silla Tapicrom Reforzada con Apoyabrazos",
+      "shortDescription": "Silla Tapicrom de caño cromado reforzado con apoyabrazos y tapizado en eco-cuero.",
+      "description": "Silla Marca Tapicrom reforzada con apoyabrazos ergonómicos, estructura de caño con baño cromado brillante y tapizado en cuero sintético de fácil limpieza. Moderna, resistente y versátil.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Caño Cromado & Eco-Cuero",
+      "measure": "Estándar Comedor",
+      "firmness": "Firme",
+      "basePrice": 395000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Juego x 4 Sillas Tapicrom",
+          "priceModifier": 0,
+          "measure": "Juego x 4"
+        }
+      ],
+      "features": [
+        "Caño con cromado electrolítico antioxidante",
+        "Apoyabrazos curvos integrados a la estructura",
+        "Asiento acolchado de espuma de densidad uniforme",
+        "Regatones plásticos para proteger el suelo"
+      ],
+      "image": "/images/products/silla-tapicrom-apoyabrazos.jpg",
+      "images": [
+        "/images/products/silla-tapicrom-apoyabrazos.jpg"
+      ],
+      "stock": 3,
+      "warranty": "2 años de garantía",
+      "rating": 4.8,
+      "reviewsCount": 11
+    },
+    {
+      "id": "sillas-reforzadas-cano-grueso-sofia",
+      "slug": "sillas-reforzadas-cano-grueso-sofia",
+      "name": "Sillas Reforzadas Caño Grueso Sofía",
+      "shortDescription": "Sillas modelo Sofía en caño negro grueso con tapizado a rayas de diseño.",
+      "description": "Silla reforzada de caño grueso modelo Sofía con respaldo alto y tapizado en telas a rayas de alta resistencia. Firmeza, durabilidad y calidad para el comedor diario.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Caño Grueso Sofía",
+      "measure": "40x48 cm Altura Asiento",
+      "firmness": "Firme",
+      "basePrice": 320000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Juego x 4 Sillas Sofía",
+          "priceModifier": 0,
+          "measure": "Juego x 4"
+        }
+      ],
+      "features": [
+        "Caño estructural de calibre superior",
+        "Tapizado en jackard a rayas de alta densidad",
+        "Respaldo alto anatómico con adorno circular",
+        "Excelente estabilidad y durabilidad comprobada"
+      ],
+      "image": "/images/products/silla-sofia-rayas.jpg",
+      "images": [
+        "/images/products/silla-sofia-rayas.jpg"
+      ],
+      "stock": 3,
+      "warranty": "2 años de garantía",
+      "rating": 4.7,
+      "reviewsCount": 10
+    },
+    {
+      "id": "silla-apilable",
+      "slug": "silla-apilable",
+      "name": "Sillas Apilables Reforzadas en Cuerina",
+      "shortDescription": "Sillas apilables de caño negro con asiento acolchado en cuerina para eventos y hogar.",
+      "description": "Silla apilable reforzada de estructura de caño negro y tapizado con cuerina resistente. Fáciles de apilar y almacenar, ideales para eventos, salones o como sillas auxiliares en el hogar.",
+      "category": "juegos-comedor",
+      "categoryLabel": "Juegos de Comedor & Sillas",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Caño & Cuerina Apilable",
+      "measure": "38x45 cm Altura Asiento",
+      "firmness": "Firme",
+      "basePrice": 197000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Juego x 4 Sillas Apilables",
+          "priceModifier": 0,
+          "measure": "Juego x 4"
+        }
+      ],
+      "features": [
+        "Apilables hasta 10 unidades sin riesgo de deformación",
+        "Tapizado en eco-cuero negro lavable",
+        "Estructura liviana pero de alta rigidez estructural",
+        "Puntas con regatones protectores de piso"
+      ],
+      "image": "/images/products/sillas-apilables-negras.jpg",
+      "images": [
+        "/images/products/sillas-apilables-negras.jpg"
+      ],
+      "badge": "APILABLES",
+      "stock": 4,
+      "warranty": "1 año de garantía",
+      "rating": 4.8,
+      "reviewsCount": 18
+    },
+    {
+      "id": "cuna-funcional",
+      "slug": "cuna-funcional",
+      "name": "Cuna Funcional de Pino Macizo con Cajonera y Carro",
+      "shortDescription": "Cuna funcional de pino con cajonera cambiador y cama inferior con ruedas.",
+      "description": "Cuna funcional confeccionada en pino macizo con tres cajones profundos, pañalera cambiador superior amplia y carro cama inferior con ruedas para maximizar el espacio. Se transforma con el crecimiento en cama de una plaza tradicional con mesa de luz.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Pino Macizo Encastrado",
+      "measure": "1 Plaza (80x190)",
+      "firmness": "Firme",
+      "basePrice": 390000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Cuna Funcional 200x80cm + Cajonera + Carro",
+          "priceModifier": 0,
+          "measure": "200x80 cm"
+        }
+      ],
+      "features": [
+        "Pino macizo seleccionado y lijado suave al tacto",
+        "Baranda desmontable de seguridad infantil",
+        "Cajonera pañalera que se convierte en mesa de noche",
+        "Cama carro marinera inferior con ruedas siliconadas"
+      ],
+      "image": "/images/products/cuna-funcional-pino-1.jpg",
+      "images": [
+        "/images/products/cuna-funcional-pino-1.jpg",
+        "/images/products/cuna-funcional-pino-2.jpg"
+      ],
+      "badge": "CRECE CON TU HIJO",
+      "stock": 2,
+      "warranty": "3 años de garantía estructural",
+      "rating": 5,
+      "reviewsCount": 22
+    },
+    {
+      "id": "roperin-marca-maximo",
+      "slug": "roperin-marca-maximo",
+      "name": "Placard Roperín de Pino 3 Puertas Máximo",
+      "shortDescription": "Roperín de pino macizo de 3 puertas y 4 cajones amplios con tiradores metálicos.",
+      "description": "Roperín de pino marca Máximo con tres puertas superiores y cuatro cajones amplios inferiores con excelentes terminaciones en madera maciza. Confort, estilo y gran capacidad de guardado para tu habitación.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Pino Macizo Lustrado",
+      "measure": "100x110 cm",
+      "firmness": "Firme",
+      "basePrice": 247000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "100cm Ancho x 110cm Alto x 50cm Prof.",
+          "priceModifier": 0,
+          "measure": "100x110 cm"
+        }
+      ],
+      "features": [
+        "3 puertas con bisagras metálicas reforzadas",
+        "4 cajones con correderas de madera encastrada suave",
+        "Terminación en madera lustrada color roble miel",
+        "Barral interior para colgado de prendas"
+      ],
+      "image": "/images/products/roperin-maximo-frontal.jpg",
+      "images": [
+        "/images/products/roperin-maximo-frontal.jpg",
+        "/images/products/roperin-maximo-angle.jpg"
+      ],
+      "badge": "PINO MACIZO",
+      "stock": 2,
+      "warranty": "3 años de garantía",
+      "rating": 4.8,
+      "reviewsCount": 17
+    },
+    {
+      "id": "comoda-de-pino",
+      "slug": "comoda-de-pino",
+      "name": "Cómoda Chifonier Wengue y Roble con Puerta",
+      "shortDescription": "Chifonier con 4 cajones deslizables y compartimento con puerta y estante interior.",
+      "description": "Cómoda chifonier moderna combinada en madera wengue brillante y roble claro con 4 cajones con tiradores cromados y puerta lateral con estante divisor interior. Muy firme, resistente y con espacio superior para TV o audio.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Melamina & MDF Laqueado",
+      "measure": "105x60x40 cm",
+      "firmness": "Firme",
+      "basePrice": 279000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "105cm Ancho x 60cm Alto x 40cm Prof.",
+          "priceModifier": 0,
+          "measure": "105x60x40 cm"
+        }
+      ],
+      "features": [
+        "Frentes en color wengue de alto brillo",
+        "Correderas metálicas en todos los cajones",
+        "Compartimento lateral con puerta batiente y estante",
+        "Tiradores curvos cromados de diseño contemporáneo"
+      ],
+      "image": "/images/products/comoda-chifonier-wengue.jpg",
+      "images": [
+        "/images/products/comoda-chifonier-wengue.jpg",
+        "/images/products/comoda-chifonier-puerta.jpg"
+      ],
+      "stock": 3,
+      "warranty": "2 años de garantía",
+      "rating": 4.8,
+      "reviewsCount": 13
+    },
+    {
+      "id": "tocador-hollywood",
+      "slug": "tocador-hollywood",
+      "name": "Tocador Hollywood con Luces LED y Banqueta",
+      "shortDescription": "Mueble tocador laqueado con espejo, 9 luces LED perimetrales y banqueta incluida.",
+      "description": "Tocador estilo Hollywood en MDF laqueado de primera calidad con espejo amplio rodeado de luces LED cálidas, múltiples cajones organizadores para maquillaje y cosméticos, y banqueta tapizada acolchada incluida.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "MDF Laqueado & Iluminación LED",
+      "measure": "110x140 cm Altura",
+      "firmness": "Firme",
+      "basePrice": 290000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Color Blanco Puro + Banqueta",
+          "priceModifier": 0,
+          "measure": "110x140 cm"
+        },
+        {
+          "name": "Color Rosa Pastel + Banqueta",
+          "priceModifier": 0,
+          "measure": "110x140 cm"
+        }
+      ],
+      "features": [
+        "Espejo profesional con luminarias LED de bajo consumo",
+        "5 cajones con tiradores metálicos y gaveta con puerta",
+        "Banqueta tapizada que se oculta bajo el escritorio",
+        "Instalación eléctrica segura con tecla de encendido"
+      ],
+      "image": "/images/products/tocador-hollywood-blanco-led.jpg",
+      "images": [
+        "/images/products/tocador-hollywood-blanco-led.jpg",
+        "/images/products/tocador-hollywood-rosa-led.jpg"
+      ],
+      "badge": "TENDENCIA VIRAL",
+      "stock": 3,
+      "warranty": "2 años de garantía",
+      "rating": 5,
+      "reviewsCount": 29
+    },
+    {
+      "id": "cocina-escorial",
+      "slug": "cocina-escorial",
+      "name": "Cocina Escorial Master Classic 4 Hornallas",
+      "shortDescription": "Cocina blanca 4 hornallas para gas licuado con horno visor y parrilla.",
+      "description": "Cocina Escorial Master Classic en color blanco con 4 hornallas de alta eficiencia, puerta de horno con visor de doble vidrio templado y luz interior, y sistema de enlozado de fácil limpieza. Ideal y confiable para tu cocina.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Enlozado Duravit Escorial",
+      "measure": "53x60x96 cm",
+      "firmness": "Firme",
+      "basePrice": 495000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Gas Licuado / Envasado (53cm)",
+          "priceModifier": 0,
+          "measure": "53x60x96 cm"
+        }
+      ],
+      "features": [
+        "Marca oficial Escorial con garantía de fábrica",
+        "Horno con visor panorámico y encendido con luz",
+        "Válvula de seguridad en horno y hornallas",
+        "Rejillas de acero esmaltado indeformables"
+      ],
+      "image": "/images/products/cocina-escorial-master-classic.jpg",
+      "images": [
+        "/images/products/cocina-escorial-master-classic.jpg",
+        "/images/products/cocina-escorial-horno-abierto.jpg"
+      ],
+      "badge": "ESCORIAL OFICIAL",
+      "stock": 2,
+      "warranty": "1 año de garantía oficial Escorial",
+      "rating": 4.9,
+      "reviewsCount": 20
+    },
+    {
+      "id": "campana-extractora-slim-motor-acero-3vl-c-luz-mara",
+      "slug": "campana-extractora-slim-motor-acero-3vl-c-luz-mara",
+      "name": "Campana Extractora Slim Acero Inoxidable Maraldi",
+      "shortDescription": "Campana de cocina Slim de 60cm en acero inoxidable con motor 3 velocidades y luz.",
+      "description": "Modelo Slim de marca Maraldi. Campana extractora de acero inoxidable esmerilado de 60 cm ideal para la cocina moderna. Diseño extraplano, comandos frontales de 3 velocidades y filtros metálicos lavables.",
+      "category": "muebles-hogar",
+      "categoryLabel": "Muebles & Hogar",
+      "technology": "anti_desgarro",
+      "technologyLabel": "Acero Inoxidable Esmerilado",
+      "measure": "60x50 cm Profundidad",
+      "firmness": "Firme",
+      "basePrice": 479000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "Campana Slim 60cm Acero",
+          "priceModifier": 0,
+          "measure": "60 cm"
+        }
+      ],
+      "features": [
+        "Cuerpo 100% acero inoxidable con frente cepillado",
+        "Motor de alta aspiración con 3 niveles de potencia",
+        "Iluminación LED direccional para la zona de cocción",
+        "Filtros antigrasa lavables en lavavajillas"
+      ],
+      "image": "/images/products/campana-maraldi-slim-acero.jpg",
+      "images": [
+        "/images/products/campana-maraldi-slim-acero.jpg"
+      ],
+      "badge": "MARALDI OFICIAL",
+      "stock": 2,
+      "warranty": "1 año de garantía oficial Maraldi",
+      "rating": 4.8,
+      "reviewsCount": 15
+    },
+    {
+      "id": "colchon-bardo-ondas-celeste",
+      "slug": "colchon-bardo-ondas-celeste",
+      "name": "Colchón Bardo Confort Ondas 140",
+      "shortDescription": "Colchón 2 Plazas 140x190x24cm en tela de punto con diseño de ondas celestes.",
+      "description": "Colchón ortopédico de alta densidad en tela de punto de tacto fresco con diseño exclusivo de ondas celestes y faja azul noche. Proporciona estabilidad firme y comodidad para la espalda durante toda la noche.",
+      "category": "colchones-sommiers",
+      "categoryLabel": "Colchones & Sommiers",
+      "technology": "alta_densidad",
+      "technologyLabel": "Espuma & Tela de Punto",
+      "measure": "2 Plazas (140x190)",
+      "firmness": "Firme",
+      "basePrice": 440000,
+      "transferDiscountPercent": 15,
+      "variations": [
+        {
+          "name": "140x190x24 cm (2 Plazas)",
+          "priceModifier": 0,
+          "measure": "140x190x24 cm"
+        }
+      ],
+      "features": [
+        "Espuma de alta densidad compacta indeformable",
+        "Tejido de punto fresco con matelaseado de ondas",
+        "Faja lateral azul con ribetes perimetrales reforzados",
+        "Tratamiento térmico respirable contra humedad"
+      ],
+      "image": "/images/products/colchon-matelase-ondas-celeste-1.jpg",
+      "images": [
+        "/images/products/colchon-matelase-ondas-celeste-1.jpg",
+        "/images/products/colchon-matelase-ondas-celeste-2.jpg"
+      ],
+      "badge": "NUEVO MODELO",
+      "stock": 3,
+      "warranty": "3 años de garantía de fábrica",
+      "rating": 4.9,
+      "reviewsCount": 14
     }
   ],
   "orders": [],
   "inquiries": [],
-  "updatedAt": "2026-11-12T11:27:36.687Z"
+  "updatedAt": "2026-11-16T12:58:39.542Z"
 }
