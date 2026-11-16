@@ -4,11 +4,16 @@ import { BENFLEX_PRODUCTS } from '@/data/products';
 import { requireAdmin } from '@/lib/auth';
 import { validateProductInput } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const products = await getDbProducts();
     const source = isDbConfigured() ? 'supabase' : 'local';
-    return NextResponse.json({ source, products });
+    return NextResponse.json(
+      { source, products },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    );
   } catch (error) {
     console.error('[API /products GET] Fallback local activado:', error);
     return NextResponse.json(
@@ -16,7 +21,7 @@ export async function GET() {
         source: 'fallback',
         products: BENFLEX_PRODUCTS,
       },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
     );
   }
 }

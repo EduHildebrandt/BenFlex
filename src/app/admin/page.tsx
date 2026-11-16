@@ -96,6 +96,166 @@ const TECH_MAP: Record<ProductTechnology, string> = {
   fibra_siliconada: 'Fibra Siliconada / Algodón 400 Hilos',
 };
 
+function QuickProductControls({
+  product,
+  onSave,
+}: {
+  product: Product;
+  onSave: (product: Product, updates: { basePrice: number; transferDiscountPercent: number; stock: number }) => Promise<boolean>;
+}) {
+  const initialDiscount = product.transferDiscountPercent ?? 15;
+  const [price, setPrice] = useState<string>(String(product.basePrice));
+  const [discount, setDiscount] = useState<string>(String(initialDiscount));
+  const [stock, setStock] = useState<string>(String(product.stock));
+  const [isSavingQuick, setIsSavingQuick] = useState(false);
+
+  useEffect(() => {
+    setPrice(String(product.basePrice));
+    setDiscount(String(product.transferDiscountPercent ?? 15));
+    setStock(String(product.stock));
+  }, [product.id, product.basePrice, product.transferDiscountPercent, product.stock]);
+
+  const parsedPrice = Math.round(Number(price));
+  const parsedDiscount = Math.round(Number(discount));
+  const parsedStock = Math.floor(Number(stock));
+
+  const isDirty =
+    (Number.isFinite(parsedPrice) && parsedPrice > 0 && parsedPrice !== product.basePrice) ||
+    (Number.isFinite(parsedDiscount) &&
+      parsedDiscount >= 0 &&
+      parsedDiscount <= 60 &&
+      parsedDiscount !== initialDiscount) ||
+    (Number.isFinite(parsedStock) && parsedStock >= 0 && parsedStock !== product.stock);
+
+  const previewPrice = Number.isFinite(parsedPrice) && parsedPrice > 0 ? parsedPrice : product.basePrice;
+  const previewDiscount =
+    Number.isFinite(parsedDiscount) && parsedDiscount >= 0 && parsedDiscount <= 60
+      ? parsedDiscount
+      : initialDiscount;
+  const transferPrice = Math.round(previewPrice * (1 - previewDiscount / 100));
+
+  const commitChanges = async () => {
+    if (!isDirty || isSavingQuick) return;
+    setIsSavingQuick(true);
+    await onSave(product, {
+      basePrice: Number.isFinite(parsedPrice) && parsedPrice > 0 ? parsedPrice : product.basePrice,
+      transferDiscountPercent:
+        Number.isFinite(parsedDiscount) && parsedDiscount >= 0 && parsedDiscount <= 60
+          ? parsedDiscount
+          : initialDiscount,
+      stock: Number.isFinite(parsedStock) && parsedStock >= 0 ? parsedStock : product.stock,
+    });
+    setIsSavingQuick(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitChanges();
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div>
+        <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+          PRECIO LISTA ($)
+        </label>
+        <input
+          type="number"
+          min={1}
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          onBlur={commitChanges}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: '115px',
+            padding: '0.42rem 0.55rem',
+            borderRadius: '8px',
+            border: isDirty ? '2px solid #0284c7' : '1px solid #cbd5e1',
+            fontWeight: 800,
+            fontSize: '0.86rem',
+            backgroundColor: '#ffffff',
+          }}
+        />
+        <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>
+          Transf: ${transferPrice.toLocaleString('es-AR')}
+        </div>
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+          % OFF TRANSF.
+        </label>
+        <input
+          type="number"
+          min={0}
+          max={60}
+          value={discount}
+          onChange={(e) => setDiscount(e.target.value)}
+          onBlur={commitChanges}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: '68px',
+            padding: '0.42rem 0.55rem',
+            borderRadius: '8px',
+            border: isDirty ? '2px solid #0284c7' : '1px solid #cbd5e1',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            backgroundColor: '#ffffff',
+          }}
+        />
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+          STOCK
+        </label>
+        <input
+          type="number"
+          min={0}
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+          onBlur={commitChanges}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: '68px',
+            padding: '0.42rem 0.55rem',
+            borderRadius: '8px',
+            border: isDirty ? '2px solid #0284c7' : '1px solid #cbd5e1',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            backgroundColor: '#ffffff',
+          }}
+        />
+      </div>
+
+      {(isDirty || isSavingQuick) && (
+        <div style={{ alignSelf: 'center', marginTop: '0.7rem' }}>
+          <button
+            type="button"
+            onClick={commitChanges}
+            disabled={isSavingQuick}
+            style={{
+              backgroundColor: '#0284c7',
+              color: '#ffffff',
+              padding: '0.45rem 0.8rem',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              cursor: isSavingQuick ? 'wait' : 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.3)',
+            }}
+          >
+            {isSavingQuick ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BenFlexAdminPage() {
   const {
     products,
@@ -411,21 +571,35 @@ export default function BenFlexAdminPage() {
 
     try {
       const compressedList: string[] = [];
+      let rejectedCount = 0;
       for (const file of files) {
         const result = await compressSingleImage(file);
-        if (result) compressedList.push(result);
+        if (!result) continue;
+        if (result.length > 2_950_000) {
+          rejectedCount += 1;
+          continue;
+        }
+        compressedList.push(result);
       }
 
-      setForm((prev) => {
-        const currentImages = Array.isArray(prev.images) && prev.images.length > 0 ? prev.images : (prev.image ? [prev.image] : []);
-        const combined = [...currentImages, ...compressedList].slice(0, 8);
-        return {
-          ...prev,
-          images: combined,
-          image: combined[0] || '',
-        };
-      });
-      showToast(`📸 ${compressedList.length} imagen(es) procesada(s) con éxito`);
+      if (rejectedCount > 0) {
+        setModalError(
+          `Se descartaron ${rejectedCount} imagen(es) porque superan los 2 MB incluso al comprimirlas. Probá con otra foto JPG/PNG.`
+        );
+      }
+
+      if (compressedList.length > 0) {
+        setForm((prev) => {
+          const currentImages = Array.isArray(prev.images) && prev.images.length > 0 ? prev.images : (prev.image ? [prev.image] : []);
+          const combined = [...currentImages, ...compressedList].slice(0, 8);
+          return {
+            ...prev,
+            images: combined,
+            image: combined[0] || '',
+          };
+        });
+        showToast(`📸 ${compressedList.length} imagen(es) procesada(s) con éxito`);
+      }
     } catch {
       setModalError('Error al procesar las imágenes seleccionadas.');
     } finally {
@@ -668,7 +842,24 @@ export default function BenFlexAdminPage() {
     showToast('📊 Cuadro de ventas exportado exitosamente a CSV');
   };
 
-  // Ajuste rápido de precio, descuento, categoría o stock desde la tarjeta
+  // Ajuste rápido unificado de precio, descuento y stock desde la tarjeta
+  const handleQuickProductSave = async (
+    product: Product,
+    updates: { basePrice: number; transferDiscountPercent: number; stock: number }
+  ): Promise<boolean> => {
+    const res = await saveProduct({
+      ...product,
+      basePrice: updates.basePrice,
+      transferDiscountPercent: updates.transferDiscountPercent,
+      stock: updates.stock,
+    });
+    if (res.success) {
+      showToast(`✅ "${product.name}" actualizado ($${updates.basePrice.toLocaleString('es-AR')} • Stock: ${updates.stock})`);
+      return true;
+    }
+    showToast(`❌ ${res.error || 'No se pudo actualizar el producto'}`);
+    return false;
+  };
   const handleQuickPriceUpdate = async (product: Product, newPrice: number) => {
     if (!Number.isFinite(newPrice) || newPrice <= 0 || newPrice === product.basePrice) return;
     const res = await saveProduct({ ...product, basePrice: Math.round(newPrice) });
@@ -1667,76 +1858,7 @@ export default function BenFlexAdminPage() {
                       </div>
 
                       {/* Modificación rápida de Precio de Lista, % Descuento y Stock */}
-                      <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                            PRECIO LISTA ($)
-                          </label>
-                          <input
-                            key={`price-${p.id}-${p.basePrice}`}
-                            type="number"
-                            defaultValue={p.basePrice}
-                            onBlur={(e) => handleQuickPriceUpdate(p, Number(e.target.value))}
-                            style={{
-                              width: '115px',
-                              padding: '0.42rem 0.55rem',
-                              borderRadius: '8px',
-                              border: '1px solid #cbd5e1',
-                              fontWeight: 800,
-                              fontSize: '0.86rem',
-                              backgroundColor: '#ffffff',
-                            }}
-                          />
-                          <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>
-                            Transf: ${transferPrice.toLocaleString('es-AR')}
-                          </div>
-                        </div>
-
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                            % OFF TRANSF.
-                          </label>
-                          <input
-                            key={`disc-${p.id}-${discountPct}`}
-                            type="number"
-                            min={0}
-                            max={60}
-                            defaultValue={discountPct}
-                            onBlur={(e) => handleQuickDiscountUpdate(p, Number(e.target.value))}
-                            style={{
-                              width: '68px',
-                              padding: '0.42rem 0.55rem',
-                              borderRadius: '8px',
-                              border: '1px solid #cbd5e1',
-                              fontWeight: 700,
-                              fontSize: '0.86rem',
-                              backgroundColor: '#ffffff',
-                            }}
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-                            STOCK
-                          </label>
-                          <input
-                            key={`stock-${p.id}-${p.stock}`}
-                            type="number"
-                            min={0}
-                            defaultValue={p.stock}
-                            onBlur={(e) => handleQuickStockUpdate(p, Number(e.target.value))}
-                            style={{
-                              width: '68px',
-                              padding: '0.42rem 0.55rem',
-                              borderRadius: '8px',
-                              border: '1px solid #cbd5e1',
-                              fontWeight: 700,
-                              fontSize: '0.86rem',
-                              backgroundColor: '#ffffff',
-                            }}
-                          />
-                        </div>
-                      </div>
+                      <QuickProductControls product={p} onSave={handleQuickProductSave} />
 
                       {/* Acciones ABM: Modificar Completo / Dar de Baja */}
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

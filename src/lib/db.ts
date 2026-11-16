@@ -482,14 +482,9 @@ export async function upsertDbProduct(p: Product): Promise<Product> {
   const localSaved = upsertLocalProduct(p);
 
   if (isDbConfigured()) {
-    try {
-      await ensureSchema();
-      const pool = getPool();
-      return await upsertDbProductInternal(pool, p);
-    } catch (err) {
-      console.warn('[DB Products] Error guardando en Supabase, persistido en local store:', err);
-      return localSaved;
-    }
+    await ensureSchema();
+    const pool = getPool();
+    return await upsertDbProductInternal(pool, p);
   }
 
   return localSaved;

@@ -9,11 +9,16 @@ import { DEFAULT_CATEGORIES } from '@/lib/localStore';
 import { requireAdmin } from '@/lib/auth';
 import { validateCategoryInput, slugifyText } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const categories = await getDbCategories();
     const source = isDbConfigured() ? 'supabase' : 'local';
-    return NextResponse.json({ source, categories });
+    return NextResponse.json(
+      { source, categories },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    );
   } catch (error) {
     console.error('[API /categories GET] Fallback local activado:', error);
     return NextResponse.json(
@@ -21,7 +26,7 @@ export async function GET() {
         source: 'fallback',
         categories: DEFAULT_CATEGORIES,
       },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
     );
   }
 }

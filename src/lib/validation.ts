@@ -61,8 +61,8 @@ export function isSafeImageUrl(url: string): boolean {
   if (!url) return false;
   if (url.startsWith('/') && !url.startsWith('//')) return true;
   if (url.startsWith('https://') || url.startsWith('http://')) return url.length <= 4096;
-  if (/^data:image\/(jpeg|jpg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(url)) {
-    return url.length <= 1_800_000; // Máx ~1.3 MB binario comprimido
+  if (/^data:image\/(jpeg|jpg|png|webp|gif|avif|heic|heif);base64,[A-Za-z0-9+/=]+$/.test(url)) {
+    return url.length <= 3_000_000; // Máx ~2.2 MB binario comprimido
   }
   return false;
 }
@@ -160,14 +160,31 @@ export function validateProductInput(
   const incomingImages: string[] = [];
   if (Array.isArray(raw.images)) {
     for (const item of raw.images) {
-      if (typeof item === 'string' && isSafeImageUrl(item.trim())) {
-        incomingImages.push(item.trim());
+      if (typeof item === 'string' && item.trim().length > 0) {
+        const trimmed = item.trim();
+        if (!isSafeImageUrl(trimmed)) {
+          return {
+            valid: false,
+            error:
+              'Una de las fotos seleccionadas es demasiado pesada o tiene un formato inválido. Usá JPG, PNG o WebP (máx. 2 MB) o un enlace HTTPS.',
+          };
+        }
+        incomingImages.push(trimmed);
       }
     }
   }
   const singleImage = typeof raw.image === 'string' ? raw.image.trim() : '';
-  if (singleImage && isSafeImageUrl(singleImage) && !incomingImages.includes(singleImage)) {
-    incomingImages.unshift(singleImage);
+  if (singleImage) {
+    if (!isSafeImageUrl(singleImage)) {
+      return {
+        valid: false,
+        error:
+          'La foto principal es demasiado pesada o tiene un formato inválido. Usá JPG, PNG o WebP (máx. 2 MB) o un enlace HTTPS.',
+      };
+    }
+    if (!incomingImages.includes(singleImage)) {
+      incomingImages.unshift(singleImage);
+    }
   }
 
   if (incomingImages.length === 0) {
