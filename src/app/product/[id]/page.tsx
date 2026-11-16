@@ -20,8 +20,10 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
+  Banknote,
 } from 'lucide-react';
 import { BENFLEX_CONTACT } from '@/types';
+import { calculateFinancing } from '@/lib/pricing';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -98,15 +100,15 @@ export default function ProductPage({ params }: ProductPageProps) {
   const activeVariation = product.variations.find((v) => v.name === selectedVariationName);
   const currentPrice = product.basePrice + (activeVariation ? activeVariation.priceModifier : 0);
   const discountPct = product.transferDiscountPercent ?? 15;
-  const transferPrice = Math.round(currentPrice * (1 - discountPct / 100));
-  const transferSavings = currentPrice - transferPrice;
+  const financing = calculateFinancing(currentPrice, discountPct);
+  const transferPrice = financing.transferPrice;
   const shippingMockCost = Math.round(currentPrice * 0.1);
   const isOutOfStock = product.stock <= 0;
 
-  // Cuotas
-  const cuota3 = Math.round(currentPrice / 3);
-  const cuota6 = Math.round(currentPrice / 6);
-  const cuota12 = Math.round(currentPrice / 12);
+  // Cuotas con recargo sobre precio de lista
+  const cuota1 = financing.onePayment;
+  const cuota6 = financing.sixInstallmentAmount;
+  const cuota12 = financing.twelveInstallmentAmount;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -445,62 +447,163 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </span>
               </div>
 
-              {/* CAJA DE PRECIOS CON DESCUENTO TRANSFERENCIA */}
-              <div
-                style={{
-                  padding: '1.25rem',
-                  backgroundColor: '#faf9f5',
-                  borderRadius: '16px',
-                  border: '1px solid #e8e1d5',
-                  marginBottom: '1.5rem',
-                }}
-              >
-                {discountPct > 0 && (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                    Precio de Lista: ${currentPrice.toLocaleString('es-AR')}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', margin: '0.25rem 0', flexWrap: 'wrap' }}>
-                  <span
-                    style={{
-                      fontSize: '2.4rem',
-                      fontWeight: 900,
-                      color: 'var(--brand-sage)',
-                      letterSpacing: '-0.03em',
-                    }}
-                  >
-                    ${transferPrice.toLocaleString('es-AR')}
-                  </span>
-                  {discountPct > 0 && (
-                    <span className="badge-pill badge-discount" style={{ fontSize: '0.85rem' }}>
-                      {discountPct}% OFF Transferencia
-                    </span>
-                  )}
-                </div>
-
-                {discountPct > 0 && (
-                  <div style={{ fontSize: '0.85rem', color: '#047857', fontWeight: 600, marginBottom: '0.75rem' }}>
-                    ¡Ahorrás ${transferSavings.toLocaleString('es-AR')} pagando con Transferencia Bancaria!
-                  </div>
-                )}
-
-                {/* Calculador de Cuotas */}
+              {/* CAJA DE PRECIOS Y FINANCIACIÓN (MEJOR PRECIO + PRECIO DE LISTA EN CUOTAS) */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                {/* Bloque 1: MEJOR PRECIO */}
                 <div
                   style={{
-                    borderTop: '1px solid #e2e8f0',
-                    paddingTop: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
+                    padding: '1.15rem 1.25rem',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '14px',
+                    border: '2px solid #00bfa5',
+                    marginBottom: '1.15rem',
                   }}
                 >
-                  <CreditCard size={18} color="var(--brand-navy)" />
-                  <div>
-                    o en hasta <strong>12 cuotas fijas de ${cuota12.toLocaleString('es-AR')}</strong>{' '}
-                    (3 de ${cuota3.toLocaleString('es-AR')} / 6 de ${cuota6.toLocaleString('es-AR')})
+                  <div
+                    style={{
+                      fontSize: '0.92rem',
+                      fontWeight: 900,
+                      color: '#0f172a',
+                      letterSpacing: '0.02em',
+                      marginBottom: '0.75rem',
+                    }}
+                  >
+                    MEJOR PRECIO:
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      flexWrap: 'wrap',
+                      paddingTop: '0.35rem',
+                      borderTop: '1px solid #f1f5f9',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Banknote size={32} color="#65c97a" strokeWidth={1.75} />
+                      <div style={{ lineHeight: 1.35 }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>
+                          EFECTIVO PESOS, DOLARES / TRANSFERENCIA
+                        </div>
+                        {discountPct > 0 && (
+                          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#00bfa5' }}>
+                            ({discountPct}% OFF YA APLICADO)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 'clamp(1.6rem, 2.8vw, 2rem)',
+                        fontWeight: 900,
+                        color: '#0f172a',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      ${transferPrice.toLocaleString('es-AR')}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bloque 2: PRECIO DE LISTA Y CUOTAS CON TARJETA */}
+                <div
+                  style={{
+                    fontSize: '0.92rem',
+                    fontWeight: 900,
+                    color: '#0f172a',
+                    letterSpacing: '0.02em',
+                    marginBottom: '0.55rem',
+                  }}
+                >
+                  PRECIO DE LISTA:
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 4px 16px rgba(15, 23, 42, 0.06)',
+                    padding: '0.85rem 1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                  }}
+                >
+                  <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CreditCard size={34} color="#65c97a" strokeWidth={1.75} />
+                  </div>
+
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    {/* 1 Pago */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        padding: '0.55rem 0',
+                        borderBottom: '1px solid #f1f5f9',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+                        EN 1 PAGO DE:
+                      </span>
+                      <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a' }}>
+                        ${cuota1.toLocaleString('es-AR')}
+                      </span>
+                    </div>
+
+                    {/* 6 Cuotas */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        padding: '0.55rem 0',
+                        borderBottom: '1px solid #f1f5f9',
+                      }}
+                    >
+                      <div style={{ lineHeight: 1.3 }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+                          EN 6 CUOTAS FIJAS DE:
+                        </div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 600, color: '#64748b' }}>
+                          (25% DE RECARGO SOBRE PRECIO DE LISTA)
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        ${cuota6.toLocaleString('es-AR')}
+                      </span>
+                    </div>
+
+                    {/* 12 Cuotas */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        padding: '0.55rem 0',
+                      }}
+                    >
+                      <div style={{ lineHeight: 1.3 }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+                          EN 12 CUOTAS FIJAS DE:
+                        </div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 600, color: '#64748b' }}>
+                          (45% DE RECARGO SOBRE PRECIO DE LISTA)
+                        </div>
+                      </div>
+                      <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        ${cuota12.toLocaleString('es-AR')}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
